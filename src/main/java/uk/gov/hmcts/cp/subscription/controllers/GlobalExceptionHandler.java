@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.controllers.advice;
+package uk.gov.hmcts.cp.subscription.controllers;
 
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
