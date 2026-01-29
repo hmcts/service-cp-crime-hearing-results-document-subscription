@@ -36,4 +36,5 @@ dependencies {
   // ( though with scope of "runtime" )
   // Yet we still need to add it manually. Grrr. TBC.
   implementation "io.swagger.core.v3:swagger-annotations:2.2.41"
+  implementation("org.owasp.encoder:encoder:1.2.3")
 }
