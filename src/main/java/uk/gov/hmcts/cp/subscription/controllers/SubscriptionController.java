@@ -1,10 +1,8 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
-import static uk.gov.hmcts.cp.subscription.utils.SubscriptionHelper.getSanitizedCallbackUrl;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
+import org.owasp.encoder.Encode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +28,7 @@ public class SubscriptionController implements SubscriptionApi {
     @Transactional
     public ResponseEntity<ClientSubscription> createClientSubscription(final String callbackUrl,
                                                                        final CreateClientSubscriptionRequest request) {
-        log.info("createClientSubscription callbackUrl:{} clientId:{}", getSanitizedCallbackUrl(callbackUrl), CLIENT_ID);
+        log.info("createClientSubscription callbackUrl:{} clientId:{}", Encode.forJava(callbackUrl), CLIENT_ID);
         final ClientSubscription response = subscriptionService.saveSubscription(callbackUrl, request);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
