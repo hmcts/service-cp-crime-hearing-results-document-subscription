@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.controllers;
+package uk.gov.hmcts.cp.subscription.unit.controllers;
 
 
 import org.junit.jupiter.api.Test;
@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
 
 import java.util.UUID;

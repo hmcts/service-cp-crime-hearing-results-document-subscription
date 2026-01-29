@@ -9,7 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
-import uk.gov.hmcts.cp.subscription.config.TestContainersInitialise;
+import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
@@ -32,10 +32,10 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected SubscriptionRepository subscriptionRepository;
 
-    NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
-            .webhookUrl("https://my-callback-url")
+    protected NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
+            .callbackUrl("https://my-callback-url")
             .build();
-    ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
+    protected ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
             .notificationEndpoint(notificationEndpoint)
             .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
             .build();

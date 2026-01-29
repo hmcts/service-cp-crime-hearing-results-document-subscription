@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.clients;
+package uk.gov.hmcts.cp.subscription.integration.clients;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -6,8 +6,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.clients.model.MaterialResponse;
-import uk.gov.hmcts.cp.subscription.config.TestContainersInitialise;
+import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;

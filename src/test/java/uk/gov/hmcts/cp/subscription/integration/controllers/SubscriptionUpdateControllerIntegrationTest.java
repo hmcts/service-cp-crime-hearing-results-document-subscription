@@ -1,11 +1,12 @@
-package uk.gov.hmcts.cp.subscription.integration;
+package uk.gov.hmcts.cp.subscription.integration.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.time.OffsetDateTime;
@@ -40,7 +41,7 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").value(existing.getId().toString()))
                 .andExpect(jsonPath("$.eventTypes.[0]").value("CUSTODIAL_RESULT"))
                 .andExpect(jsonPath("$.eventTypes.[1]").value("PRISON_COURT_REGISTER_GENERATED"))
-                .andExpect(jsonPath("$.notificationEndpoint.webhookUrl").value("https://my-callback-url"));
+                .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
         verifyCreatedAtIsUnchanged(existing.getId(), existing.getCreatedAt());
     }
 

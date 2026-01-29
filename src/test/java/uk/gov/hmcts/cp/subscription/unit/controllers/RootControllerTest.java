@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.controllers;
+package uk.gov.hmcts.cp.subscription.unit.controllers;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import uk.gov.hmcts.cp.subscription.controllers.RootController;
 
 @ExtendWith(MockitoExtension.class)
 class RootControllerTest {

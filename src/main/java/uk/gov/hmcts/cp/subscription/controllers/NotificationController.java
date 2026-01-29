@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -18,8 +19,7 @@ public class NotificationController implements NotificationApi {
     private final NotificationService notificationService;
 
     @Override
-    @Transactional
-    public ResponseEntity<Void> createNotificationPCR(final PcrEventPayload pcrEventPayload) {
+    public ResponseEntity<Void> createNotificationPCR(@Valid final PcrEventPayload pcrEventPayload) {
         notificationService.processPcrEvent(pcrEventPayload.getMaterialId());
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }

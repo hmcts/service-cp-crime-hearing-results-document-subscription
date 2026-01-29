@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.mappers;
+package uk.gov.hmcts.cp.subscription.unit.mappers;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -6,8 +6,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
+import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapperImpl;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 
@@ -31,15 +34,16 @@ class SubscriptionMapperTest {
     @Mock
     ClockService clockService;
 
+    String callbackUrl = "https://example.com";
     SubscriptionMapper mapper = new SubscriptionMapperImpl();
 
     UUID clientSubscriptionId = UUID.fromString("d730c6e1-66ba-4ef0-a3dd-0b9928faa76d");
     NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
-            .webhookUrl("https://example.com")
+            .callbackUrl("https://example.com")
             .build();
     ClientSubscriptionEntity existing = ClientSubscriptionEntity.builder()
             .id(clientSubscriptionId)
-            .notificationEndpoint(notificationEndpoint.getWebhookUrl().toString())
+            .notificationEndpoint(notificationEndpoint.getCallbackUrl().toString())
             .eventTypes(mutableLisOfEventTypes())
             .createdAt(MOCKCREATED)
             .updatedAt(MOCKUPDATED)
@@ -48,12 +52,11 @@ class SubscriptionMapperTest {
     @Test
     void create_request_should_map_to_entity_with_sorted_types() {
         when(clockService.nowOffsetUTC()).thenReturn(MOCKCREATED);
-        ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
-                .notificationEndpoint(notificationEndpoint)
+        CreateClientSubscriptionRequest request = CreateClientSubscriptionRequest.builder()
                 .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
                 .build();
 
-        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, request);
+        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, callbackUrl, request);
 
         assertThat(entity.getId()).isNull();
         assertThat(entity.getNotificationEndpoint()).isEqualTo("https://example.com");
@@ -65,7 +68,7 @@ class SubscriptionMapperTest {
     @Test
     void update_request_should_map_to_entity_with_sorted_types() {
         NotificationEndpoint updatedEndpoint = NotificationEndpoint.builder()
-                .webhookUrl("https://updated.com")
+                .callbackUrl("https://updated.com")
                 .build();
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(updatedEndpoint)

@@ -1,10 +1,11 @@
-package uk.gov.hmcts.cp.subscription.integration;
+package uk.gov.hmcts.cp.subscription.integration.controllers;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.util.List;
@@ -26,6 +27,7 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
     void save_client_subscription_should_save_subscription() throws Exception {
         String body = new ObjectMapper().writeValueAsString(request);
         mockMvc.perform(post("/client-subscriptions")
+                        .param("callbackUrl", "https://my-callback-url")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("client-id-todo", "1234")
                         .content(body))

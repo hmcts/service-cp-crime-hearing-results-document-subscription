@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
@@ -24,16 +25,18 @@ public class SubscriptionController implements SubscriptionApi {
 
     @Override
     @Transactional
-    public ResponseEntity<ClientSubscription> createClientSubscription(final ClientSubscriptionRequest request) {
-        log.info("createClientSubscription clientId:{}", CLIENT_ID);
-        final ClientSubscription response = subscriptionService.saveSubscription(request);
+    public ResponseEntity<ClientSubscription> createClientSubscription(final String callbackUrl,
+                                                                       final CreateClientSubscriptionRequest request) {
+        log.info("createClientSubscription callbackUrl:{} clientId:{}", callbackUrl, CLIENT_ID);
+        final ClientSubscription response = subscriptionService.saveSubscription(callbackUrl, request);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @Override
     @Transactional
-    public ResponseEntity<ClientSubscription> updateClientSubscription(final UUID clientSubscriptionId, final ClientSubscriptionRequest request) {
+    public ResponseEntity<ClientSubscription> updateClientSubscription(final UUID clientSubscriptionId,
+                                                                       final ClientSubscriptionRequest request) {
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, CLIENT_ID);
         final ClientSubscription response = subscriptionService.updateSubscription(clientSubscriptionId, request);
         return new ResponseEntity<>(response, HttpStatus.OK);

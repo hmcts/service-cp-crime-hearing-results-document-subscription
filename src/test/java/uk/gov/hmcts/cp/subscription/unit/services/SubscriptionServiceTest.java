@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.services;
+package uk.gov.hmcts.cp.subscription.unit.services;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,10 +7,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
-import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapperImpl;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
+import uk.gov.hmcts.cp.subscription.services.ClockService;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
 
@@ -21,31 +23,33 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
 
-    @Mock ClockService clockService;
+    @Mock
+    ClockService clockService;
     @Mock
     SubscriptionRepository subscriptionRepository;
     @Mock
-    SubscriptionMapper mapper = new SubscriptionMapperImpl();
-
+    SubscriptionMapper mapper;
     @InjectMocks
     SubscriptionService subscriptionService;
 
+    CreateClientSubscriptionRequest createClientSubscriptionRequest = CreateClientSubscriptionRequest.builder().build();
     ClientSubscriptionRequest request = ClientSubscriptionRequest.builder().build();
     ClientSubscriptionEntity requestEntity = ClientSubscriptionEntity.builder().build();
     ClientSubscriptionEntity savedEntity = ClientSubscriptionEntity.builder().build();
     ClientSubscriptionEntity updatedEntity = ClientSubscriptionEntity.builder().build();
     ClientSubscription response = ClientSubscription.builder().build();
     UUID subscriptionId = UUID.fromString("2ca16eb5-3998-4bb7-adce-4bb9b3b7223c");
+    String callbackUrl = "https://example.com/callback";
 
     @Test
     void save_request_should_save_new_entity() {
-        when(mapper.mapCreateRequestToEntity(clockService, request)).thenReturn(requestEntity);
+        when(mapper.mapCreateRequestToEntity(clockService, callbackUrl, createClientSubscriptionRequest)).thenReturn(requestEntity);
         when(subscriptionRepository.save(requestEntity)).thenReturn(savedEntity);
         when(mapper.mapEntityToResponse(clockService, savedEntity)).thenReturn(response);
 
-        ClientSubscription result = subscriptionService.saveSubscription(request);
+        ClientSubscription result = subscriptionService.saveSubscription(callbackUrl, createClientSubscriptionRequest);
 
-        verify(mapper).mapCreateRequestToEntity(clockService, request);
+        verify(mapper).mapCreateRequestToEntity(clockService, callbackUrl, createClientSubscriptionRequest);
         verify(subscriptionRepository).save(requestEntity);
         assertThat(result).isEqualTo(response);
     }

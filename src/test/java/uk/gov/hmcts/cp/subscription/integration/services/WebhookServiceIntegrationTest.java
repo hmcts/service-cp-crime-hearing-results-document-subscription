@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.services;
+package uk.gov.hmcts.cp.subscription.integration.services;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import org.junit.jupiter.api.Test;
@@ -9,6 +9,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.services.WebhookService;
 
 import java.util.UUID;
 
