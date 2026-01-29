@@ -2,11 +2,12 @@ package uk.gov.hmcts.cp.subscription.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.owasp.encoder.Encode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.HtmlUtils;
+
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
@@ -28,7 +29,7 @@ public class SubscriptionController implements SubscriptionApi {
     @Transactional
     public ResponseEntity<ClientSubscription> createClientSubscription(final String callbackUrl,
                                                                        final CreateClientSubscriptionRequest request) {
-        log.info("createClientSubscription callbackUrl:{} clientId:{}", Encode.forJava(callbackUrl), CLIENT_ID);
+        log.info("createClientSubscription callbackUrl:{} clientId:{}", HtmlUtils.htmlEscape(callbackUrl), CLIENT_ID);
         final ClientSubscription response = subscriptionService.saveSubscription(callbackUrl, request);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
