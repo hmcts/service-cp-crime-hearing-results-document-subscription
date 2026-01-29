@@ -7,6 +7,7 @@ import org.mapstruct.Named;
 import org.mapstruct.NullValueMappingStrategy;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
@@ -24,10 +25,10 @@ public interface SubscriptionMapper {
 
     @Mapping(target = "id", expression = "java(null)")
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
-    @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
+    @Mapping(target = "notificationEndpoint", expression = "java(callbackUrl)")
     @Mapping(target = "createdAt", expression = "java(clockService.nowOffsetUTC())")
     @Mapping(target = "updatedAt", expression = "java(clockService.nowOffsetUTC())")
-    ClientSubscriptionEntity mapCreateRequestToEntity(@Context ClockService clockService, ClientSubscriptionRequest request);
+    ClientSubscriptionEntity mapCreateRequestToEntity(@Context ClockService clockService, String callbackUrl, CreateClientSubscriptionRequest request);
 
     @Mapping(source = "existing.id", target = "id")
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
@@ -43,16 +44,16 @@ public interface SubscriptionMapper {
 
     @Named("mapWithSortedEventTypes")
     static List<EntityEventType> sortedEventTypes(final List<EventType> events) {
-        final List<String> sorted = events.stream().map(e -> e.name()).sorted().collect(toList());
-        return sorted.stream().map(e -> EntityEventType.valueOf(e)).toList();
+        final List<String> sorted = events.stream().map(Enum::name).sorted().collect(toList());
+        return sorted.stream().map(EntityEventType::valueOf).toList();
     }
 
     @Named("mapFromNotificationEndpoint")
     static String mapFromNotificationEndpoint(final NotificationEndpoint notificationEndpoint) {
-        return notificationEndpoint.getWebhookUrl().toString();
+        return notificationEndpoint.getCallbackUrl();
     }
 
     static NotificationEndpoint mapToNotificationEndpoint(final String endpointUrl) {
-        return NotificationEndpoint.builder().webhookUrl(endpointUrl).build();
+        return NotificationEndpoint.builder().callbackUrl(endpointUrl).build();
     }
 }

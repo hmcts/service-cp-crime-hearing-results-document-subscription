@@ -2,10 +2,12 @@ package uk.gov.hmcts.cp.subscription.controllers;
 
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -31,6 +33,14 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage());
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<String> handleHttpMessageNotReadable(final HttpMessageNotReadableException exception) {
+        log.error("Invalid request body: {}", exception.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body("");
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleUnknownException(final Exception exception) {
         log.error("Exception {}", exception.getMessage());
@@ -49,5 +59,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(status)
                 .body(ex.contentUTF8());
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Void> handleConstraintViolation(final ConstraintViolationException ex) {
+        log.error("Exception {}", ex.getMessage());
+        return ResponseEntity.badRequest().build();
     }
 }

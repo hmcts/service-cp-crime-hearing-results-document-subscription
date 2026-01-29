@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
@@ -20,8 +21,8 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionMapper mapper;
 
-    public ClientSubscription saveSubscription(final ClientSubscriptionRequest request) {
-        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, request);
+    public ClientSubscription saveSubscription(final String callbackUrl, final CreateClientSubscriptionRequest request) {
+        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, callbackUrl, request);
         return mapper.mapEntityToResponse(clockService, subscriptionRepository.save(entity));
     }
 

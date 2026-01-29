@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.repositories;
+package uk.gov.hmcts.cp.subscription.integration.repositories;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.hmcts.cp.subscription.model.EntityEventType.CUSTODIAL_RESULT;
 import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
 
-class SubscriptionRepositoryTest extends IntegrationTestBase {
+class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {

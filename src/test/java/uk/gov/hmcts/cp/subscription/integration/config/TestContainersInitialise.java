@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.config;
+package uk.gov.hmcts.cp.subscription.integration.config;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

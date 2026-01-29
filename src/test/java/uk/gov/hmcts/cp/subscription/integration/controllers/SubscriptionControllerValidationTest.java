@@ -1,11 +1,12 @@
-package uk.gov.hmcts.cp.subscription.integration;
+package uk.gov.hmcts.cp.subscription.integration.controllers;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
+import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.List;
@@ -22,7 +23,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
     SubscriptionRepository subscriptionRepository;
 
     NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
-            .webhookUrl("https://my-callback-url")
+            .callbackUrl("https://my-callback-url")
             .build();
     ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
             .notificationEndpoint(notificationEndpoint)
@@ -34,6 +35,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
         String body = new ObjectMapper().writeValueAsString(request)
                 .replace("PRISON_COURT_REGISTER_GENERATED", "BAD");
         mockMvc.perform(post("/client-subscriptions")
+                        .param("callbackUrl", "https://my-callback-url")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
@@ -42,9 +44,9 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
 
     @Test
     void webhook_bad_url_should_return_400() throws Exception {
-        String body = new ObjectMapper().writeValueAsString(request)
-                .replace("https://my-callback-url", "not-a-url");
+        String body = new ObjectMapper().writeValueAsString(request);
         mockMvc.perform(post("/client-subscriptions")
+                        .param("callbackUrl", "not-a-url")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())

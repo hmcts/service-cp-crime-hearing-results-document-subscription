@@ -1,9 +1,10 @@
-package uk.gov.hmcts.cp.subscription.integration;
+package uk.gov.hmcts.cp.subscription.integration.controllers;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.util.List;
