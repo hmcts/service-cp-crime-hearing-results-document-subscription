@@ -27,7 +27,10 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     @Transactional
     public ResponseEntity<ClientSubscription> createClientSubscription(final String callbackUrl,
-                                                                       final CreateClientSubscriptionRequest request) {
+        final String sanitizedCallbackUrl = callbackUrl == null
+            ? null
+            : callbackUrl.replace("\r", " ").replace("\n", " ");
+        log.info("createClientSubscription callbackUrl:{} clientId:{}", sanitizedCallbackUrl, CLIENT_ID);
         log.info("createClientSubscription callbackUrl:{} clientId:{}", getSanitizedCallbackUrl(callbackUrl), CLIENT_ID);
         final ClientSubscription response = subscriptionService.saveSubscription(callbackUrl, request);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
