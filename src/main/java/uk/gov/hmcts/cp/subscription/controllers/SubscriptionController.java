@@ -1,5 +1,7 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
+import static uk.gov.hmcts.cp.subscription.utils.SubscriptionHelper.getSanitizedCallbackUrl;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -27,18 +29,11 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     @Transactional
     public ResponseEntity<ClientSubscription> createClientSubscription(final String callbackUrl,
-        final String sanitizedCallbackUrl = callbackUrl == null
-            ? null
-            : callbackUrl.replace("\r", " ").replace("\n", " ");
-        log.info("createClientSubscription callbackUrl:{} clientId:{}", sanitizedCallbackUrl, CLIENT_ID);
+                                                                       final CreateClientSubscriptionRequest request) {
         log.info("createClientSubscription callbackUrl:{} clientId:{}", getSanitizedCallbackUrl(callbackUrl), CLIENT_ID);
         final ClientSubscription response = subscriptionService.saveSubscription(callbackUrl, request);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    private static @Nullable String getSanitizedCallbackUrl(final String callbackUrl) {
-        return callbackUrl == null ? null : callbackUrl.replace("\r", " ").replace("\n", " ");
     }
 
     @Override
@@ -65,4 +60,5 @@ public class SubscriptionController implements SubscriptionApi {
         subscriptionService.deleteSubscription(clientSubscriptionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
 }

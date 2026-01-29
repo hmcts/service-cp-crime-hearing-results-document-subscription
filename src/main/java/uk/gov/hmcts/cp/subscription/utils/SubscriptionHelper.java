@@ -1,0 +1,1 @@
+package uk.gov.hmcts.cp.subscription.utils;import org.jspecify.annotations.Nullable;public class SubscriptionHelper {    public static @Nullable String getSanitizedCallbackUrl(final String callbackUrl) {        return callbackUrl == null ? null : callbackUrl.replace("\r", " ").replace("\n", " ");    }}
