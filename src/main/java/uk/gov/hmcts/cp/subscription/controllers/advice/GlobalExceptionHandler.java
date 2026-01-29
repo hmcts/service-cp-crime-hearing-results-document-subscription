@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Void> handleConstraintViolation(ConstraintViolationException ex) {
+    public ResponseEntity<Void> handleConstraintViolation(final ConstraintViolationException ex) {
         log.error("Exception {}", ex.getMessage());
         return ResponseEntity.badRequest().build();
     }

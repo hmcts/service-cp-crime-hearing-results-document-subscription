@@ -44,13 +44,13 @@ public interface SubscriptionMapper {
 
     @Named("mapWithSortedEventTypes")
     static List<EntityEventType> sortedEventTypes(final List<EventType> events) {
-        final List<String> sorted = events.stream().map(e -> e.name()).sorted().collect(toList());
-        return sorted.stream().map(e -> EntityEventType.valueOf(e)).toList();
+        final List<String> sorted = events.stream().map(Enum::name).sorted().collect(toList());
+        return sorted.stream().map(EntityEventType::valueOf).toList();
     }
 
     @Named("mapFromNotificationEndpoint")
     static String mapFromNotificationEndpoint(final NotificationEndpoint notificationEndpoint) {
-        return notificationEndpoint.getCallbackUrl().toString();
+        return notificationEndpoint.getCallbackUrl();
     }
 
     static NotificationEndpoint mapToNotificationEndpoint(final String endpointUrl) {
