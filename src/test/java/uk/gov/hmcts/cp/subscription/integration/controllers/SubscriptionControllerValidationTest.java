@@ -43,7 +43,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
     }
 
     @Test
-    void webhook_bad_url_should_return_400() throws Exception {
+    void callback_url_should_return_400() throws Exception {
         String body = new ObjectMapper().writeValueAsString(request);
         mockMvc.perform(post("/client-subscriptions")
                         .param("callbackUrl", "not-a-url")

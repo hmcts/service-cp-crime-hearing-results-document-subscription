@@ -3,6 +3,7 @@ plugins {
   id 'java'
   id 'org.springframework.boot' version '4.0.1'
   id 'io.spring.dependency-management' version '1.1.7'
+  id 'org.openapi.generator' version '7.19.0'
   id 'jacoco'
   id 'maven-publish'
   id 'com.github.ben-manes.versions' version '0.53.0'
@@ -17,7 +18,7 @@ apply {
   from("$rootDir/gradle/dependencies/java-core.gradle")
   from("$rootDir/gradle/dependencies/spring-core.gradle")
   from("$rootDir/gradle/dependencies/spring-db.gradle")
-  from("$rootDir/gradle/dependencies/spring-cloud.gradle")
+  from("$rootDir/gradle/dependencies/openapi-material.gradle")
 
   from("$rootDir/gradle/github/repositories.gradle")
   from("$rootDir/gradle/github/java.gradle")

@@ -2,8 +2,15 @@ package uk.gov.hmcts.cp.subscription.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
+
+import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
+import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
+import uk.gov.hmcts.cp.subscription.services.exceptions.MaterialMetadataNotReadyException;
 
 import java.util.UUID;
 
@@ -12,9 +19,28 @@ import java.util.UUID;
 @Slf4j
 public class NotificationService {
 
-    private final MaterialClient client;
+    private final MaterialApi materialApi;
+    private final DocumentService documentService;
+    @Qualifier("retryTemplate")
+    private final RetryTemplate materialRetryTemplate;
 
-    public byte[] processPcrEvent(final UUID materialId) {
-        return client.getContentById(materialId);
+    public void processPcrEvent(final PcrEventPayload pcrEventPayload) {
+        final MaterialMetadata materialMetadata = materialRetryTemplate.execute(context ->
+                waitForMaterialMetadata(pcrEventPayload.getMaterialId()));
+        
+        final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
+        documentService.saveDocumentMapping(UUID.fromString(materialMetadata.getMaterialId()), eventType);
+    }
+
+    /**
+     * Waits for material metadata. Retries when not ready (null).
+     * 404 from Material API and MaterialMetadataNotReadyException (after retries) are handled by GlobalExceptionHandler.
+     */
+    private MaterialMetadata waitForMaterialMetadata(final UUID materialId) {
+        final MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId.toString());
+        if (response == null) {
+            throw new MaterialMetadataNotReadyException("PCR - Material metadata not ready for materialId: " + materialId);
+        }
+        return response;
     }
 }

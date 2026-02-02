@@ -20,7 +20,7 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {
-        clearAllTables();
+        clearClientSubscriptionTable();
     }
 
     @Test

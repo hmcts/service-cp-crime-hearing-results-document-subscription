@@ -18,7 +18,7 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {
-        clearAllTables();
+        clearClientSubscriptionTable();
     }
 
     @Test
