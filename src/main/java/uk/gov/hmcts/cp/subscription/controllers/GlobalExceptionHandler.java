@@ -69,16 +69,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<String> handleNoHandlerFoundException(final NoHandlerFoundException exception) {
-        log.error("No handler found for request: {} {} - This might indicate a deserialization error before method matching",
-                exception.getHttpMethod(), exception.getRequestURL());
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body("Endpoint not found: " + exception.getRequestURL());
+        log.error("No handler found for request: {} {}", exception.getHttpMethod(), exception.getRequestURL(), exception);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not Found");
     }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(final ResponseStatusException exception) {
-        log.error("ResponseStatusException: {}", exception.getReason(), exception);
+        log.error("ResponseStatusException: {}", exception.getMessage());
         return ResponseEntity
                 .status(exception.getStatusCode())
                 .body(exception.getReason() != null ? exception.getReason() : exception.getMessage());
