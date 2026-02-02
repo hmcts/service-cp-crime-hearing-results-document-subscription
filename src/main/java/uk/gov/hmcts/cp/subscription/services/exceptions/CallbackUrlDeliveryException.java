@@ -4,6 +4,8 @@ package uk.gov.hmcts.cp.subscription.services.exceptions;
  * Thrown when callbackUrl delivery fails (network error or non-2xx response). Triggers retry via @Retryable.
  */
 public class CallbackUrlDeliveryException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
     public CallbackUrlDeliveryException(final String message) {
         super(message);
     }
