@@ -91,4 +91,13 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(exception.getMessage());
     }
+
+    @ExceptionHandler(UnsupportedOperationException.class)
+    public ResponseEntity<String> handleUnsupportedOperation(final UnsupportedOperationException exception) {
+        log.error("Unsupported operation: {}", exception.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_IMPLEMENTED)
+                .body("Unsupported");
+    }
+
 }
