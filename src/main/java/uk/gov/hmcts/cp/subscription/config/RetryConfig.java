@@ -37,7 +37,6 @@ public class RetryConfig {
         return template;
     }
 
-    /** Generic default: 3 attempts, 50ms initial, multiplier 2, max 5000ms. */
     public static RetryConfig retryConfig() {
         return RetryConfig.builder()
                 .maxAttempts(3)
