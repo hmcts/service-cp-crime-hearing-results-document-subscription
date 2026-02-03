@@ -51,12 +51,18 @@ public abstract class IntegrationTestBase {
             .build();
 
     protected void clearClientSubscriptionTable() {
-        log.info("Clearing all tables");
+        log.info("Clearing client_subscription table");
         subscriptionRepository.deleteAll();
     }
 
     protected void clearDocumentMappingTable() {
-        log.info("Clearing all tables");
+        log.info("Clearing document_mapping table");
+        documentMappingRepository.deleteAll();
+    }
+
+    protected void clearAllTables() {
+        log.info("Clearing client_subscription and document_mapping tables");
+        subscriptionRepository.deleteAll();
         documentMappingRepository.deleteAll();
     }
 

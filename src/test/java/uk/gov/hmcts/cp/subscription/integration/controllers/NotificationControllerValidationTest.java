@@ -42,7 +42,6 @@ class NotificationControllerValidationTest {
     private static final String PCR_REQUEST_VALID = "stubs/requests/pcr-request-valid.json";
     private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/pcr-request-missing-material.json";
     private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/pcr-request-missing-event.json";
-    private static final String PCR_REQUEST_MATERIAL_NOT_FOUND = "stubs/requests/pcr-request-material-not-found.json";
     private static final UUID SUBSCRIPTION_ID = randomUUID();
     private static final UUID DOCUMENT_ID = randomUUID();
 
@@ -109,20 +108,6 @@ class NotificationControllerValidationTest {
                         .content("{}"))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void material_metadata_not_found_should_return_404() throws Exception {
-        String pcrPayload = loadPcrPayload(PCR_REQUEST_MATERIAL_NOT_FOUND);
-
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"))
-                .when(notificationService).processInboundEvent(any());
-
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(pcrPayload))
-                .andDo(print())
-                .andExpect(status().isNotFound());
     }
 
     @Test

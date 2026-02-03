@@ -45,8 +45,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         reset(callbackDeliveryService);
-        clearClientSubscriptionTable();
-        clearDocumentMappingTable();
+        clearAllTables();
     }
 
     @Test
@@ -79,6 +78,18 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(content().string("Unsupported"));
 
         verify(callbackDeliveryService, times(1)).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
+    }
+
+    @Test
+    void material_metadata_not_found_should_return_404() throws Exception {
+        String pcrPayload = loadPcrPayload("stubs/requests/pcr-request-material-not-found.json");
+
+        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Accept", MediaType.APPLICATION_JSON_VALUE)
+                        .content(pcrPayload))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 
     @Test
