@@ -7,6 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
@@ -51,7 +53,7 @@ class NotificationControllerTest {
     void valid_pcr_payload_should_process_deliver_callbackurl_and_return_accepted() {
         PcrEventPayload payload = PcrEventPayload.builder()
                 .materialId(MATERIAL_ID)
-                .eventType(uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED)
+                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();
         doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
         when(documentService.getDocumentIdForMaterialId(any(UUID.class), any(EntityEventType.class))).thenReturn(DOCUMENT_ID);
@@ -83,7 +85,7 @@ class NotificationControllerTest {
     void json_processing_exception_in_callback_should_throw_callback_url_delivery_exception() {
         PcrEventPayload payload = PcrEventPayload.builder()
                 .materialId(MATERIAL_ID)
-                .eventType(uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED)
+                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();
         JsonProcessingException cause = new JsonProcessingException("Invalid JSON") {};
 
@@ -103,7 +105,7 @@ class NotificationControllerTest {
     void uri_syntax_exception_in_callback_should_throw_callback_url_delivery_exception() {
         PcrEventPayload payload = PcrEventPayload.builder()
                 .materialId(MATERIAL_ID)
-                .eventType(uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED)
+                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();
         URISyntaxException cause = new URISyntaxException("invalid", "bad uri");
 
