@@ -35,13 +35,10 @@ public class DocumentService {
     private final MaterialApi materialApi;
     private final RestTemplate restTemplate;
 
-    /**
-     * Saves a document mapping with the associated eventType.
-     */
     @Transactional
-    public DocumentMappingEntity saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
+    public UUID saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
         final DocumentMappingEntity entity = documentMapper.mapToEntity(clockService, materialId, eventType);
-        return documentMappingRepository.save(entity);
+        return documentMappingRepository.save(entity).getDocumentId();
     }
 
     @Transactional(readOnly = true)
@@ -49,10 +46,6 @@ public class DocumentService {
         return documentMappingRepository.findByMaterialIdAndEventType(materialId, eventType).get().getDocumentId();
     }
 
-    /**
-     * Returns document content as binary by fetching from the Material contentUrl (e.g. Azure Blob).
-     * Validates subscription access, then fetches the file from the URL and returns bytes with metadata.
-     */
     public DocumentContent getDocumentContentAsBinary(final UUID clientSubscriptionId, final UUID documentId) {
         final DocumentMappingEntity document = documentMappingRepository.findById(documentId).get();
         if (!subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, document.getEventType().name())) {

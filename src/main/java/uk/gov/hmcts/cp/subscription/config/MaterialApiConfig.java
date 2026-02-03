@@ -7,9 +7,6 @@ import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.material.openapi.ApiClient;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 
-/**
- * Configures the OpenAPI-generated Material API client with base URL from material-client.url.
- */
 @Configuration
 public class MaterialApiConfig {
 

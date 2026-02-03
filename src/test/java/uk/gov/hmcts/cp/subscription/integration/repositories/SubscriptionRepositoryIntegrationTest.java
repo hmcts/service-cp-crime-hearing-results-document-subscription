@@ -41,14 +41,14 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
     @Transactional
     @Test
     void findByEventType_should_return_subscriptions_for_event_type() {
-        insertSubscription("https://subscriber1.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED));
-        insertSubscription("https://subscriber2.example/callback", List.of(CUSTODIAL_RESULT));
-        insertSubscription("https://subscriber3.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT));
+        ClientSubscriptionEntity sub1 = insertSubscription("https://subscriber1.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED));
+        ClientSubscriptionEntity sub2 = insertSubscription("https://subscriber2.example/callback", List.of(CUSTODIAL_RESULT));
+        ClientSubscriptionEntity sub3 = insertSubscription("https://subscriber3.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT));
 
-        var forPcr = subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED");
-        var forCustodial = subscriptionRepository.findByEventType("CUSTODIAL_RESULT");
+        List<ClientSubscriptionEntity> forPcr = subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED");
+        List<ClientSubscriptionEntity> forCustodial = subscriptionRepository.findByEventType("CUSTODIAL_RESULT");
 
-        assertThat(forPcr).hasSize(2);
-        assertThat(forCustodial).hasSize(2);
+        assertThat(forPcr).containsExactlyInAnyOrder(sub1, sub3);
+        assertThat(forCustodial).containsExactlyInAnyOrder(sub2, sub3);
     }
 }

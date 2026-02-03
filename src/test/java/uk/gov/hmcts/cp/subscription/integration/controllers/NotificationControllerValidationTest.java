@@ -1,11 +1,11 @@
 package uk.gov.hmcts.cp.subscription.integration.controllers;
 
-import static java.util.Objects.nonNull;
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -31,20 +31,20 @@ import uk.gov.hmcts.cp.subscription.services.NotificationService;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-/**
- * Validation tests for PCR notification API. Uses @WebMvcTest only (no Docker, DB, or WireMock).
- */
 @WebMvcTest(NotificationController.class)
 @Import(GlobalExceptionHandler.class)
 class NotificationControllerValidationTest {
 
     private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
-    private static final String PCR_REQUEST_TEMPLATE = "stubs/requests/pcr-request.json";
-    private static final UUID MATERIAL_ID = randomUUID();
-    private static final UUID EVENT_ID = randomUUID();
+    private static final String PCR_REQUEST_VALID = "stubs/requests/pcr-request-valid.json";
+    private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/pcr-request-missing-material.json";
+    private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/pcr-request-missing-event.json";
+    private static final String PCR_REQUEST_MATERIAL_NOT_FOUND = "stubs/requests/pcr-request-material-not-found.json";
+    private static final UUID SUBSCRIPTION_ID = randomUUID();
+    private static final UUID DOCUMENT_ID = randomUUID();
 
     @Autowired
     private MockMvc mockMvc;
@@ -60,7 +60,7 @@ class NotificationControllerValidationTest {
 
     @Test
     void bad_content_type_should_return_415() throws Exception {
-        String pcrPayload = createPcrPayload(EVENT_ID, MATERIAL_ID);
+        String pcrPayload = loadPcrPayload(PCR_REQUEST_VALID);
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.TEXT_PLAIN)
@@ -71,7 +71,7 @@ class NotificationControllerValidationTest {
 
     @Test
     void invalid_payload_missing_materialid_should_return_400() throws Exception {
-        String pcrPayload = createPcrPayload(EVENT_ID, null);
+        String pcrPayload = loadPcrPayload(PCR_REQUEST_MISSING_MATERIAL);
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -82,7 +82,7 @@ class NotificationControllerValidationTest {
 
     @Test
     void invalid_payload_missing_eventid_should_return_400() throws Exception {
-        String pcrPayload = createPcrPayload(null, MATERIAL_ID);
+        String pcrPayload = loadPcrPayload(PCR_REQUEST_MISSING_EVENT);
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -113,11 +113,10 @@ class NotificationControllerValidationTest {
 
     @Test
     void material_metadata_not_found_should_return_404() throws Exception {
-        UUID materialId = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6022");
-        String pcrPayload = createPcrPayload(randomUUID(), materialId);
+        String pcrPayload = loadPcrPayload(PCR_REQUEST_MATERIAL_NOT_FOUND);
 
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Material not found"))
-                .when(notificationService).processPcrEvent(any());
+                .when(notificationService).processInboundEvent(any());
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,8 +135,6 @@ class NotificationControllerValidationTest {
 
     @Test
     void get_document_should_return_200_with_pdf_content_when_subscription_has_access() throws Exception {
-        UUID subscriptionId = randomUUID();
-        UUID documentId = randomUUID();
         byte[] pdfContent = "PDF content".getBytes();
         DocumentContent documentContent = DocumentContent.builder()
                 .body(pdfContent)
@@ -145,11 +142,10 @@ class NotificationControllerValidationTest {
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
 
-        doReturn(documentContent).when(documentService)
-                .getDocumentContentAsBinary(eq(subscriptionId), eq(documentId));
+        when(documentService.getDocumentContentAsBinary(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(documentContent);
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
-                        subscriptionId, documentId))
+                        SUBSCRIPTION_ID, DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "application/pdf"))
@@ -159,14 +155,11 @@ class NotificationControllerValidationTest {
 
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
-        UUID subscriptionId = randomUUID();
-        UUID documentId = randomUUID();
-
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
-                .when(documentService).getDocumentContentAsBinary(eq(subscriptionId), eq(documentId));
+                .when(documentService).getDocumentContentAsBinary(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
-                        subscriptionId, documentId))
+                        SUBSCRIPTION_ID, DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("Access denied: subscription does not have access to this document"));
@@ -175,7 +168,7 @@ class NotificationControllerValidationTest {
     @Test
     void get_document_should_return_400_when_invalid_subscription_uuid() throws Exception {
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
-                        "invalid-uuid", randomUUID()))
+                        "invalid-uuid", DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
@@ -183,31 +176,28 @@ class NotificationControllerValidationTest {
     @Test
     void get_document_should_return_400_when_invalid_document_uuid() throws Exception {
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
-                        randomUUID(), "invalid-uuid"))
+                        SUBSCRIPTION_ID, "invalid-uuid"))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void get_document_should_return_400_when_document_not_found() throws Exception {
-        UUID subscriptionId = randomUUID();
-        UUID documentId = randomUUID();
-
         doThrow(new java.util.NoSuchElementException("Document not found"))
-                .when(documentService).getDocumentContentAsBinary(eq(subscriptionId), eq(documentId));
+                .when(documentService).getDocumentContentAsBinary(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
-                        subscriptionId, documentId))
+                        SUBSCRIPTION_ID, DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void callbackUrl_delivery_failure_should_return_502() throws Exception {
-        String pcrPayload = createPcrPayload(EVENT_ID, MATERIAL_ID);
+        String pcrPayload = loadPcrPayload(PCR_REQUEST_VALID);
 
         // return any documentId so controller proceeds to callbackUrl delivery
-        org.mockito.Mockito.doReturn(randomUUID())
+        org.mockito.Mockito.doReturn(DOCUMENT_ID)
                 .when(documentService).getDocumentIdForMaterialId(any(), any());
 
         // callbackUrl delivery failing with 502
@@ -221,24 +211,7 @@ class NotificationControllerValidationTest {
                 .andExpect(status().isBadGateway());
     }
 
-    private static String createPcrPayload(UUID eventId, UUID materialId) throws IOException {
-        return createPcrPayload(eventId, materialId, "PRISON_COURT_REGISTER_GENERATED");
-    }
-
-    private static String createPcrPayload(UUID eventId, UUID materialId, String eventType) throws IOException {
-        ClassPathResource resource = new ClassPathResource(PCR_REQUEST_TEMPLATE);
-        String template = Files.readString(resource.getFile().toPath());
-        template = template.replaceAll("EVENT_TYPE", eventType != null ? eventType : "PRISON_COURT_REGISTER_GENERATED");
-        if (nonNull(eventId)) {
-            template = template.replaceAll("EVENT_ID", eventId.toString());
-        } else {
-            template = template.replaceAll("EVENT_ID", "null");
-        }
-        if (nonNull(materialId)) {
-            template = template.replaceAll("MATERIAL_ID", materialId.toString());
-        } else {
-            template = template.replaceAll("MATERIAL_ID", "null");
-        }
-        return template;
+    private static String loadPcrPayload(String path) throws IOException {
+        return new ClassPathResource(path).getContentAsString(StandardCharsets.UTF_8);
     }
 }

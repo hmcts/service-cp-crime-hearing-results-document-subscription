@@ -42,11 +42,6 @@ public class NotificationController implements NotificationApi {
     private final DocumentService documentService;
     private final CallbackDeliveryService callbackDeliveryService;
 
-    /**
-     * Processes incoming Prison Court Register (PCR) notification events from the Progression Service.
-     * Validates material metadata availability, creates document mappings, and delivers callback
-     * notifications to all active subscribers for the event type.
-     */
     @Override
     public ResponseEntity<Void> createNotificationPCR(@Valid @RequestBody final PcrEventPayload pcrEventPayload) {
         log.info("PCR - Received PCR notification request from Progression Service - eventId: {}, materialId: {}, eventType: {}",
@@ -54,7 +49,7 @@ public class NotificationController implements NotificationApi {
                 pcrEventPayload.getMaterialId(),
                 pcrEventPayload.getEventType());
 
-        notificationService.processPcrEvent(pcrEventPayload);
+        notificationService.processInboundEvent(pcrEventPayload);
 
         final UUID materialId = convertToUuid(pcrEventPayload.getMaterialId());
         final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
@@ -69,12 +64,6 @@ public class NotificationController implements NotificationApi {
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
-    /**
-     * Retrieves PCR document content in binary format for a specific client subscription and document.
-     * Validates that the subscription has an active subscription for the document's event type,
-     * fetches the binary content from the Material Service contentUrl (e.g., Azure Blob Storage),
-     * and returns it with appropriate headers for file download.
-     */
     @Override
     public ResponseEntity<Resource> getPcrDocumentByClientSubscription(
             @PathVariable final UUID clientSubscriptionId,

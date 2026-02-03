@@ -15,9 +15,6 @@ public interface SubscriptionRepository extends JpaRepository<ClientSubscription
     @Query(value = "SELECT * FROM client_subscription WHERE :eventType = ANY(event_types)", nativeQuery = true)
     List<ClientSubscriptionEntity> findByEventType(@Param("eventType") String eventType);
 
-    /**
-     * Checks if a subscription exists with the given ID and has the specified event type.
-     */
     @Query(value = "SELECT EXISTS(SELECT 1 FROM client_subscription WHERE id = :subscriptionId AND :eventType = ANY(event_types))", nativeQuery = true)
     boolean existsByIdAndEventType(@Param("subscriptionId") UUID subscriptionId, @Param("eventType") String eventType);
 }

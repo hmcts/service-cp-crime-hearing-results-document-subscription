@@ -1,7 +1,7 @@
 package uk.gov.hmcts.cp.subscription.services;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -14,22 +14,12 @@ import java.net.URISyntaxException;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class CallbackService {
 
     private final RestTemplate restTemplate;
     private final RetryTemplate retryTemplate;
 
-    public CallbackService(
-            final RestTemplate restTemplate,
-            @Qualifier("retryTemplate") final RetryTemplate retryTemplate) {
-        this.restTemplate = restTemplate;
-        this.retryTemplate = retryTemplate;
-    }
-
-    /**
-     * POSTs to the callback URL with Spring Retry (exponential backoff). Retries on failure or non-2xx response.
-     * Throws CallbackUrlDeliveryException when all retries exhausted (handled by GlobalExceptionHandler).
-     */
     public void post(final String url, final String pcrOutboundPayload) throws URISyntaxException {
         retryTemplate.execute(context -> {
             doPost(url, pcrOutboundPayload);

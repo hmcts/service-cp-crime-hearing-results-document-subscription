@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,23 +10,29 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
+import uk.gov.hmcts.cp.subscription.services.exceptions.CallbackUrlDeliveryException;
 
+import java.net.URISyntaxException;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.ACCEPTED;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
+
+    private static final UUID MATERIAL_ID = UUID.randomUUID();
+    private static final UUID DOCUMENT_ID = UUID.randomUUID();
 
     @Mock
     NotificationService notificationService;
@@ -43,74 +50,71 @@ class NotificationControllerTest {
     @Test
     void valid_pcr_payload_should_process_deliver_callbackurl_and_return_accepted() {
         PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(UUID.randomUUID())
+                .materialId(MATERIAL_ID)
                 .eventType(uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();
-        doNothing().when(notificationService).processPcrEvent(any(PcrEventPayload.class));
-        when(documentService.getDocumentIdForMaterialId(any(UUID.class), any(EntityEventType.class))).thenReturn(UUID.randomUUID());
+        doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
+        when(documentService.getDocumentIdForMaterialId(any(UUID.class), any(EntityEventType.class))).thenReturn(DOCUMENT_ID);
 
         var response = notificationController.createNotificationPCR(payload);
 
-        verify(notificationService, times(1)).processPcrEvent(any(PcrEventPayload.class));
-        verify(documentService, times(1)).getDocumentIdForMaterialId(any(UUID.class), any(EntityEventType.class));
-        verify(callbackDeliveryService, times(1)).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
-        assert response.getStatusCode().value() == 202;
-        assert response.getBody() == null;
+        verify(notificationService).processInboundEvent(any(PcrEventPayload.class));
+        verify(documentService).getDocumentIdForMaterialId(any(UUID.class), any(EntityEventType.class));
+        verify(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
+        assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
 
     @SneakyThrows
     @Test
     void runtime_exception_should_not_resolve_subscribers() {
-        PcrEventPayload payload = PcrEventPayload.builder().materialId(UUID.randomUUID()).build();
+        PcrEventPayload payload = PcrEventPayload.builder().materialId(MATERIAL_ID).build();
 
         doThrow(new RuntimeException("processing failed"))
                 .when(notificationService)
-                .processPcrEvent(any(PcrEventPayload.class));
+                .processInboundEvent(any(PcrEventPayload.class));
 
         assertThrows(RuntimeException.class, () -> notificationController.createNotificationPCR(payload));
-        verify(notificationService, times(1)).processPcrEvent(any(PcrEventPayload.class));
+        verify(notificationService).processInboundEvent(any(PcrEventPayload.class));
         verify(documentService, never()).getDocumentIdForMaterialId(any(), any());
     }
 
     @SneakyThrows
     @Test
-    void illegal_state_should_not_resolve_subscribers() {
-        PcrEventPayload payload = PcrEventPayload.builder().materialId(UUID.randomUUID()).build();
+    void json_processing_exception_in_callback_should_throw_callback_url_delivery_exception() {
+        PcrEventPayload payload = PcrEventPayload.builder()
+                .materialId(MATERIAL_ID)
+                .eventType(uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED)
+                .build();
+        JsonProcessingException cause = new JsonProcessingException("Invalid JSON") {};
 
-        doThrow(new IllegalStateException("Service is in an invalid state"))
-                .when(notificationService)
-                .processPcrEvent(any(PcrEventPayload.class));
+        doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
+        when(documentService.getDocumentIdForMaterialId(any(UUID.class), any(EntityEventType.class))).thenReturn(DOCUMENT_ID);
+        doThrow(cause).when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
 
-        assertThrows(IllegalStateException.class, () -> notificationController.createNotificationPCR(payload));
-        verify(notificationService, times(1)).processPcrEvent(any(PcrEventPayload.class));
-        verify(documentService, never()).getDocumentIdForMaterialId(any(), any());
+        CallbackUrlDeliveryException thrown = assertThrows(CallbackUrlDeliveryException.class,
+                () -> notificationController.createNotificationPCR(payload));
+
+        assertThat(thrown.getMessage()).contains("PCR - Failed to build or deliver callback payload");
+        assertThat(thrown.getCause()).isEqualTo(cause);
     }
 
     @SneakyThrows
     @Test
-    void unexpected_exception_should_not_resolve_subscribers() {
-        PcrEventPayload payload = PcrEventPayload.builder().materialId(UUID.randomUUID()).build();
+    void uri_syntax_exception_in_callback_should_throw_callback_url_delivery_exception() {
+        PcrEventPayload payload = PcrEventPayload.builder()
+                .materialId(MATERIAL_ID)
+                .eventType(uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED)
+                .build();
+        URISyntaxException cause = new URISyntaxException("invalid", "bad uri");
 
-        doThrow(new RuntimeException("Unexpected error occurred", new Exception("Root cause")))
-                .when(notificationService)
-                .processPcrEvent(any(PcrEventPayload.class));
+        doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
+        when(documentService.getDocumentIdForMaterialId(any(UUID.class), any(EntityEventType.class))).thenReturn(DOCUMENT_ID);
+        doThrow(cause).when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
 
-        assertThrows(RuntimeException.class, () -> notificationController.createNotificationPCR(payload));
-        verify(notificationService, times(1)).processPcrEvent(any(PcrEventPayload.class));
-        verify(documentService, never()).getDocumentIdForMaterialId(any(), any());
-    }
+        CallbackUrlDeliveryException thrown = assertThrows(CallbackUrlDeliveryException.class,
+                () -> notificationController.createNotificationPCR(payload));
 
-    @SneakyThrows
-    @Test
-    void null_pointer_should_not_resolve_subscribers() {
-        PcrEventPayload payload = PcrEventPayload.builder().materialId(UUID.randomUUID()).build();
-
-        doThrow(new NullPointerException("Null value encountered"))
-                .when(notificationService)
-                .processPcrEvent(any(PcrEventPayload.class));
-
-        assertThrows(NullPointerException.class, () -> notificationController.createNotificationPCR(payload));
-        verify(notificationService, times(1)).processPcrEvent(any(PcrEventPayload.class));
-        verify(documentService, never()).getDocumentIdForMaterialId(any(), any());
+        assertThat(thrown.getMessage()).contains("PCR - Failed to build or deliver callback payload");
+        assertThat(thrown.getCause()).isEqualTo(cause);
     }
 }

@@ -15,10 +15,6 @@ import java.util.UUID;
         nullValueMapMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT)
 public interface DocumentMapper {
 
-    /**
-     * Maps a materialId and eventType to a new DocumentMappingEntity.
-     * Sets the createdAt timestamp using ClockService.
-     */
     @Mapping(target = "documentId", expression = "java(null)")
     @Mapping(source = "materialId", target = "materialId")
     @Mapping(source = "eventType", target = "eventType")

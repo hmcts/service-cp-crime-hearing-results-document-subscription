@@ -24,7 +24,7 @@ public class NotificationService {
     @Qualifier("retryTemplate")
     private final RetryTemplate materialRetryTemplate;
 
-    public void processPcrEvent(final PcrEventPayload pcrEventPayload) {
+    public void processInboundEvent(final PcrEventPayload pcrEventPayload) {
         final MaterialMetadata materialMetadata = materialRetryTemplate.execute(context ->
                 waitForMaterialMetadata(pcrEventPayload.getMaterialId()));
         
@@ -32,10 +32,6 @@ public class NotificationService {
         documentService.saveDocumentMapping(UUID.fromString(materialMetadata.getMaterialId()), eventType);
     }
 
-    /**
-     * Waits for material metadata. Retries when not ready (null).
-     * 404 from Material API and MaterialMetadataNotReadyException (after retries) are handled by GlobalExceptionHandler.
-     */
     private MaterialMetadata waitForMaterialMetadata(final UUID materialId) {
         final MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId.toString());
         if (response == null) {

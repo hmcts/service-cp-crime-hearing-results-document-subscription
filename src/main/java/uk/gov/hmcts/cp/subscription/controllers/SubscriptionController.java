@@ -54,5 +54,4 @@ public class SubscriptionController implements SubscriptionApi {
         subscriptionService.deleteSubscription(clientSubscriptionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
 }

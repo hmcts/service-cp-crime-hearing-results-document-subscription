@@ -12,7 +12,6 @@ import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
 import uk.gov.hmcts.cp.subscription.services.exceptions.MaterialMetadataNotReadyException;
@@ -60,7 +59,7 @@ class NotificationServiceTest {
         materialMetadata.setMaterialId(materialId.toString());
         when(materialApi.getMaterialMetadataByMaterialId(materialId.toString())).thenReturn(materialMetadata);
 
-        notificationService.processPcrEvent(payload);
+        notificationService.processInboundEvent(payload);
 
         verify(materialApi).getMaterialMetadataByMaterialId(materialId.toString());
         verify(documentService).saveDocumentMapping(eq(materialId), eq(PRISON_COURT_REGISTER_GENERATED));
@@ -75,6 +74,6 @@ class NotificationServiceTest {
                 .build();
         when(materialApi.getMaterialMetadataByMaterialId(anyString())).thenReturn(null);
 
-        assertThrows(MaterialMetadataNotReadyException.class, () -> notificationService.processPcrEvent(payload));
+        assertThrows(MaterialMetadataNotReadyException.class, () -> notificationService.processInboundEvent(payload));
     }
 }

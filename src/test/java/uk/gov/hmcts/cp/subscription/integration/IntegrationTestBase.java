@@ -19,12 +19,11 @@ import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.io.IOException;
-import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import static java.util.Objects.nonNull;
 import static uk.gov.hmcts.cp.openapi.model.EventType.CUSTODIAL_RESULT;
 import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
@@ -42,8 +41,6 @@ public abstract class IntegrationTestBase {
 
     @Autowired
     protected DocumentMappingRepository documentMappingRepository;
-
-    private static final String PCR_REQUEST_TEMPLATE = "stubs/requests/pcr-request.json";
 
     protected NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
             .callbackUrl("https://my-callback-url")
@@ -70,9 +67,7 @@ public abstract class IntegrationTestBase {
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
-        ClientSubscriptionEntity saved = subscriptionRepository.save(subscription);
-        log.info("Inserted subscription:{}", saved.getId());
-        return saved;
+        return subscriptionRepository.save(subscription);
     }
 
     protected DocumentMappingEntity insertDocument(UUID materialId) {
@@ -85,27 +80,11 @@ public abstract class IntegrationTestBase {
                 .eventType(eventType)
                 .createdAt(OffsetDateTime.now())
                 .build();
-        DocumentMappingEntity saved = documentMappingRepository.save(document);
-        log.info("Inserted document: {} for materialId:{}, eventType:{}", 
-                saved.getDocumentId(), saved.getMaterialId(), saved.getEventType());
-        return saved;
+        return documentMappingRepository.save(document);
     }
 
 
-    protected String createPcrPayload(UUID eventId, UUID materialId, String eventType) throws IOException {
-        ClassPathResource resource = new ClassPathResource(PCR_REQUEST_TEMPLATE);
-        String template = Files.readString(resource.getFile().toPath());
-        template = template.replaceAll("EVENT_TYPE", eventType);
-        if (nonNull(eventId)) {
-            template = template.replaceAll("EVENT_ID", eventId.toString());
-        } else {
-            template = template.replaceAll("EVENT_ID", "null");
-        }
-        if (nonNull(materialId)) {
-            template = template.replaceAll("MATERIAL_ID", materialId.toString());
-        } else {
-            template = template.replaceAll("MATERIAL_ID", "null");
-        }
-        return template;
+    protected String loadPcrPayload(String path) throws IOException {
+        return new ClassPathResource(path).getContentAsString(StandardCharsets.UTF_8);
     }
 }

@@ -10,7 +10,6 @@ import org.wiremock.spring.EnableWireMock;
 import java.util.List;
 import java.util.UUID;
 
-import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
@@ -35,6 +34,7 @@ import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
+    private static final String CALLBACK_URL = "https://callback.example.com";
 
     /** Material ID stubbed to return 200 with metadata (material-metadata-mapping.json). */
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
@@ -51,7 +51,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void prison_court_register_generated_should_return_success() throws Exception {
-        String pcrPayload = createPcrPayload(randomUUID(), MATERIAL_ID, "PRISON_COURT_REGISTER_GENERATED");
+        String pcrPayload = loadPcrPayload("stubs/requests/pcr-request-prison-court-register.json");
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -65,8 +65,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void custodial_result_should_return_unsupported() throws Exception {
-        UUID eventId = randomUUID();
-        String pcrPayload = createPcrPayload(eventId, MATERIAL_ID, "CUSTODIAL_RESULT");
+        String pcrPayload = loadPcrPayload("stubs/requests/pcr-request-custodial-result.json");
 
         doThrow(new UnsupportedOperationException("CUSTODIAL_RESULT not implemented"))
                 .when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
@@ -85,7 +84,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_200_with_pdf_when_subscription_has_access() throws Exception {
         ClientSubscriptionEntity subscription = insertSubscription(
-                "https://callback.example.com",
+                CALLBACK_URL,
                 List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
         DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
 
@@ -102,7 +101,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_event_type() throws Exception {
         ClientSubscriptionEntity subscription = insertSubscription(
-                "https://callback.example.com",
+                CALLBACK_URL,
                 List.of(EntityEventType.CUSTODIAL_RESULT));
         DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
 

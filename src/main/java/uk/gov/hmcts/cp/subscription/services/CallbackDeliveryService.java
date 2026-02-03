@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
 import uk.gov.hmcts.cp.subscription.model.Subscriber;
 import uk.gov.hmcts.cp.subscription.model.PcrOutboundPayload;
@@ -18,9 +18,6 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Handles resolving subscribers by event type and delivering callbackURL with document URLs.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,25 +30,18 @@ public class CallbackDeliveryService {
     private final SubscriberMapper subscriberMapper;
     private final CallbackService callbackService;
 
-    /**
-     * Resolves subscribers for the event type and delivers a callbackUrl to each with the document URL.
-     */
     public void processPcrEvent(final PcrEventPayload pcrEventPayload, final UUID documentId) throws JsonProcessingException, URISyntaxException {
-        final String eventTypeName = pcrEventPayload.getEventType().name();
-
-        if (eventTypeName.contains("CUSTODIAL_RESULT")) {
-            throw new UnsupportedOperationException("CUSTODIAL_RESULT not implemented");
-        }
-        if (eventTypeName.contains("PRISON_COURT_REGISTER_GENERATED")) {
-            deliverForPCREvent(EventType.PRISON_COURT_REGISTER_GENERATED.name(), pcrEventPayload, documentId);
-        }
+        final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
+        deliverForPCREvent(eventType, pcrEventPayload, documentId);
     }
 
-    private void deliverForPCREvent(final String eventTypeName,
+    private void deliverForPCREvent(final EntityEventType eventType,
                                     final PcrEventPayload pcrEventPayload,
                                     final UUID documentId) throws JsonProcessingException, URISyntaxException {
-
-        final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventTypeName);
+        if (eventType == EntityEventType.CUSTODIAL_RESULT) {
+            throw new UnsupportedOperationException("CUSTODIAL_RESULT not implemented");
+        }
+        final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType.name());
         if (entities.isEmpty()) {
             return;
         }
@@ -66,7 +56,7 @@ public class CallbackDeliveryService {
     private void deliverToSubscriber(final Subscriber subscriber, final UUID documentId, final String pcrOutboundPayload) throws JsonProcessingException, URISyntaxException {
         final String callbackURL = subscriber.getNotificationEndpoint();
         callbackService.post(callbackURL, pcrOutboundPayload);
-        log.info("PCR - callbackUrl delivered to subscriber {} for documentId {}", subscriber.getId(), documentId);
+        log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), callbackURL, documentId);
     }
 
     private static PcrOutboundPayload getPcrOutboundPayload(final PcrEventPayload pcrEventPayload, final UUID documentId) {
