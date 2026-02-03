@@ -51,7 +51,7 @@ public class NotificationController implements NotificationApi {
 
         notificationService.processInboundEvent(pcrEventPayload);
 
-        final UUID materialId = convertToUuid(pcrEventPayload.getMaterialId());
+        final UUID materialId = pcrEventPayload.getMaterialId();
         final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
         final UUID documentId = documentService.getDocumentIdForMaterialId(materialId, eventType);
 
@@ -81,10 +81,6 @@ public class NotificationController implements NotificationApi {
         headers.set(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + encodeFileName(content.getFileName()) + "\"");
         return headers;
-    }
-
-    private static UUID convertToUuid(final Object value) {
-        return value == null ? null : value instanceof UUID ? (UUID) value : UUID.fromString(value.toString());
     }
 
     private static String encodeFileName(final String fileName) {
