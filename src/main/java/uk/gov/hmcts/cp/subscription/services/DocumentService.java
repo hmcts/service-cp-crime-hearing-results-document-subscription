@@ -36,12 +36,12 @@ public class DocumentService {
         return documentMappingRepository.save(entity).getDocumentId();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public UUID getDocumentIdForMaterialId(final UUID materialId, final EntityEventType eventType) {
         return documentMappingRepository.findByMaterialIdAndEventType(materialId, eventType).get().getDocumentId();
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public EntityEventType getEventTypeForDocument(final UUID documentId) {
         return documentMappingRepository.findById(documentId).get().getEventType();
     }

@@ -37,7 +37,7 @@ public class SubscriptionService {
         return mapper.mapEntityToResponse(clockService, subscriptionRepository.save(entity));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ClientSubscription getSubscription(final UUID clientSubscriptionId) {
         final ClientSubscriptionEntity entity = subscriptionRepository.getReferenceById(clientSubscriptionId);
         return mapper.mapEntityToResponse(clockService, entity);
@@ -48,7 +48,7 @@ public class SubscriptionService {
         subscriptionRepository.deleteById(clientSubscriptionId);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean hasAccess(final UUID clientSubscriptionId, final EntityEventType eventType) {
         return subscriptionRepository.existsById(clientSubscriptionId)
                 && subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, eventType.name());
