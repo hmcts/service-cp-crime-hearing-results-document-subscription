@@ -7,9 +7,6 @@ import uk.gov.hmcts.cp.subscription.model.Subscriber;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Maps subscription entities to internal Subscriber model for callbackUrl delivery
- */
 @Component
 public class SubscriberMapper {
 
@@ -19,7 +16,7 @@ public class SubscriberMapper {
                 .collect(Collectors.toList());
         return new Subscriber(
                 entity.getId(),
-                eventTypeNames,
+                entity.getEventTypes(),
                 entity.getNotificationEndpoint(),
                 null
         );

@@ -46,8 +46,11 @@ public class DocumentService {
         return documentMappingRepository.findByMaterialIdAndEventType(materialId, eventType).get().getDocumentId();
     }
 
-    public DocumentContent getDocumentContentAsBinary(final UUID clientSubscriptionId, final UUID documentId) {
+    public DocumentContent getDocumentContent(final UUID clientSubscriptionId, final UUID documentId) {
         final DocumentMappingEntity document = documentMappingRepository.findById(documentId).get();
+        // lets move this validation into the controller with a specific method if required
+        // or maybe we should add subscription-id into the document
+        // And maybe make the repository query accept eventType not String so not converting
         if (!subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, document.getEventType().name())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }

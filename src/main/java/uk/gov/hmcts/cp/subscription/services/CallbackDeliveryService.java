@@ -49,13 +49,13 @@ public class CallbackDeliveryService {
 
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
-            deliverToSubscriber(subscriber, documentId, pcrOutboundPayload.toString());
+            deliverToSubscriber(subscriber, documentId, pcrOutboundPayload);
         }
     }
 
-    private void deliverToSubscriber(final Subscriber subscriber, final UUID documentId, final String pcrOutboundPayload) throws JsonProcessingException, URISyntaxException {
+    private void deliverToSubscriber(final Subscriber subscriber, final UUID documentId, final PcrOutboundPayload pcrOutboundPayload) throws JsonProcessingException, URISyntaxException {
         final String callbackURL = subscriber.getNotificationEndpoint();
-        callbackService.post(callbackURL, pcrOutboundPayload);
+        callbackService.sendToSubscriber(callbackURL, pcrOutboundPayload);
         log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), callbackURL, documentId);
     }
 

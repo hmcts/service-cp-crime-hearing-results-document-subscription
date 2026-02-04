@@ -68,7 +68,7 @@ public class NotificationController implements NotificationApi {
     public ResponseEntity<Resource> getPcrDocumentByClientSubscription(
             @PathVariable final UUID clientSubscriptionId,
             @PathVariable final UUID documentId) {
-        final DocumentContent content = documentService.getDocumentContentAsBinary(clientSubscriptionId, documentId);
+        final DocumentContent content = documentService.getDocumentContent(clientSubscriptionId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);

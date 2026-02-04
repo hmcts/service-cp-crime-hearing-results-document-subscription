@@ -2,32 +2,27 @@ package uk.gov.hmcts.cp.subscription.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
+import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
+import uk.gov.hmcts.cp.subscription.model.PcrOutboundPayload;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CallbackService {
 
-    private final RestClient restClient;
-    private final RetryTemplate retryTemplate;
+    private final CallbackClient callbackClient;
 
-    public void post(final String url, final String pcrOutboundPayload) {
-        retryTemplate.execute(context -> {
-            doPost(url, pcrOutboundPayload);
-            return null;
-        });
-    }
-
-    private void doPost(final String url, final String pcrOutboundPayload) {
-        restClient.post()
-                .uri(url)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(pcrOutboundPayload)
-                .retrieve()
-                .toBodilessEntity();
+    public void sendToSubscriber(final String url, final PcrOutboundPayload pcrOutboundPayload) {
+        callbackClient.send_notification(url, pcrOutboundPayload);
     }
 }
