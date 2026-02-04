@@ -16,7 +16,7 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {
-        clearAllTables();
+        clearClientSubscriptionTable();
     }
 
     @Transactional
@@ -36,5 +36,19 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
         ClientSubscriptionEntity saved = insertSubscription("https://example.com/notify", List.of(CUSTODIAL_RESULT, PRISON_COURT_REGISTER_GENERATED));
         subscriptionRepository.deleteById(saved.getId());
         assertThat(subscriptionRepository.findAll()).hasSize(0);
+    }
+
+    @Transactional
+    @Test
+    void findByEventType_should_return_subscriptions_for_event_type() {
+        ClientSubscriptionEntity sub1 = insertSubscription("https://subscriber1.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED));
+        ClientSubscriptionEntity sub2 = insertSubscription("https://subscriber2.example/callback", List.of(CUSTODIAL_RESULT));
+        ClientSubscriptionEntity sub3 = insertSubscription("https://subscriber3.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT));
+
+        List<ClientSubscriptionEntity> forPcr = subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED");
+        List<ClientSubscriptionEntity> forCustodial = subscriptionRepository.findByEventType("CUSTODIAL_RESULT");
+
+        assertThat(forPcr).containsExactlyInAnyOrder(sub1, sub3);
+        assertThat(forCustodial).containsExactlyInAnyOrder(sub2, sub3);
     }
 }

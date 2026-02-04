@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
@@ -26,7 +25,6 @@ public class SubscriptionController implements SubscriptionApi {
     private static final String CLIENT_ID = "TODO";
 
     @Override
-    @Transactional
     public ResponseEntity<ClientSubscription> createClientSubscription(final String callbackUrl,
                                                                        final CreateClientSubscriptionRequest request) {
         log.info("createClientSubscription callbackUrl:{} clientId:{}", Encode.forJava(callbackUrl), CLIENT_ID);
@@ -36,7 +34,6 @@ public class SubscriptionController implements SubscriptionApi {
     }
 
     @Override
-    @Transactional
     public ResponseEntity<ClientSubscription> updateClientSubscription(final UUID clientSubscriptionId,
                                                                        final ClientSubscriptionRequest request) {
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, CLIENT_ID);
@@ -45,7 +42,6 @@ public class SubscriptionController implements SubscriptionApi {
     }
 
     @Override
-    @Transactional
     public ResponseEntity<ClientSubscription> getClientSubscription(final UUID clientSubscriptionId) {
         log.info("getClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, CLIENT_ID);
         final ClientSubscription response = subscriptionService.getSubscription(clientSubscriptionId);
@@ -53,11 +49,9 @@ public class SubscriptionController implements SubscriptionApi {
     }
 
     @Override
-    @Transactional
     public ResponseEntity<Void> deleteClientSubscription(final UUID clientSubscriptionId) {
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, CLIENT_ID);
         subscriptionService.deleteSubscription(clientSubscriptionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
 }

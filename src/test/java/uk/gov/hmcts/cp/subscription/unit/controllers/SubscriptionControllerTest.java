@@ -9,8 +9,10 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
+import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
+import java.net.URI;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;

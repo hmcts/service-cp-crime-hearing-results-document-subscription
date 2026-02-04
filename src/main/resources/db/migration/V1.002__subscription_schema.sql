@@ -1,4 +1,5 @@
-drop table client_subscription;
+--sql
+drop table if exists client_subscription;
 create table client_subscription (
     id                      uuid primary key not null,
     event_types             varchar(128)[] not null,

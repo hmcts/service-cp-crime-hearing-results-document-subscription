@@ -1,21 +1,29 @@
 package uk.gov.hmcts.cp.subscription.clients;
 
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import uk.gov.hmcts.cp.subscription.clients.model.MaterialResponse;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import uk.gov.hmcts.cp.subscription.model.PcrOutboundPayload;
 
-import java.util.UUID;
+import static org.springframework.http.HttpMethod.GET;
 
-@FeignClient(
-        name = "material-client",
-        url = "${material-client.url}"
-)
-public interface MaterialClient {
+@Service
+@AllArgsConstructor
+@Slf4j
+public class MaterialClient {
 
-    @GetMapping("/material-query-api/query/api/rest/material/material/{materialId}/metadata")
-    MaterialResponse getMetadataById(@PathVariable UUID materialId);
+    private RestTemplate restTemplate;
 
-    @GetMapping("/material-query-api/query/api/rest/material/material/{materialId}/content")
-    byte[] getContentById(@PathVariable UUID materialId);
+    public ResponseEntity<byte[]> getMaterialDocument(final String url) {
+        log.info("Getting material document from {}", url);
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        final HttpEntity<PcrOutboundPayload> req = new HttpEntity<>(headers);
+        return restTemplate.exchange(url, GET, req, byte[].class);
+    }
 }

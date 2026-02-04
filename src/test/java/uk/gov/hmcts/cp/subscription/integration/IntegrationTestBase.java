@@ -5,17 +5,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static uk.gov.hmcts.cp.openapi.model.EventType.CUSTODIAL_RESULT;
 import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
@@ -32,6 +39,9 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected SubscriptionRepository subscriptionRepository;
 
+    @Autowired
+    protected DocumentMappingRepository documentMappingRepository;
+
     protected NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
             .callbackUrl("https://my-callback-url")
             .build();
@@ -40,9 +50,20 @@ public abstract class IntegrationTestBase {
             .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
             .build();
 
-    protected void clearAllTables() {
-        log.info("Clearing all tables");
+    protected void clearClientSubscriptionTable() {
+        log.info("Clearing client_subscription table");
         subscriptionRepository.deleteAll();
+    }
+
+    protected void clearDocumentMappingTable() {
+        log.info("Clearing document_mapping table");
+        documentMappingRepository.deleteAll();
+    }
+
+    protected void clearAllTables() {
+        log.info("Clearing client_subscription and document_mapping tables");
+        subscriptionRepository.deleteAll();
+        documentMappingRepository.deleteAll();
     }
 
     protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<EntityEventType> entityEventTypes) {
@@ -52,8 +73,24 @@ public abstract class IntegrationTestBase {
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
-        ClientSubscriptionEntity saved = subscriptionRepository.save(subscription);
-        log.info("Inserted subscription:{}", saved.getId());
-        return saved;
+        return subscriptionRepository.save(subscription);
+    }
+
+    protected DocumentMappingEntity insertDocument(UUID materialId) {
+        return insertDocument(materialId, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
+    }
+
+    protected DocumentMappingEntity insertDocument(UUID materialId, EntityEventType eventType) {
+        DocumentMappingEntity document = DocumentMappingEntity.builder()
+                .materialId(materialId)
+                .eventType(eventType)
+                .createdAt(OffsetDateTime.now())
+                .build();
+        return documentMappingRepository.save(document);
+    }
+
+
+    protected String loadPcrPayload(String path) throws IOException {
+        return new ClassPathResource(path).getContentAsString(StandardCharsets.UTF_8);
     }
 }

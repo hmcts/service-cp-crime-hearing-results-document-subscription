@@ -1,0 +1,68 @@
+package uk.gov.hmcts.cp.subscription.services;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
+import uk.gov.hmcts.cp.subscription.model.Subscriber;
+import uk.gov.hmcts.cp.subscription.model.PcrOutboundPayload;
+import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
+
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class CallbackDeliveryService {
+
+    @Value("${subscription.service.base-url:}")
+    private String subscriptionServiceBaseUrl;
+
+    private final SubscriptionRepository subscriptionRepository;
+    private final SubscriberMapper subscriberMapper;
+    private final CallbackService callbackService;
+
+    public void processPcrEvent(final PcrEventPayload pcrEventPayload, final UUID documentId) throws JsonProcessingException, URISyntaxException {
+        final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
+        deliverForPCREvent(eventType, pcrEventPayload, documentId);
+    }
+
+    private void deliverForPCREvent(final EntityEventType eventType,
+                                    final PcrEventPayload pcrEventPayload,
+                                    final UUID documentId) throws JsonProcessingException, URISyntaxException {
+        if (eventType == EntityEventType.CUSTODIAL_RESULT) {
+            throw new UnsupportedOperationException("CUSTODIAL_RESULT not implemented");
+        }
+        final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType.name());
+        if (entities.isEmpty()) {
+            return;
+        }
+        final PcrOutboundPayload pcrOutboundPayload = getPcrOutboundPayload(pcrEventPayload, documentId);
+
+        for (final ClientSubscriptionEntity entity : entities) {
+            final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
+            deliverToSubscriber(subscriber, documentId, pcrOutboundPayload);
+        }
+    }
+
+    private void deliverToSubscriber(final Subscriber subscriber, final UUID documentId, final PcrOutboundPayload pcrOutboundPayload) throws JsonProcessingException, URISyntaxException {
+        final String callbackURL = subscriber.getNotificationEndpoint();
+        callbackService.sendToSubscriber(callbackURL, pcrOutboundPayload);
+        log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), callbackURL, documentId);
+    }
+
+    private static PcrOutboundPayload getPcrOutboundPayload(final PcrEventPayload pcrEventPayload, final UUID documentId) {
+       return PcrOutboundPayload.builder()
+                .pcrEventPayload(pcrEventPayload)
+                .documentId(documentId.toString())
+                .build();
+    }
+}

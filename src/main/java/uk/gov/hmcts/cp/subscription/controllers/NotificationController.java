@@ -3,23 +3,66 @@ package uk.gov.hmcts.cp.subscription.controllers;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
-import uk.gov.hmcts.cp.subscription.services.NotificationService;
+import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
+import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
+/**
+ * Handles PCR notification events and document retrieval for subscribers.
+ * Delegates orchestration to NotificationManager; builds HTTP responses only.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationController implements NotificationApi {
 
-    private final NotificationService notificationService;
+    private final NotificationManager notificationManager;
 
     @Override
-    public ResponseEntity<Void> createNotificationPCR(@Valid final PcrEventPayload pcrEventPayload) {
-        notificationService.processPcrEvent(pcrEventPayload.getMaterialId());
+    public ResponseEntity<Void> createNotificationPCR(@Valid @RequestBody final PcrEventPayload pcrEventPayload) {
+        log.info("PCR - Received PCR notification request from Progression Service - eventId: {}, materialId: {}, eventType: {}",
+                pcrEventPayload.getEventId(),
+                pcrEventPayload.getMaterialId(),
+                pcrEventPayload.getEventType());
+
+        notificationManager.processPcrNotification(pcrEventPayload);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
+    }
+
+    @Override
+    public ResponseEntity<Resource> getPcrDocumentByClientSubscription(
+            @PathVariable final UUID clientSubscriptionId,
+            @PathVariable final UUID documentId) {
+        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, documentId);
+        final Resource resource = new ByteArrayResource(content.getBody());
+        final HttpHeaders headers = getHttpHeaders(content);
+        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+    }
+
+    private static @NonNull HttpHeaders getHttpHeaders(final DocumentContent content) {
+        final HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(content.getContentType());
+        headers.setContentLength(content.getBody().length);
+        headers.set(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" + encodeFileName(content.getFileName()) + "\"");
+        return headers;
+    }
+
+    private static String encodeFileName(final String fileName) {
+        return URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", " ");
     }
 }
