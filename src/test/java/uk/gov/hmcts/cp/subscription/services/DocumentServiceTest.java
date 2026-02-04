@@ -46,8 +46,6 @@ class DocumentServiceTest {
             .documentId(documentId)
             .materialId(materialId)
             .eventType(PRISON_COURT_REGISTER_GENERATED).build();
-    UUID subscriptionId = UUID.fromString("906bdc7b-ea20-49d2-b9fb-a0ce83cc6371");
-
 
     @Test
     void save_document_should_save_entity() {
