@@ -1,12 +1,11 @@
 package uk.gov.hmcts.cp.subscription.services;
 
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.Material;
@@ -33,7 +32,7 @@ public class DocumentService {
     private final ClockService clockService;
     private final DocumentMapper documentMapper;
     private final MaterialApi materialApi;
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
     @Transactional
     public UUID saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
@@ -52,7 +51,10 @@ public class DocumentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
         final Material material = materialApi.getMaterialByMaterialId(document.getMaterialId().toString(), null, null);
-        final ResponseEntity<byte[]> response = restTemplate.getForEntity(material.getContentUrl(), byte[].class);
+        final var response = restClient.get()
+                .uri(material.getContentUrl())
+                .retrieve()
+                .toEntity(byte[].class);
         return DocumentContent.builder()
                 .body(response.getBody())
                 .contentType(response.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE))

@@ -1,13 +1,9 @@
 package uk.gov.hmcts.cp.subscription.http;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,21 +16,19 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class SubscriptionApiTest {
     private final String baseUrl = System.getProperty("app.baseUrl", "http://localhost:8082");
-    private final RestTemplate http = new RestTemplate();
+    private final RestClient http = RestClient.create();
 
     @Test
     void round_trip_subscription_should_work_ok() throws InterruptedException {
         final String callbackUrl = "https://my-callback-url";
         final String postUrl = String.format("%s/client-subscriptions?callbackUrl=%s", baseUrl, callbackUrl);
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
         final String body = "{\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\",\"CUSTODIAL_RESULT\"]}";
-        final ResponseEntity<String> postResult = http.exchange(
-                postUrl,
-                HttpMethod.POST,
-                new HttpEntity<>(body, headers),
-                String.class
-        );
+        final var postResult = http.post()
+                .uri(postUrl)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .retrieve()
+                .toEntity(String.class);
         assertThat(postResult.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(postResult.getBody()).contains("clientSubscriptionId");
         final String subscriptionId = postResult.getBody()
@@ -42,12 +36,10 @@ class SubscriptionApiTest {
                 .replaceAll("\".*$", "");
 
         final String getUrl = String.format("%s/client-subscriptions/%s", baseUrl, subscriptionId);
-        final ResponseEntity<String> getResult = http.exchange(
-                getUrl,
-                HttpMethod.GET,
-                new HttpEntity<>(new HttpHeaders()),
-                String.class
-        );
+        final var getResult = http.get()
+                .uri(getUrl)
+                .retrieve()
+                .toEntity(String.class);
         assertThat(getResult.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(getResult.getBody()).contains("clientSubscriptionId\":\"" + subscriptionId);
     }
