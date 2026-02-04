@@ -55,12 +55,19 @@ class NotificationManagerTest {
     @InjectMocks
     NotificationManager notificationManager;
 
+    PcrEventPayload payload = PcrEventPayload.builder()
+            .materialId(MATERIAL_ID)
+            .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
+            .build();
+
+    DocumentContent content = DocumentContent.builder()
+            .body("PDF".getBytes())
+            .contentType(MediaType.APPLICATION_PDF)
+            .fileName("doc.pdf")
+            .build();
+
     @Test
-    void processPcrNotification_should_process_deliver_and_not_throw() throws Exception {
-        PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(MATERIAL_ID)
-                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
-                .build();
+    void processPcrNotification_should_process_deliver() throws Exception {
         doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
         when(documentService.getDocumentIdForMaterialId(eq(MATERIAL_ID), eq(EntityEventType.PRISON_COURT_REGISTER_GENERATED)))
                 .thenReturn(DOCUMENT_ID);
@@ -75,11 +82,6 @@ class NotificationManagerTest {
 
     @Test
     void getPcrDocumentContent_should_return_content_when_subscription_has_access() {
-        DocumentContent content = DocumentContent.builder()
-                .body("PDF".getBytes())
-                .contentType(MediaType.APPLICATION_PDF)
-                .fileName("doc.pdf")
-                .build();
         when(documentService.getEventTypeForDocument(DOCUMENT_ID)).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
         when(subscriptionService.hasAccess(SUBSCRIPTION_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
         when(documentService.getDocumentContent(DOCUMENT_ID)).thenReturn(content);

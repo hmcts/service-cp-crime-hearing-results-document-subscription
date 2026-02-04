@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
@@ -18,14 +19,24 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    private static final String NOT_FOUND_MESSAGE = "No row with the given identifier exists";
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<String> handleNotFoundException(final EntityNotFoundException exception) {
+    @ExceptionHandler({EntityNotFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<String> handleNotFoundException(final Exception exception) {
         log.error("NotFoundException {}", exception.getMessage());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(NOT_FOUND_MESSAGE);
+                .body(exception.getMessage());
+    }
+
+    @ExceptionHandler({
+            ConstraintViolationException.class,
+            MethodArgumentTypeMismatchException.class,
+            MethodArgumentNotValidException.class,
+            HttpMessageNotReadableException.class})
+    public ResponseEntity<String> handleBadRequestException(final Exception exception) {
+        log.error("Validation failed: {}", exception.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(exception.getMessage());
     }
 
     @ExceptionHandler(HttpClientErrorException.class)
@@ -36,19 +47,11 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage());
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<String> handleHttpMessageNotReadableException(final HttpMessageNotReadableException exception) {
-        log.error("Invalid request body - HttpMessageNotReadableException: {}", exception.getMessage(), exception);
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body("");
-    }
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleUnknownException(final Exception exception) {
         log.error("Exception {}", exception.getMessage());
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(exception.getMessage());
     }
 
@@ -61,32 +64,12 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage());
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Void> handleConstraintViolation(final ConstraintViolationException ex) {
-        log.error("Exception {}", ex.getMessage());
-        return ResponseEntity.badRequest().build();
-    }
-
-    @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<String> handleNoHandlerFoundException(final NoHandlerFoundException exception) {
-        log.error("No handler found for request: {} {}", exception.getHttpMethod(), exception.getRequestURL(), exception);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not Found");
-    }
-
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(final ResponseStatusException exception) {
         log.error("ResponseStatusException: {}", exception.getMessage());
         return ResponseEntity
                 .status(exception.getStatusCode())
                 .body(exception.getReason() != null ? exception.getReason() : exception.getMessage());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidationException(final MethodArgumentNotValidException exception) {
-        log.error("Validation failed: {}", exception.getMessage());
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(exception.getMessage());
     }
 
     @ExceptionHandler(UnsupportedOperationException.class)
@@ -96,5 +79,4 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_IMPLEMENTED)
                 .body("Unsupported");
     }
-
 }

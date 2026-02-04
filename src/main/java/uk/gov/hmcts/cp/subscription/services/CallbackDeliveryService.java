@@ -52,7 +52,7 @@ public class CallbackDeliveryService {
         log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), callbackURL, documentId);
     }
 
-    private static PcrOutboundPayload createPcrOutboundPayload(final PcrEventPayload pcrEventPayload, final UUID documentId) {
+    private PcrOutboundPayload createPcrOutboundPayload(final PcrEventPayload pcrEventPayload, final UUID documentId) {
         return PcrOutboundPayload.builder()
                 .pcrEventPayload(pcrEventPayload)
                 .documentId(documentId.toString())

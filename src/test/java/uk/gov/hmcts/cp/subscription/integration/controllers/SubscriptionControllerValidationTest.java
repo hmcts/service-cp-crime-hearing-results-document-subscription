@@ -39,7 +39,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(""));
+                .andExpect(content().string("JSON parse error: Cannot construct instance of `uk.gov.hmcts.cp.openapi.model.EventType`, problem: Unexpected value 'BAD'"));
     }
 
     @Test
@@ -50,6 +50,6 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(""));
+                .andExpect(content().string("createClientSubscription.arg0: must match \"^https://.*$\""));
     }
 }
