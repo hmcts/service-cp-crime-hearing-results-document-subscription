@@ -15,7 +15,6 @@ import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
-import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -37,8 +36,6 @@ class DocumentServiceTest {
     MaterialApi materialApi;
     @Mock
     MaterialClient materialClient;
-    @Mock
-    SubscriptionRepository subscriptionRepository;
 
     @InjectMocks
     DocumentService documentService;
@@ -70,12 +67,11 @@ class DocumentServiceTest {
     @Test
     void get_document_content_should_return_response() {
         when(documentMappingRepository.findById(documentId)).thenReturn(Optional.of(documentMappingEntity));
-        when(subscriptionRepository.existsByIdAndEventType(subscriptionId, PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(true);
         when(materialApi.getMaterialByMaterialId(materialId, null, null)).thenReturn(createMaterial());
         ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
         when(materialClient.getMaterialDocument("http://material-servce")).thenReturn(document);
 
-        DocumentContent documentContent = documentService.getDocumentContent(subscriptionId, documentId);
+        DocumentContent documentContent = documentService.getDocumentContent(documentId);
 
         assertThat(documentContent.getBody()).isEqualTo("pdfcontent".getBytes());
         assertThat(documentContent.getContentType()).isEqualTo(MediaType.APPLICATION_PDF);

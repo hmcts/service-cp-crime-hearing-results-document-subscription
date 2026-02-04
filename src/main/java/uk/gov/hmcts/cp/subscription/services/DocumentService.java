@@ -16,7 +16,6 @@ import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
-import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.UUID;
 
@@ -26,7 +25,6 @@ import java.util.UUID;
 public class DocumentService {
 
     private final DocumentMappingRepository documentMappingRepository;
-    private final SubscriptionRepository subscriptionRepository;
     private final ClockService clockService;
     private final DocumentMapper documentMapper;
     private final MaterialApi materialApi;
@@ -43,14 +41,14 @@ public class DocumentService {
         return documentMappingRepository.findByMaterialIdAndEventType(materialId, eventType).get().getDocumentId();
     }
 
-    public DocumentContent getDocumentContent(final UUID clientSubscriptionId, final UUID documentId) {
-        final DocumentMappingEntity documentMapping = documentMappingRepository.findById(documentId).get();
-        // lets move this validation into the controller with a specific method if required
-        // or maybe we should add subscription-id into the document
-        // And maybe make the repository query accept eventType not String so not converting
-        if (!subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, documentMapping.getEventType().name())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
-        }
+    @Transactional(readOnly = true)
+    public EntityEventType getEventTypeForDocument(final UUID documentId) {
+        return documentMappingRepository.findById(documentId).get().getEventType();
+    }
+
+    public DocumentContent getDocumentContent(final UUID documentId) {
+        final DocumentMappingEntity documentMapping = documentMappingRepository.findById(documentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
         final Material materialDetails = materialApi.getMaterialByMaterialId(documentMapping.getMaterialId(), null, null);
         final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(materialDetails.getContentUrl());
         return DocumentContent.builder()

@@ -26,8 +26,10 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.subscription.controllers.GlobalExceptionHandler;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 
 import java.io.IOException;
@@ -53,6 +55,9 @@ class NotificationControllerValidationTest {
 
     @MockitoBean
     private DocumentService documentService;
+
+    @MockitoBean
+    private SubscriptionService subscriptionService;
 
     @MockitoBean
     private CallbackDeliveryService callbackDeliveryService;
@@ -123,10 +128,13 @@ class NotificationControllerValidationTest {
         byte[] pdfContent = "PDF content".getBytes();
         DocumentContent documentContent = DocumentContent.builder()
                 .body(pdfContent)
+                .contentType(MediaType.APPLICATION_PDF)
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
 
-        when(documentService.getDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(documentContent);
+        when(documentService.getEventTypeForDocument(eq(DOCUMENT_ID))).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
+        when(subscriptionService.hasAccess(eq(SUBSCRIPTION_ID), eq(EntityEventType.PRISON_COURT_REGISTER_GENERATED))).thenReturn(true);
+        when(documentService.getDocumentContent(eq(DOCUMENT_ID))).thenReturn(documentContent);
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
@@ -139,8 +147,8 @@ class NotificationControllerValidationTest {
 
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
-                .when(documentService).getDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
+        when(documentService.getEventTypeForDocument(eq(DOCUMENT_ID))).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
+        when(subscriptionService.hasAccess(eq(SUBSCRIPTION_ID), eq(EntityEventType.PRISON_COURT_REGISTER_GENERATED))).thenReturn(false);
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
@@ -166,14 +174,14 @@ class NotificationControllerValidationTest {
     }
 
     @Test
-    void get_document_should_return_400_when_document_not_found() throws Exception {
-        doThrow(new java.util.NoSuchElementException("Document not found"))
-                .when(documentService).getDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
+    void get_document_should_return_404_when_document_not_found() throws Exception {
+        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + DOCUMENT_ID))
+                .when(documentService).getEventTypeForDocument(eq(DOCUMENT_ID));
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
     }
 
     @Test

@@ -20,7 +20,9 @@ import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 import uk.gov.hmcts.cp.subscription.services.exceptions.CallbackUrlDeliveryException;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
@@ -38,6 +40,7 @@ public class NotificationController implements NotificationApi {
 
     private final NotificationService notificationService;
     private final DocumentService documentService;
+    private final SubscriptionService subscriptionService;
     private final CallbackDeliveryService callbackDeliveryService;
 
     @Override
@@ -66,10 +69,15 @@ public class NotificationController implements NotificationApi {
     public ResponseEntity<Resource> getPcrDocumentByClientSubscription(
             @PathVariable final UUID clientSubscriptionId,
             @PathVariable final UUID documentId) {
-        final DocumentContent content = documentService.getDocumentContent(clientSubscriptionId, documentId);
-        final Resource resource = new ByteArrayResource(content.getBody());
-        final HttpHeaders headers = getHttpHeaders(content);
-        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+        final EntityEventType eventType = documentService.getEventTypeForDocument(documentId);
+        if (!subscriptionService.hasAccess(clientSubscriptionId, eventType)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
+        } else {
+            final DocumentContent content = documentService.getDocumentContent(documentId);
+            final Resource resource = new ByteArrayResource(content.getBody());
+            final HttpHeaders headers = getHttpHeaders(content);
+            return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+        }
     }
 
     private static @NonNull HttpHeaders getHttpHeaders(final DocumentContent content) {

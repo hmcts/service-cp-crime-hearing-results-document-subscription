@@ -10,6 +10,7 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.UUID;
@@ -45,5 +46,11 @@ public class SubscriptionService {
     @Transactional
     public void deleteSubscription(final UUID clientSubscriptionId) {
         subscriptionRepository.deleteById(clientSubscriptionId);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasAccess(final UUID clientSubscriptionId, final EntityEventType eventType) {
+        return subscriptionRepository.existsById(clientSubscriptionId)
+                && subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, eventType.name());
     }
 }
