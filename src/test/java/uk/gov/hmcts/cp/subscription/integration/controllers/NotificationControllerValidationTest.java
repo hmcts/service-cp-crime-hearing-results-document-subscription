@@ -123,7 +123,6 @@ class NotificationControllerValidationTest {
         byte[] pdfContent = "PDF content".getBytes();
         DocumentContent documentContent = DocumentContent.builder()
                 .body(pdfContent)
-                .contentType("application/pdf")
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
 

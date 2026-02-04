@@ -76,7 +76,7 @@ public class NotificationController implements NotificationApi {
 
     private static @NonNull HttpHeaders getHttpHeaders(final DocumentContent content) {
         final HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(content.getContentType()));
+        headers.setContentType(content.getContentType());
         headers.setContentLength(content.getBody().length);
         headers.set(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + encodeFileName(content.getFileName()) + "\"");

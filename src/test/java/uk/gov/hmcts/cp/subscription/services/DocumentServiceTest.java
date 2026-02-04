@@ -5,10 +5,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.Material;
+import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
+import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
@@ -31,6 +36,8 @@ class DocumentServiceTest {
     @Mock
     MaterialApi materialApi;
     @Mock
+    MaterialClient materialClient;
+    @Mock
     SubscriptionRepository subscriptionRepository;
 
     @InjectMocks
@@ -38,10 +45,12 @@ class DocumentServiceTest {
 
     UUID materialId = UUID.fromString("43bb8246-2bdf-487c-a0d3-160bbfd37777");
     UUID documentId = UUID.fromString("2e48f8f1-c057-48f7-92e5-c4183480ea3e");
-    DocumentMappingEntity documentMappingEntity = DocumentMappingEntity.builder().documentId(documentId).build();
+    DocumentMappingEntity documentMappingEntity = DocumentMappingEntity.builder()
+            .documentId(documentId)
+            .materialId(materialId)
+            .eventType(PRISON_COURT_REGISTER_GENERATED).build();
     UUID subscriptionId = UUID.fromString("906bdc7b-ea20-49d2-b9fb-a0ce83cc6371");
-    // Lets make material have a builder !
-    Material material = new Material();
+
 
     @Test
     void save_document_should_save_entity() {
@@ -62,25 +71,24 @@ class DocumentServiceTest {
     void get_document_content_should_return_response() {
         when(documentMappingRepository.findById(documentId)).thenReturn(Optional.of(documentMappingEntity));
         when(subscriptionRepository.existsByIdAndEventType(subscriptionId, PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(true);
-        // why is materialId a string in the api ? lets fix it to be a uuid
-        when(materialApi.getMaterialByMaterialId(materialId.toString(), null, null)).thenReturn(material);
+        when(materialApi.getMaterialByMaterialId(materialId, null, null)).thenReturn(createMaterial());
+        ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
+        when(materialClient.getMaterialDocument("http://material-servce")).thenReturn(document);
 
-        documentService.getDocumentContent(subscriptionId, documentId);
+        DocumentContent documentContent = documentService.getDocumentContent(subscriptionId, documentId);
 
-
+        assertThat(documentContent.getBody()).isEqualTo("pdfcontent".getBytes());
+        assertThat(documentContent.getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
+        assertThat(documentContent.getFileName()).isEqualTo("file.pdf");
     }
-    //     public DocumentContent getDocumentContentAsBinary(final UUID clientSubscriptionId, final UUID documentId) {
-    //        final DocumentMappingEntity document = documentMappingRepository.findById(documentId).get();
-    //        if (!subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, document.getEventType().name())) {
-    //            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
-    //        }
-    //        final Material material = materialApi.getMaterialByMaterialId(document.getMaterialId().toString(), null, null);
-    //        final ResponseEntity<byte[]> response = restTemplate.getForEntity(material.getContentUrl(), byte[].class);
-    //        return DocumentContent.builder()
-    //                .body(response.getBody())
-    //                .contentType(response.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE))
-    //                .fileName(material.getMetadata().getFileName())
-    //                .build();
-    //    }
 
+    private Material createMaterial() {
+        // TODO Lets make material have a builder so we can make it immutable!
+        Material material = new Material();
+        material.setContentUrl("http://material-servce");
+        MaterialMetadata materialMetadata = new MaterialMetadata();
+        materialMetadata.setFileName("file.pdf");
+        material.setMetadata(materialMetadata);
+        return material;
+    }
 }
