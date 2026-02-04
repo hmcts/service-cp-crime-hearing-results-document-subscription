@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,33 +14,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
-import uk.gov.hmcts.cp.subscription.services.DocumentService;
-import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
-import uk.gov.hmcts.cp.subscription.services.exceptions.CallbackUrlDeliveryException;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
  * Handles PCR notification events and document retrieval for subscribers.
- * Implements NotificationApi with endpoints for receiving PCR events and serving document content.
+ * Delegates orchestration to NotificationManager; builds HTTP responses only.
  */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationController implements NotificationApi {
 
-    private final NotificationService notificationService;
-    private final DocumentService documentService;
-    private final SubscriptionService subscriptionService;
-    private final CallbackDeliveryService callbackDeliveryService;
+    private final NotificationManager notificationManager;
 
     @Override
     public ResponseEntity<Void> createNotificationPCR(@Valid @RequestBody final PcrEventPayload pcrEventPayload) {
@@ -50,18 +39,7 @@ public class NotificationController implements NotificationApi {
                 pcrEventPayload.getMaterialId(),
                 pcrEventPayload.getEventType());
 
-        notificationService.processInboundEvent(pcrEventPayload);
-
-        final UUID materialId = pcrEventPayload.getMaterialId();
-        final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
-        final UUID documentId = documentService.getDocumentIdForMaterialId(materialId, eventType);
-
-        try {
-            callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId);
-        } catch (JsonProcessingException | URISyntaxException e) {
-            throw new CallbackUrlDeliveryException("PCR - Failed to build or deliver callback payload: " + e.getMessage(), e);
-        }
-
+        notificationManager.processPcrNotification(pcrEventPayload);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
@@ -69,11 +47,7 @@ public class NotificationController implements NotificationApi {
     public ResponseEntity<Resource> getPcrDocumentByClientSubscription(
             @PathVariable final UUID clientSubscriptionId,
             @PathVariable final UUID documentId) {
-        final EntityEventType eventType = documentService.getEventTypeForDocument(documentId);
-        if (!subscriptionService.hasAccess(clientSubscriptionId, eventType)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
-        }
-        final DocumentContent content = documentService.getDocumentContent(documentId);
+        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);

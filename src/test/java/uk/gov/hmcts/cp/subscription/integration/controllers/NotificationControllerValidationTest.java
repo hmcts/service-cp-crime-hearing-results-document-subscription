@@ -3,7 +3,6 @@ package uk.gov.hmcts.cp.subscription.integration.controllers;
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,12 +24,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.subscription.controllers.GlobalExceptionHandler;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
+import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
-import uk.gov.hmcts.cp.subscription.services.DocumentService;
-import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -51,16 +46,7 @@ class NotificationControllerValidationTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private NotificationService notificationService;
-
-    @MockitoBean
-    private DocumentService documentService;
-
-    @MockitoBean
-    private SubscriptionService subscriptionService;
-
-    @MockitoBean
-    private CallbackDeliveryService callbackDeliveryService;
+    private NotificationManager notificationManager;
 
     @Test
     void bad_content_type_should_return_415() throws Exception {
@@ -132,9 +118,7 @@ class NotificationControllerValidationTest {
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
 
-        when(documentService.getEventTypeForDocument(eq(DOCUMENT_ID))).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-        when(subscriptionService.hasAccess(eq(SUBSCRIPTION_ID), eq(EntityEventType.PRISON_COURT_REGISTER_GENERATED))).thenReturn(true);
-        when(documentService.getDocumentContent(eq(DOCUMENT_ID))).thenReturn(documentContent);
+        when(notificationManager.getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(documentContent);
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
@@ -147,8 +131,8 @@ class NotificationControllerValidationTest {
 
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
-        when(documentService.getEventTypeForDocument(eq(DOCUMENT_ID))).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-        when(subscriptionService.hasAccess(eq(SUBSCRIPTION_ID), eq(EntityEventType.PRISON_COURT_REGISTER_GENERATED))).thenReturn(false);
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
+                .when(notificationManager).getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
@@ -176,7 +160,7 @@ class NotificationControllerValidationTest {
     @Test
     void get_document_should_return_404_when_document_not_found() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + DOCUMENT_ID))
-                .when(documentService).getEventTypeForDocument(eq(DOCUMENT_ID));
+                .when(notificationManager).getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
@@ -188,13 +172,8 @@ class NotificationControllerValidationTest {
     void callbackUrl_delivery_failure_should_return_502() throws Exception {
         String pcrPayload = loadPcrPayload(PCR_REQUEST_VALID);
 
-        // return any documentId so controller proceeds to callbackUrl delivery
-        org.mockito.Mockito.doReturn(DOCUMENT_ID)
-                .when(documentService).getDocumentIdForMaterialId(any(), any());
-
-        // callbackUrl delivery failing with 502
         doThrow(new ResponseStatusException(HttpStatus.BAD_GATEWAY, "CallbackUrl delivery failed"))
-                .when(callbackDeliveryService).processPcrEvent(any(), any());
+                .when(notificationManager).processPcrNotification(any());
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
