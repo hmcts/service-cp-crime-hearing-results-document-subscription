@@ -13,7 +13,7 @@ import java.util.UUID;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class DocumentRepositoryTest extends IntegrationTestBase {
+class DocumentMappingRepositoryTest extends IntegrationTestBase {
 
     private static final UUID MATERIAL_ID = randomUUID();
 

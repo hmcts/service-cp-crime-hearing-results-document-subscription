@@ -1,25 +1,22 @@
 package uk.gov.hmcts.cp.subscription.services;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.Material;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
-
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.util.UUID;
 
@@ -33,7 +30,7 @@ public class DocumentService {
     private final ClockService clockService;
     private final DocumentMapper documentMapper;
     private final MaterialApi materialApi;
-    private final RestClient restClient;
+    private final MaterialClient materialClient;
 
     @Transactional
     public UUID saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
@@ -46,20 +43,20 @@ public class DocumentService {
         return documentMappingRepository.findByMaterialIdAndEventType(materialId, eventType).get().getDocumentId();
     }
 
-    public DocumentContent getDocumentContentAsBinary(final UUID clientSubscriptionId, final UUID documentId) {
-        final DocumentMappingEntity document = documentMappingRepository.findById(documentId).get();
-        if (!subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, document.getEventType().name())) {
+    public DocumentContent getDocumentContent(final UUID clientSubscriptionId, final UUID documentId) {
+        final DocumentMappingEntity documentMapping = documentMappingRepository.findById(documentId).get();
+        // lets move this validation into the controller with a specific method if required
+        // or maybe we should add subscription-id into the document
+        // And maybe make the repository query accept eventType not String so not converting
+        if (!subscriptionRepository.existsByIdAndEventType(clientSubscriptionId, documentMapping.getEventType().name())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
-        final Material material = materialApi.getMaterialByMaterialId(document.getMaterialId().toString(), null, null);
-        final ResponseEntity<byte[]> response = restClient.get()
-                .uri(material.getContentUrl())
-                .retrieve()
-                .toEntity(byte[].class);
+        final Material materialDetails = materialApi.getMaterialByMaterialId(documentMapping.getMaterialId(), null, null);
+        final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(materialDetails.getContentUrl());
         return DocumentContent.builder()
-                .body(response.getBody())
-                .contentType(response.getHeaders().getFirst(HttpHeaders.CONTENT_TYPE))
-                .fileName(material.getMetadata().getFileName())
+                .body(document.getBody())
+                .contentType(MediaType.APPLICATION_PDF)
+                .fileName(materialDetails.getMetadata().getFileName())
                 .build();
     }
 }

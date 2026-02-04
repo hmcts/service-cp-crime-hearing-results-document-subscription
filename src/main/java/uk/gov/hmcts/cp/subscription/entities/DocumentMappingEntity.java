@@ -16,10 +16,6 @@ import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/**
- * Entity to store the mapping between generated documentId,
- * internal materialId values (from Material Service), and the event type.
- */
 @Entity
 @Table(name = "document_mapping")
 @Getter

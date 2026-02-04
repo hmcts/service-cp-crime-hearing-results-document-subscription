@@ -9,19 +9,17 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.exceptions.CallbackUrlDeliveryException;
 
 import java.net.URISyntaxException;
@@ -60,7 +58,7 @@ public class NotificationController implements NotificationApi {
         } catch (JsonProcessingException | URISyntaxException e) {
             throw new CallbackUrlDeliveryException("PCR - Failed to build or deliver callback payload: " + e.getMessage(), e);
         }
-        
+
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
@@ -68,7 +66,7 @@ public class NotificationController implements NotificationApi {
     public ResponseEntity<Resource> getPcrDocumentByClientSubscription(
             @PathVariable final UUID clientSubscriptionId,
             @PathVariable final UUID documentId) {
-        final DocumentContent content = documentService.getDocumentContentAsBinary(clientSubscriptionId, documentId);
+        final DocumentContent content = documentService.getDocumentContent(clientSubscriptionId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);
@@ -76,7 +74,7 @@ public class NotificationController implements NotificationApi {
 
     private static @NonNull HttpHeaders getHttpHeaders(final DocumentContent content) {
         final HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(content.getContentType()));
+        headers.setContentType(content.getContentType());
         headers.setContentLength(content.getBody().length);
         headers.set(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + encodeFileName(content.getFileName()) + "\"");

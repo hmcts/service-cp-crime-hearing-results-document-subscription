@@ -123,11 +123,10 @@ class NotificationControllerValidationTest {
         byte[] pdfContent = "PDF content".getBytes();
         DocumentContent documentContent = DocumentContent.builder()
                 .body(pdfContent)
-                .contentType("application/pdf")
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
 
-        when(documentService.getDocumentContentAsBinary(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(documentContent);
+        when(documentService.getDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(documentContent);
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
@@ -141,7 +140,7 @@ class NotificationControllerValidationTest {
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
-                .when(documentService).getDocumentContentAsBinary(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
+                .when(documentService).getDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
@@ -169,7 +168,7 @@ class NotificationControllerValidationTest {
     @Test
     void get_document_should_return_400_when_document_not_found() throws Exception {
         doThrow(new java.util.NoSuchElementException("Document not found"))
-                .when(documentService).getDocumentContentAsBinary(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
+                .when(documentService).getDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
         mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
                         SUBSCRIPTION_ID, DOCUMENT_ID))
