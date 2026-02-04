@@ -22,6 +22,6 @@ class CallbackServiceTest {
     void send_to_subscriber_should_post() {
         PcrOutboundPayload pcrOutboundPayload = PcrOutboundPayload.builder().build();
         callbackService.sendToSubscriber("url", pcrOutboundPayload);
-        verify(callbackClient).send_notification("url", pcrOutboundPayload);
+        verify(callbackClient).sendNotification("url", pcrOutboundPayload);
     }
 }

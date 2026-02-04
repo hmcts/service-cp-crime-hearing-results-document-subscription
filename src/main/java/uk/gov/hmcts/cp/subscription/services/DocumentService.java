@@ -52,7 +52,7 @@ public class DocumentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
         final Material materialDetails = materialApi.getMaterialByMaterialId(documentMapping.getMaterialId(), null, null);
-        ResponseEntity<byte[]> document = materialClient.getMaterialDocument(materialDetails.getContentUrl());
+        final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(materialDetails.getContentUrl());
         return DocumentContent.builder()
                 .body(document.getBody())
                 .contentType(MediaType.APPLICATION_PDF)

@@ -27,7 +27,7 @@ class CallbackClientTest {
     @Test
     void client_should_post_to_subscriber() {
         PcrOutboundPayload payload = PcrOutboundPayload.builder().build();
-        client.send_notification("http://subscriber", payload);
+        client.sendNotification("http://subscriber", payload);
         verify(restTemplate).exchange(anyString(), eq(POST), any(HttpEntity.class), eq(String.class));
     }
 }

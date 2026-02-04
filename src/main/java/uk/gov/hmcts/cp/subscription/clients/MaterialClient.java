@@ -19,7 +19,7 @@ public class MaterialClient {
 
     private RestTemplate restTemplate;
 
-    public ResponseEntity<byte[]> getMaterialDocument(String url) {
+    public ResponseEntity<byte[]> getMaterialDocument(final String url) {
         log.info("Getting material document from {}", url);
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

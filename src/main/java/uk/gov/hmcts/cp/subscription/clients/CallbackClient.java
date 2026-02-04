@@ -18,7 +18,7 @@ public class CallbackClient {
 
     private RestTemplate restTemplate;
 
-    public void send_notification(final String url, final PcrOutboundPayload subscriberOutboundPayload) {
+    public void sendNotification(final String url, final PcrOutboundPayload subscriberOutboundPayload) {
         log.info("Sending notification to {}", url);
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
