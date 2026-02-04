@@ -72,12 +72,11 @@ public class NotificationController implements NotificationApi {
         final EntityEventType eventType = documentService.getEventTypeForDocument(documentId);
         if (!subscriptionService.hasAccess(clientSubscriptionId, eventType)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
-        } else {
-            final DocumentContent content = documentService.getDocumentContent(documentId);
-            final Resource resource = new ByteArrayResource(content.getBody());
-            final HttpHeaders headers = getHttpHeaders(content);
-            return new ResponseEntity<>(resource, headers, HttpStatus.OK);
         }
+        final DocumentContent content = documentService.getDocumentContent(documentId);
+        final Resource resource = new ByteArrayResource(content.getBody());
+        final HttpHeaders headers = getHttpHeaders(content);
+        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
     }
 
     private static @NonNull HttpHeaders getHttpHeaders(final DocumentContent content) {
