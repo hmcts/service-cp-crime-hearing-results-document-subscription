@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.services;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +52,7 @@ public class DocumentService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
         final Material material = materialApi.getMaterialByMaterialId(document.getMaterialId().toString(), null, null);
-        final var response = restClient.get()
+        final ResponseEntity<byte[]> response = restClient.get()
                 .uri(material.getContentUrl())
                 .retrieve()
                 .toEntity(byte[].class);
