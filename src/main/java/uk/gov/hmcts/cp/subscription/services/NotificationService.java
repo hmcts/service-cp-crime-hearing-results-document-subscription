@@ -54,7 +54,7 @@ public class NotificationService {
                 .atMost(waitTimeout)
                 .pollInterval(pollInterval)
                 .until(() -> {
-                    MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId);
+                    final MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId);
                     materialResponse.set(response);
                     return response != null;
                 });

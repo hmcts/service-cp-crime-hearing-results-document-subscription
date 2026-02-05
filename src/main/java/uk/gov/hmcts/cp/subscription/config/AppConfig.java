@@ -7,7 +7,6 @@ import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 
 import java.time.Clock;
-import java.util.Map;
 
 @Configuration
 public class AppConfig {
