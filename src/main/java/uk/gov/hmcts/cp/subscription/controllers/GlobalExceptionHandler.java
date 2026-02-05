@@ -3,6 +3,7 @@ package uk.gov.hmcts.cp.subscription.controllers;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.core.ConditionTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -78,5 +79,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.NOT_IMPLEMENTED)
                 .body("Unsupported");
+    }
+
+    @ExceptionHandler(ConditionTimeoutException.class)
+    public ResponseEntity<String> handleConditionTimeout(final ConditionTimeoutException ex) {
+        log.error("Material metadata timed out: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.GATEWAY_TIMEOUT)
+                .body("Material metadata not ready");
     }
 }

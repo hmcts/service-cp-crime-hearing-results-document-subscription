@@ -1,41 +1,63 @@
 package uk.gov.hmcts.cp.subscription.services;
 
-import lombok.RequiredArgsConstructor;
+import static java.time.Duration.ofSeconds;
+import static org.awaitility.Awaitility.await;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
-import uk.gov.hmcts.cp.subscription.services.exceptions.MaterialMetadataNotReadyException;
 
+import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class NotificationService {
 
     private final MaterialApi materialApi;
     private final DocumentService documentService;
-    @Qualifier("retryTemplate")
-    private final RetryTemplate materialRetryTemplate;
+    private final Duration waitTimeout;
+    private final Duration pollInterval;
+
+    @Autowired
+    public NotificationService(final MaterialApi materialApi,
+                               final DocumentService documentService) {
+        this(materialApi, documentService, ofSeconds(30), ofSeconds(5));
+    }
+
+    public NotificationService(final MaterialApi materialApi,
+                               final DocumentService documentService,
+                               final Duration waitTimeout,
+                               final Duration pollInterval) {
+        this.materialApi = materialApi;
+        this.documentService = documentService;
+        this.waitTimeout = waitTimeout;
+        this.pollInterval = pollInterval;
+    }
 
     public void processInboundEvent(final PcrEventPayload pcrEventPayload) {
-        final MaterialMetadata materialMetadata = materialRetryTemplate.execute(context ->
-                waitForMaterialMetadata(pcrEventPayload.getMaterialId()));
+        final MaterialMetadata materialMetadata = waitForMaterialMetadata(pcrEventPayload.getMaterialId());
 
         final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
         documentService.saveDocumentMapping(materialMetadata.getMaterialId(), eventType);
     }
 
     private MaterialMetadata waitForMaterialMetadata(final UUID materialId) {
-        final MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId);
-        if (response == null) {
-            throw new MaterialMetadataNotReadyException("PCR - Material metadata not ready for materialId: " + materialId);
-        }
-        return response;
+        final AtomicReference<MaterialMetadata> materialResponse = new AtomicReference<>();
+        await()
+                .atMost(waitTimeout)
+                .pollInterval(pollInterval)
+                .until(() -> {
+                    MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId);
+                    materialResponse.set(response);
+                    return response != null;
+                });
+        return materialResponse.get();
     }
 }
