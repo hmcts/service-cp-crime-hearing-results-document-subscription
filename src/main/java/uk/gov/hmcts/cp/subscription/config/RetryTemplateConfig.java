@@ -8,22 +8,15 @@ import org.springframework.retry.support.RetryTemplate;
 
 import java.util.Map;
 
-/**
- * Common retry configuration for Material API and Callback URL delivery.
- * Supports exponential backoff and configurable retry policies.
- */
 @Value
 @Builder
-public class RetryConfig {
+public class RetryTemplateConfig {
 
     int maxAttempts;
     long initialDelayMs;
     double multiplier;
     long maxDelayMs;
 
-    /**
-     * Creates a RetryTemplate with exponential backoff that retries on the given exception types.
-     */
     public RetryTemplate toRetryTemplate(final Map<Class<? extends Throwable>, Boolean> retryableExceptions) {
         final SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy(maxAttempts, retryableExceptions);
         final ExponentialBackOffPolicy backOffPolicy = new ExponentialBackOffPolicy();
@@ -37,8 +30,8 @@ public class RetryConfig {
         return template;
     }
 
-    public static RetryConfig retryConfig() {
-        return RetryConfig.builder()
+    public static RetryTemplateConfig retryConfig() {
+        return RetryTemplateConfig.builder()
                 .maxAttempts(3)
                 .initialDelayMs(50)
                 .multiplier(2)

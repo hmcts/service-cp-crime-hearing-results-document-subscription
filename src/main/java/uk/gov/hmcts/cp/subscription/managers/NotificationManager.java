@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.managers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,9 +12,7 @@ import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
-import uk.gov.hmcts.cp.subscription.services.exceptions.CallbackUrlDeliveryException;
 
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 /**
@@ -38,12 +35,7 @@ public class NotificationManager {
         final UUID materialId = pcrEventPayload.getMaterialId();
         final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
         final UUID documentId = documentService.getDocumentIdForMaterialId(materialId, eventType);
-
-        try {
-            callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId);
-        } catch (JsonProcessingException | URISyntaxException e) {
-            throw new CallbackUrlDeliveryException("PCR - Failed to build or deliver callback payload: " + e.getMessage(), e);
-        }
+        callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId);
     }
 
     public DocumentContent getPcrDocumentContent(final UUID clientSubscriptionId, final UUID documentId) {

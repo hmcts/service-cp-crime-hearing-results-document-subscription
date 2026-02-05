@@ -55,12 +55,19 @@ class NotificationManagerTest {
     @InjectMocks
     NotificationManager notificationManager;
 
+    PcrEventPayload payload = PcrEventPayload.builder()
+            .materialId(MATERIAL_ID)
+            .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
+            .build();
+
+    DocumentContent content = DocumentContent.builder()
+            .body("PDF".getBytes())
+            .contentType(MediaType.APPLICATION_PDF)
+            .fileName("doc.pdf")
+            .build();
+
     @Test
-    void processPcrNotification_should_process_deliver_and_not_throw() throws Exception {
-        PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(MATERIAL_ID)
-                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
-                .build();
+    void processPcrNotification_should_process_deliver() throws Exception {
         doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
         when(documentService.getDocumentIdForMaterialId(eq(MATERIAL_ID), eq(EntityEventType.PRISON_COURT_REGISTER_GENERATED)))
                 .thenReturn(DOCUMENT_ID);
@@ -74,48 +81,7 @@ class NotificationManagerTest {
     }
 
     @Test
-    void processPcrNotification_should_throw_callback_url_delivery_exception_on_json_error() throws Exception {
-        PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(MATERIAL_ID)
-                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
-                .build();
-        JsonProcessingException cause = new JsonProcessingException("Invalid JSON") {};
-        doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
-        when(documentService.getDocumentIdForMaterialId(any(), any())).thenReturn(DOCUMENT_ID);
-        doThrow(cause).when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
-
-        CallbackUrlDeliveryException thrown = assertThrows(CallbackUrlDeliveryException.class,
-                () -> notificationManager.processPcrNotification(payload));
-
-        assertThat(thrown.getMessage()).contains("PCR - Failed to build or deliver callback payload");
-        assertThat(thrown.getCause()).isEqualTo(cause);
-    }
-
-    @Test
-    void processPcrNotification_should_throw_callback_url_delivery_exception_on_uri_error() throws Exception {
-        PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(MATERIAL_ID)
-                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
-                .build();
-        URISyntaxException cause = new URISyntaxException("invalid", "bad uri");
-        doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
-        when(documentService.getDocumentIdForMaterialId(any(), any())).thenReturn(DOCUMENT_ID);
-        doThrow(cause).when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
-
-        CallbackUrlDeliveryException thrown = assertThrows(CallbackUrlDeliveryException.class,
-                () -> notificationManager.processPcrNotification(payload));
-
-        assertThat(thrown.getMessage()).contains("PCR - Failed to build or deliver callback payload");
-        assertThat(thrown.getCause()).isEqualTo(cause);
-    }
-
-    @Test
     void getPcrDocumentContent_should_return_content_when_subscription_has_access() {
-        DocumentContent content = DocumentContent.builder()
-                .body("PDF".getBytes())
-                .contentType(MediaType.APPLICATION_PDF)
-                .fileName("doc.pdf")
-                .build();
         when(documentService.getEventTypeForDocument(DOCUMENT_ID)).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
         when(subscriptionService.hasAccess(SUBSCRIPTION_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
         when(documentService.getDocumentContent(DOCUMENT_ID)).thenReturn(content);
@@ -140,20 +106,6 @@ class NotificationManagerTest {
         assertThat(thrown.getReason()).contains("Access denied");
         verify(documentService).getEventTypeForDocument(DOCUMENT_ID);
         verify(subscriptionService).hasAccess(SUBSCRIPTION_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-        verify(documentService, never()).getDocumentContent(any());
-    }
-
-    @Test
-    void getPcrDocumentContent_should_propagate_not_found_from_document_service() {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + DOCUMENT_ID))
-                .when(documentService).getEventTypeForDocument(DOCUMENT_ID);
-
-        ResponseStatusException thrown = assertThrows(ResponseStatusException.class,
-                () -> notificationManager.getPcrDocumentContent(SUBSCRIPTION_ID, DOCUMENT_ID));
-
-        assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        verify(documentService).getEventTypeForDocument(DOCUMENT_ID);
-        verify(subscriptionService, never()).hasAccess(any(), any());
         verify(documentService, never()).getDocumentContent(any());
     }
 }

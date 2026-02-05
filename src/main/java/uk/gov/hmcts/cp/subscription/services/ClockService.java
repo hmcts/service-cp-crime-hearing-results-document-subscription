@@ -7,9 +7,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-/**
- * We use a ClockService to expose the clock time in a simple method to allow mocking in Tests
- */
 @Service
 public class ClockService {
 

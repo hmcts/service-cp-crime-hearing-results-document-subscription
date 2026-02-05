@@ -4,9 +4,6 @@ import lombok.Builder;
 import lombok.Value;
 import org.springframework.http.MediaType;
 
-/**
- * Holds binary document content with metadata for download response.
- */
 @Value
 @Builder
 public class DocumentContent {

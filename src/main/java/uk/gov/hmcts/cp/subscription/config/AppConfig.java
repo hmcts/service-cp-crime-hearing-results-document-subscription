@@ -32,7 +32,7 @@ public class AppConfig {
 
     @Bean
     public RetryTemplate retryTemplate() {
-        return RetryConfig.retryConfig().toRetryTemplate( Map.of(
+        return RetryTemplateConfig.retryConfig().toRetryTemplate( Map.of(
                 MaterialMetadataNotReadyException.class, true,
                 CallbackUrlDeliveryException.class, true
         ));

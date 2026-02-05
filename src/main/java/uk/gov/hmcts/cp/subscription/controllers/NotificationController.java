@@ -53,7 +53,7 @@ public class NotificationController implements NotificationApi {
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);
     }
 
-    private static @NonNull HttpHeaders getHttpHeaders(final DocumentContent content) {
+    private @NonNull HttpHeaders getHttpHeaders(final DocumentContent content) {
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(content.getContentType());
         headers.setContentLength(content.getBody().length);
@@ -62,7 +62,7 @@ public class NotificationController implements NotificationApi {
         return headers;
     }
 
-    private static String encodeFileName(final String fileName) {
+    private String encodeFileName(final String fileName) {
         return URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", " ");
     }
 }
