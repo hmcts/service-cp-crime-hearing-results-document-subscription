@@ -10,11 +10,11 @@ import org.springframework.stereotype.Service;
 @Service
 public class AppProperties {
 
-    int materialRetryIntervalMilliSecs;
-    int materialRetryTimeoutMilliSecs;
+    private int materialRetryIntervalMilliSecs;
+    private int materialRetryTimeoutMilliSecs;
 
-    public AppProperties(@Value("${material-client.retry.intervalMilliSecs}") int materialRetryIntervalMilliSecs,
-                         @Value("${material-client.retry.timeoutMilliSecs}") int materialRetryTimeoutMilliSecs) {
+    public AppProperties(@Value("${material-client.retry.intervalMilliSecs}") final int materialRetryIntervalMilliSecs,
+                         @Value("${material-client.retry.timeoutMilliSecs}") final int materialRetryTimeoutMilliSecs) {
         this.materialRetryIntervalMilliSecs = materialRetryIntervalMilliSecs;
         this.materialRetryTimeoutMilliSecs = materialRetryTimeoutMilliSecs;
     }
