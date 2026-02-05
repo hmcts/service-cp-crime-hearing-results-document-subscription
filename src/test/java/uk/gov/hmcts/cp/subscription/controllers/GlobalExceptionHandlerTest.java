@@ -1,14 +1,16 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -58,7 +60,36 @@ class GlobalExceptionHandlerTest {
         assertErrorFields(response, INTERNAL_SERVER_ERROR, "message");
     }
 
-    // TODO - Add tests for the other exception handlers ... if we decide that we really do need 10
+    @Test
+    void unsupported_media_type_should_handle_ok() {
+        HttpMediaTypeNotSupportedException e =
+                new HttpMediaTypeNotSupportedException("application/xml");
+
+        ResponseEntity<String> response =
+                globalExceptionHandler.handleHttpMediaTypeNotSupportedException(e);
+
+        assertErrorFields(response, HttpStatus.UNSUPPORTED_MEDIA_TYPE, e.getMessage());
+    }
+
+    @Test
+    void unsupported_operation_should_handle_ok() {
+        UnsupportedOperationException e = new UnsupportedOperationException("not implemented");
+
+        ResponseEntity<String> response =
+                globalExceptionHandler.handleUnsupportedOperation(e);
+
+        assertErrorFields(response, HttpStatus.NOT_IMPLEMENTED, "Unsupported");
+    }
+
+    @Test
+    void condition_timeout_should_handle_ok() {
+        ConditionTimeoutException e = new ConditionTimeoutException("timed out");
+
+        ResponseEntity<String> response =
+                globalExceptionHandler.handleConditionTimeout(e);
+
+        assertErrorFields(response, HttpStatus.GATEWAY_TIMEOUT, "Material metadata not ready");
+    }
 
     private void assertErrorFields(ResponseEntity<String> errorResponse, HttpStatusCode httpStatusCode, String message) {
         assertThat(errorResponse.getStatusCode()).isEqualTo(httpStatusCode);

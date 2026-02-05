@@ -52,10 +52,15 @@ public class CallbackDeliveryService {
         log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), callbackURL, documentId);
     }
 
-    private PcrOutboundPayload createPcrOutboundPayload(final PcrEventPayload pcrEventPayload, final UUID documentId) {
+    private PcrOutboundPayload createPcrOutboundPayload(final PcrEventPayload pcrEventPayload,
+                                                        final UUID documentId) {
         return PcrOutboundPayload.builder()
-                .pcrEventPayload(pcrEventPayload)
-                .documentId(documentId.toString())
+                .eventId(pcrEventPayload.getEventId())
+                .eventType(pcrEventPayload.getEventType())
+                .documentId(documentId)
+                .timestamp(pcrEventPayload.getTimestamp())
+                //TBD - post to api changes
+                .defendant(pcrEventPayload.getDefendant())
                 .build();
     }
 }
