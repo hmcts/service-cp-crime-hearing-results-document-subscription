@@ -43,7 +43,7 @@ class CallbackDeliveryServiceTest {
             .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
             .eventId(EVENT_ID)
             .timestamp(timestamp)
-            .defendant(null)
+            .defendant(null) //TODO verify for few more params after latest api changes
             .build();
     private static final ClientSubscriptionEntity SUB_ENTITY = ClientSubscriptionEntity.builder()
             .id(randomUUID())
@@ -66,7 +66,7 @@ class CallbackDeliveryServiceTest {
 
         verifyNoInteractions(subscriptionRepository, subscriberMapper, callbackService);
     }
-    //TODO verify for few mor params after latest api changes
+    //TODO verify for few more params after latest api changes
     @Test
     void processPcrEvent_shouldMapOutboundPayloadFieldsCorrectly() {
         when(subscriptionRepository.findByEventType(EntityEventType.PRISON_COURT_REGISTER_GENERATED.name()))
