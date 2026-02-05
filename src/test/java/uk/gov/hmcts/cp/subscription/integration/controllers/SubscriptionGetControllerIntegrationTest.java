@@ -17,12 +17,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class SubscriptionGetControllerIntegrationTest extends IntegrationTestBase {
 
+    UUID subscriptionId=UUID.fromString("0a3f88fb-1573-43aa-92be-40ad86e561fe");
+
     @BeforeEach
     void beforeEach() {
         clearClientSubscriptionTable();
     }
-
-    UUID subscriptionId=UUID.fromString("0a3f88fb-1573-43aa-92be-40ad86e561fe");
 
     @Test
     void get_subscription_should_return_expected() throws Exception {
