@@ -61,8 +61,8 @@ class NotificationServiceTest {
 
     @Test
     void shouldThrowExceptionWhenMaterialMetadataNotReady() {
-        when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(10);
-        when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(45);
+        when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
+        when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
         UUID materialId = randomUUID();
         PcrEventPayload payload = PcrEventPayload.builder()
                 .materialId(materialId)
