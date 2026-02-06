@@ -6,7 +6,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
-import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
@@ -34,7 +33,6 @@ class SubscriptionMapperTest {
     @Mock
     ClockService clockService;
 
-    String callbackUrl = "https://example.com";
     SubscriptionMapper mapper = new SubscriptionMapperImpl();
 
     UUID clientSubscriptionId = UUID.fromString("d730c6e1-66ba-4ef0-a3dd-0b9928faa76d");
@@ -52,11 +50,12 @@ class SubscriptionMapperTest {
     @Test
     void create_request_should_map_to_entity_with_sorted_types() {
         when(clockService.nowOffsetUTC()).thenReturn(MOCKCREATED);
-        CreateClientSubscriptionRequest request = CreateClientSubscriptionRequest.builder()
+        ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
+                .notificationEndpoint(notificationEndpoint)
                 .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
                 .build();
 
-        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, callbackUrl, request);
+        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, request);
 
         assertThat(entity.getId()).isNull();
         assertThat(entity.getNotificationEndpoint()).isEqualTo("https://example.com");

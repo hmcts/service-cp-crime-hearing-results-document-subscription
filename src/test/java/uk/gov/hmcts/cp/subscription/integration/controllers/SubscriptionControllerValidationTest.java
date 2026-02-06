@@ -19,6 +19,7 @@ import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENE
 
 class SubscriptionControllerValidationTest extends IntegrationTestBase {
 
+    public static final String CLIENT_SUBSCRIPTIONS = "/client-subscriptions";
     @Autowired
     SubscriptionRepository subscriptionRepository;
 
@@ -34,8 +35,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
     void bad_event_type_should_return_400() throws Exception {
         String body = new ObjectMapper().writeValueAsString(request)
                 .replace("PRISON_COURT_REGISTER_GENERATED", "BAD");
-        mockMvc.perform(post("/client-subscriptions")
-                        .param("callbackUrl", "https://my-callback-url")
+        mockMvc.perform(post(CLIENT_SUBSCRIPTIONS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
@@ -43,13 +43,15 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
     }
 
     @Test
-    void callback_url_should_return_400() throws Exception {
-        String body = new ObjectMapper().writeValueAsString(request);
-        mockMvc.perform(post("/client-subscriptions")
-                        .param("callbackUrl", "not-a-url")
+    void callback_url_invalid_should_return_400() throws Exception {
+        ClientSubscriptionRequest invalidRequest = ClientSubscriptionRequest.builder()
+                .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("not-a-url").build())
+                .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
+                .build();
+        String body = new ObjectMapper().writeValueAsString(invalidRequest);
+        mockMvc.perform(post(CLIENT_SUBSCRIPTIONS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("createClientSubscription.arg0: must match \"^https://.*$\""));
+                .andExpect(status().isBadRequest());
     }
 }

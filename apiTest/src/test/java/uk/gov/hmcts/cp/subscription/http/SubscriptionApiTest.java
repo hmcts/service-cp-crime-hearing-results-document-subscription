@@ -20,9 +20,8 @@ class SubscriptionApiTest {
 
     @Test
     void round_trip_subscription_should_work_ok() throws InterruptedException {
-        final String callbackUrl = "https://my-callback-url";
-        final String postUrl = String.format("%s/client-subscriptions?callbackUrl=%s", baseUrl, callbackUrl);
-        final String body = "{\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\",\"CUSTODIAL_RESULT\"]}";
+        final String postUrl = baseUrl + "/client-subscriptions";
+        final String body = "{\"notificationEndpoint\":{\"callbackUrl\":\"https://my-callback-url\"},\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\",\"CUSTODIAL_RESULT\"]}";
         final var postResult = http.post()
                 .uri(postUrl)
                 .contentType(MediaType.APPLICATION_JSON)

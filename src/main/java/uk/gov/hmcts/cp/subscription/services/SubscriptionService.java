@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
-import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
@@ -25,8 +24,8 @@ public class SubscriptionService {
     private final SubscriptionMapper mapper;
 
     @Transactional
-    public ClientSubscription saveSubscription(final String callbackUrl, final CreateClientSubscriptionRequest request) {
-        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, callbackUrl, request);
+    public ClientSubscription saveSubscription(final ClientSubscriptionRequest request) {
+        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, request);
         return mapper.mapEntityToResponse(clockService, subscriptionRepository.save(entity));
     }
 

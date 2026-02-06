@@ -7,7 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.gov.hmcts.cp.subscription.model.PcrOutboundPayload;
+import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 
 import static org.springframework.http.HttpMethod.POST;
 
@@ -18,11 +18,11 @@ public class CallbackClient {
 
     private RestTemplate restTemplate;
 
-    public void sendNotification(final String url, final PcrOutboundPayload subscriberOutboundPayload) {
+    public void sendNotification(final String url, final EventNotificationPayload eventNotificationPayload) {
         log.info("Sending notification to {}", url);
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        final HttpEntity<PcrOutboundPayload> req = new HttpEntity<>(subscriberOutboundPayload, headers);
+        final HttpEntity<EventNotificationPayload> req = new HttpEntity<>(eventNotificationPayload, headers);
         restTemplate.exchange(url, POST, req, String.class);
     }
 }

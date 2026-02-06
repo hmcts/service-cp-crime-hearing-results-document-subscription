@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
-import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
@@ -25,10 +24,10 @@ public class SubscriptionController implements SubscriptionApi {
     private static final String CLIENT_ID = "TODO";
 
     @Override
-    public ResponseEntity<ClientSubscription> createClientSubscription(final String callbackUrl,
-                                                                       final CreateClientSubscriptionRequest request) {
-        log.info("createClientSubscription callbackUrl:{} clientId:{}", Encode.forJava(callbackUrl), CLIENT_ID);
-        final ClientSubscription response = subscriptionService.saveSubscription(callbackUrl, request);
+    public ResponseEntity<ClientSubscription> createClientSubscription(final ClientSubscriptionRequest request) {
+        log.info("createClientSubscription callbackUrl:{} clientId:{}",
+                Encode.forJava(request.getNotificationEndpoint().getCallbackUrl()), CLIENT_ID);
+        final ClientSubscription response = subscriptionService.saveSubscription(request);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }

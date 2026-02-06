@@ -27,7 +27,6 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
     void save_client_subscription_should_save_subscription() throws Exception {
         String body = new ObjectMapper().writeValueAsString(request);
         mockMvc.perform(post("/client-subscriptions")
-                        .param("callbackUrl", "https://my-callback-url")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("client-id-todo", "1234")
                         .content(body))
