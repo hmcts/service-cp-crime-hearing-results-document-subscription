@@ -38,4 +38,5 @@ dependencies {
   // Yet we still need to add it manually. Grrr. TBC.
   implementation "io.swagger.core.v3:swagger-annotations:2.2.42"
   implementation("org.owasp.encoder:encoder:1.4.0")
+  implementation 'org.awaitility:awaitility:4.2.0'
 }

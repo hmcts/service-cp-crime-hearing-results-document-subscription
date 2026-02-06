@@ -41,6 +41,7 @@ class NotificationControllerValidationTest {
     private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/pcr-request-missing-event.json";
     private static final UUID SUBSCRIPTION_ID = randomUUID();
     private static final UUID DOCUMENT_ID = randomUUID();
+    private static final String SUBSCRIPTION_DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @Autowired
     private MockMvc mockMvc;
@@ -120,7 +121,7 @@ class NotificationControllerValidationTest {
 
         when(notificationManager.getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(documentContent);
 
-        mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
+        mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         SUBSCRIPTION_ID, DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -134,7 +135,7 @@ class NotificationControllerValidationTest {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
                 .when(notificationManager).getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
-        mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
+        mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         SUBSCRIPTION_ID, DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isForbidden())
@@ -143,7 +144,7 @@ class NotificationControllerValidationTest {
 
     @Test
     void get_document_should_return_400_when_invalid_subscription_uuid() throws Exception {
-        mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
+        mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         "invalid-uuid", DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
@@ -151,7 +152,7 @@ class NotificationControllerValidationTest {
 
     @Test
     void get_document_should_return_400_when_invalid_document_uuid() throws Exception {
-        mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
+        mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         SUBSCRIPTION_ID, "invalid-uuid"))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
@@ -162,7 +163,7 @@ class NotificationControllerValidationTest {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + DOCUMENT_ID))
                 .when(notificationManager).getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
 
-        mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
+        mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         SUBSCRIPTION_ID, DOCUMENT_ID))
                 .andDo(print())
                 .andExpect(status().isNotFound());

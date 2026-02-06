@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.services;
 
+import lombok.Builder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -77,12 +78,28 @@ class DocumentServiceTest {
     }
 
     private Material createMaterial() {
-        // TODO Lets make material have a builder so we can make it immutable!
-        Material material = new Material();
-        material.setContentUrl("http://material-servce");
-        MaterialMetadata materialMetadata = new MaterialMetadata();
-        materialMetadata.setFileName("file.pdf");
-        material.setMetadata(materialMetadata);
-        return material;
+        return TestMaterialBuilder.builder()
+                .contentUrl("http://material-servce")
+                .fileName("file.pdf")
+                .build()
+                .toMaterial();
+    }
+
+    @Builder
+    private static final class TestMaterialBuilder {
+
+        private final String contentUrl;
+        private final String fileName;
+
+        Material toMaterial() {
+            Material material = new Material();
+            material.setContentUrl(contentUrl);
+
+            MaterialMetadata metadata = new MaterialMetadata();
+            metadata.setFileName(fileName);
+            material.setMetadata(metadata);
+
+            return material;
+        }
     }
 }
