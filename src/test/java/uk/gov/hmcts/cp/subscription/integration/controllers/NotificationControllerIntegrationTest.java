@@ -41,7 +41,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
     private static final String CALLBACK_URL = "https://callback.example.com";
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
-    final String SUBSCRIPTION_DOCUEMNT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
+    private static final String SUBSCRIPTION_DOCUEMNT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @MockitoBean
     private CallbackDeliveryService callbackDeliveryService;
