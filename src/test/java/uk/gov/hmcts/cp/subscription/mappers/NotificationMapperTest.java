@@ -25,22 +25,21 @@ class NotificationMapperTest {
 
     UUID defendentId = UUID.fromString("f791c82b-dd68-468f-9066-a31008f8f229");
     UUID documentId = UUID.fromString("24f36bc0-ecf7-4fa2-985a-afada1cdee98");
+    Instant now = Instant.now();
+    PcrEventPayloadDefendantCasesInner caseOne = PcrEventPayloadDefendantCasesInner.builder().urn("http://localhost").build();
+    PcrEventPayloadDefendantCustodyEstablishmentDetails custodyEstablishment = PcrEventPayloadDefendantCustodyEstablishmentDetails.builder()
+            .emailAddress("prison@example.com")
+            .build();
+    PcrEventPayloadDefendant defendant = PcrEventPayloadDefendant.builder()
+            .cases(List.of(caseOne))
+            .masterDefendantId(defendentId)
+            .name("John Doe")
+            .dateOfBirth(LocalDate.of(2000, 1, 1))
+            .custodyEstablishmentDetails(custodyEstablishment)
+            .build();
 
     @Test
     void mapper_should_return_populated_object() {
-        Instant now = Instant.now();
-        PcrEventPayloadDefendantCasesInner caseOne = PcrEventPayloadDefendantCasesInner.builder().urn("http://localhost").build();
-        PcrEventPayloadDefendant.builder().cases(List.of(caseOne)).build();
-        PcrEventPayloadDefendantCustodyEstablishmentDetails custodyEstablishment = PcrEventPayloadDefendantCustodyEstablishmentDetails.builder()
-                .emailAddress("prison@example.com")
-                .build();
-        PcrEventPayloadDefendant defendant = PcrEventPayloadDefendant.builder()
-                .cases(List.of(caseOne))
-                .masterDefendantId(defendentId)
-                .name("John Doe")
-                .dateOfBirth(LocalDate.of(2000, 1, 1))
-                .custodyEstablishmentDetails(custodyEstablishment)
-                .build();
         PcrEventPayload pcrEventPayload = PcrEventPayload.builder()
                 .defendant(defendant)
                 .timestamp(now)
