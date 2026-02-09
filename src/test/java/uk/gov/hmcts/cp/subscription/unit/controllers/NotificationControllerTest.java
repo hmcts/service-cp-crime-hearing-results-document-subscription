@@ -117,7 +117,7 @@ class NotificationControllerTest {
                 .build();
         when(notificationManager.getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(content);
 
-        var response = notificationController.getPcrDocumentByClientSubscription(SUBSCRIPTION_ID, DOCUMENT_ID);
+        var response = notificationController.getDocument(SUBSCRIPTION_ID, DOCUMENT_ID);
 
         assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();

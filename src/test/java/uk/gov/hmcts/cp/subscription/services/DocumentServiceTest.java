@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.services;
 
-import lombok.Builder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,6 +26,7 @@ import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_RE
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
+    public static final String MATERIAL_URL = "http://material-servce";
     @Mock
     ClockService clockService;
     @Mock
@@ -68,7 +68,7 @@ class DocumentServiceTest {
         when(documentMappingRepository.findById(documentId)).thenReturn(Optional.of(documentMappingEntity));
         when(materialApi.getMaterialByMaterialId(materialId, null, null)).thenReturn(createMaterial());
         ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
-        when(materialClient.getMaterialDocument("http://material-servce")).thenReturn(document);
+        when(materialClient.getMaterialDocument(MATERIAL_URL)).thenReturn(document);
 
         DocumentContent documentContent = documentService.getDocumentContent(documentId);
 
@@ -78,28 +78,11 @@ class DocumentServiceTest {
     }
 
     private Material createMaterial() {
-        return TestMaterialBuilder.builder()
-                .contentUrl("http://material-servce")
-                .fileName("file.pdf")
-                .build()
-                .toMaterial();
-    }
-
-    @Builder
-    private static final class TestMaterialBuilder {
-
-        private final String contentUrl;
-        private final String fileName;
-
-        Material toMaterial() {
-            Material material = new Material();
-            material.setContentUrl(contentUrl);
-
-            MaterialMetadata metadata = new MaterialMetadata();
-            metadata.setFileName(fileName);
-            material.setMetadata(metadata);
-
-            return material;
-        }
+        Material material = new Material();
+        material.setContentUrl(MATERIAL_URL);
+        MaterialMetadata materialMetadata = new MaterialMetadata();
+        materialMetadata.setFileName("file.pdf");
+        material.setMetadata(materialMetadata);
+        return material;
     }
 }

@@ -7,7 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
-import uk.gov.hmcts.cp.subscription.model.PcrOutboundPayload;
+import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,7 +26,7 @@ class CallbackClientTest {
 
     @Test
     void client_should_post_to_subscriber() {
-        PcrOutboundPayload payload = PcrOutboundPayload.builder().build();
+        EventNotificationPayload payload = EventNotificationPayload.builder().build();
         client.sendNotification("http://subscriber", payload);
         verify(restTemplate).exchange(anyString(), eq(POST), any(HttpEntity.class), eq(String.class));
     }

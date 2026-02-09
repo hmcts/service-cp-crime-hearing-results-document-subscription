@@ -7,7 +7,6 @@ import org.mapstruct.Named;
 import org.mapstruct.NullValueMappingStrategy;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
-import uk.gov.hmcts.cp.openapi.model.CreateClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
@@ -25,10 +24,10 @@ public interface SubscriptionMapper {
 
     @Mapping(target = "id", expression = "java(null)")
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
-    @Mapping(target = "notificationEndpoint", expression = "java(callbackUrl)")
+    @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(target = "createdAt", expression = "java(clockService.nowOffsetUTC())")
     @Mapping(target = "updatedAt", expression = "java(clockService.nowOffsetUTC())")
-    ClientSubscriptionEntity mapCreateRequestToEntity(@Context ClockService clockService, String callbackUrl, CreateClientSubscriptionRequest request);
+    ClientSubscriptionEntity mapCreateRequestToEntity(@Context ClockService clockService, ClientSubscriptionRequest request);
 
     @Mapping(source = "existing.id", target = "id")
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")

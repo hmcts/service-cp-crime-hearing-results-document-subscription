@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -44,9 +45,9 @@ public class NotificationController implements NotificationApi {
     }
 
     @Override
-    public ResponseEntity<Resource> getPcrDocumentByClientSubscription(
-            @PathVariable final UUID clientSubscriptionId,
-            @PathVariable final UUID documentId) {
+    public ResponseEntity<Resource> getDocument(
+            @NotNull @PathVariable("clientSubscriptionId") final UUID clientSubscriptionId,
+            @NotNull @PathVariable("documentId") final UUID documentId) {
         final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);

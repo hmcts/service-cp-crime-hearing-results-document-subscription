@@ -8,7 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.gov.hmcts.cp.subscription.model.PcrOutboundPayload;
 
 import static org.springframework.http.HttpMethod.GET;
 
@@ -23,7 +22,7 @@ public class MaterialClient {
         log.info("Getting material document from {}", url);
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        final HttpEntity<PcrOutboundPayload> req = new HttpEntity<>(headers);
+        final HttpEntity<Void> req = new HttpEntity<>(headers);
         return restTemplate.exchange(url, GET, req, byte[].class);
     }
 }

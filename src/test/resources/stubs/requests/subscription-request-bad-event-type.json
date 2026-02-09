@@ -1,0 +1,9 @@
+{
+  "notificationEndpoint": {
+    "callbackUrl": "https://my-callback-url"
+  },
+  "eventTypes": [
+    "BAD",
+    "CUSTODIAL_RESULT"
+  ]
+}
