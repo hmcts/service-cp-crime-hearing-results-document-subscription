@@ -41,7 +41,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
     private static final String CALLBACK_URL = "https://callback.example.com";
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
-    private static final String SUBSCRIPTION_DOCUEMNT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
+    private static final String DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @MockitoBean
     private CallbackDeliveryService callbackDeliveryService;
@@ -54,7 +54,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void prison_court_register_generated_should_return_success() throws Exception {
-        String pcrPayload = loadPcrPayload("stubs/requests/pcr-request-prison-court-register.json");
+        String pcrPayload = loadPayload("stubs/requests/pcr-request-prison-court-register.json");
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -68,7 +68,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void custodial_result_should_return_unsupported() throws Exception {
-        String pcrPayload = loadPcrPayload("stubs/requests/pcr-request-custodial-result.json");
+        String pcrPayload = loadPayload("stubs/requests/pcr-request-custodial-result.json");
 
         doThrow(new UnsupportedOperationException("CUSTODIAL_RESULT not implemented"))
                 .when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
@@ -86,7 +86,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void material_metadata_not_found_should_return_404() throws Exception {
-        String pcrPayload = loadPcrPayload("stubs/requests/pcr-request-material-not-found.json");
+        String pcrPayload = loadPayload("stubs/requests/pcr-request-material-not-found.json");
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void material_metadata_timeout_should_return_504_via_global_exception_handler() throws Exception {
-        String pcrPayload = loadPcrPayload("stubs/requests/pcr-request-material-timeout.json");
+        String pcrPayload = loadPayload("stubs/requests/pcr-request-material-timeout.json");
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +116,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                 List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
         DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
 
-        mockMvc.perform(get(SUBSCRIPTION_DOCUEMNT_URI,
+        mockMvc.perform(get(DOCUMENT_URI,
                         subscription.getId(), document.getDocumentId()))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -133,7 +133,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                 List.of(EntityEventType.CUSTODIAL_RESULT));
         DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
 
-        mockMvc.perform(get(SUBSCRIPTION_DOCUEMNT_URI,
+        mockMvc.perform(get(DOCUMENT_URI,
                         subscription.getId(), document.getDocumentId()))
                 .andDo(print())
                 .andExpect(status().isForbidden());

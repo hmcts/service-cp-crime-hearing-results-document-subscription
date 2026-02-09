@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
@@ -23,6 +22,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
 
+    private static final String SUBSCRIPTION_REQUEST_VALID = "stubs/requests/subscription-request-valid.json";
+
     @BeforeEach
     void beforeEach() {
         clearClientSubscriptionTable();
@@ -31,7 +32,7 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
     @Test
     void update_client_subscription_should_update_subscription() throws Exception {
         ClientSubscriptionEntity existing = insertSubscription("https://oldendpoint", List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
-        String body = new ObjectMapper().writeValueAsString(request);
+        String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
         mockMvc.perform(put("/client-subscriptions/{id}", existing.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("client-id-todo", "1234")

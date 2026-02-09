@@ -1,0 +1,9 @@
+{
+  "notificationEndpoint": {
+    "callbackUrl": "not-a-url"
+  },
+  "eventTypes": [
+    "PRISON_COURT_REGISTER_GENERATED",
+    "CUSTODIAL_RESULT"
+  ]
+}
