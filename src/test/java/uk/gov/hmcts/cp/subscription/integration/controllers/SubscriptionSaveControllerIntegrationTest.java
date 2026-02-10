@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
 
-    private static final String SUBSCRIPTION_REQUEST_VALID = "stubs/requests/subscription-request-valid.json";
+    private static final String SUBSCRIPTION_REQUEST_VALID = "stubs/requests/subscription/subscription-request-valid.json";
 
     @BeforeEach
     void beforeEach() {

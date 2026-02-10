@@ -8,6 +8,9 @@
     "headers": {
       "Content-Type": "application/vnd.material.query.material+json"
     },
-    "bodyFileName": "material-with-contenturl.json"
+    "bodyFileName": "material-with-contenturl.json",
+    "transformers": [
+      "response-template"
+    ]
   }
 }
