@@ -3,7 +3,7 @@ package uk.gov.hmcts.cp.subscription.integration.controllers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
@@ -32,10 +32,7 @@ import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 
 
 @EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0)})
-@TestPropertySource(properties = {
-        "material-client.retry.timeoutMilliSecs=500",
-        "material-client.retry.intervalMilliSecs=100"
-})
+@ActiveProfiles("test")
 class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";

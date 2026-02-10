@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
@@ -49,10 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
-@TestPropertySource(properties = {
-        "material-client.retry.timeoutMilliSecs=500",
-        "material-client.retry.intervalMilliSecs=100"
-})
+@ActiveProfiles("test")
 @Import(SSLTrustingRestTemplateConfig.class)
 class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
@@ -72,7 +69,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     private WireMockServer callbackWireMock;
 
     @Value("${callback-client.url}")
-    private String callbackHttpsBaseUrl;
+    private String callbackBaseUrl;
 
     @MockitoSpyBean
     private MaterialApi materialApi;
@@ -202,7 +199,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void createSubscription() throws Exception {
-        String callbackUrl = callbackHttpsBaseUrl.endsWith("/") ? callbackHttpsBaseUrl + CALLBACK_URI.substring(1) : callbackHttpsBaseUrl + CALLBACK_URI;
+        String callbackUrl = callbackBaseUrl.endsWith("/") ? callbackBaseUrl + CALLBACK_URI.substring(1) : callbackBaseUrl + CALLBACK_URI;
         String body = loadPayload(SUBSCRIPTION_REQUEST_E2E).replace("{{callback.url}}", callbackUrl);
         String json = postSubscriptionAndReturnJson(body);
         subscriptionId = UUID.fromString(new ObjectMapper().readTree(json).get("clientSubscriptionId").asText());
