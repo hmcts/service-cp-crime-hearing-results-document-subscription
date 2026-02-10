@@ -1,4 +1,5 @@
 # Docker base image - note that this is currently overwritten by azure pipelines
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE:-eclipse-temurin:21-jdk}
 
 # run as non-root ... group and user "app"
@@ -13,7 +14,7 @@ RUN apt-get update \
 # ---- Application files ----
 COPY docker/* /app/
 COPY build/libs/*.jar /app/
-COPY lib/applicationinsights.json /app/
+COPY ../lib/applicationinsights.json /app/
 
 # Not sure this does anything useful we can drop once we sort certificates
 RUN test -n "$JAVA_HOME" \
