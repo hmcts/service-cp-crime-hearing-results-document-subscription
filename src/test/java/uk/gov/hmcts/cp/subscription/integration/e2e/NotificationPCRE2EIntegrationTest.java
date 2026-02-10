@@ -35,10 +35,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * E2E: success = subscription → material API → callback → document (full chain).
- * failure = metadata never ready → 504, no callback.
- */
 // TODO - comments can be removed after handover to QA
 
 @EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0)})
@@ -48,9 +44,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
-    private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
+    private static final String NOTIFICATIONS_PCR_URI = "/notifications/pcr";
     private static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
-    private static final String DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
+    private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final String SUBSCRIPTION_REQUEST_E2E = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression-pcr/pcr-request-prison-court-register.json";
     private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression-pcr/pcr-request-material-timeout.json";
@@ -127,7 +123,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void when_a_pcr_event_is_posted() throws Exception {
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(loadPayload(PCR_EVENT_PAYLOAD_PATH)))
@@ -136,7 +132,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void when_a_pcr_event_is_posted_with_timeout() throws Exception {
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(loadPayload(PCR_EVENT_TIMEOUT_PATH)))
