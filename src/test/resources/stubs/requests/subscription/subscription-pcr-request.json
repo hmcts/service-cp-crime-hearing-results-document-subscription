@@ -1,6 +1,6 @@
 {
   "notificationEndpoint": {
-    "callbackUrl": "https://callback.example.com"
+    "callbackUrl": "{{callback.url}}"
   },
   "eventTypes": [
     "PRISON_COURT_REGISTER_GENERATED"
