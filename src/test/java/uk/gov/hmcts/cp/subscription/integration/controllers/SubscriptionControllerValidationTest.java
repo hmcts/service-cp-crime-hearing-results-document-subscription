@@ -11,8 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SubscriptionControllerValidationTest extends IntegrationTestBase {
 
     private static final String CLIENT_SUBSCRIPTIONS = "/client-subscriptions";
-    private static final String SUBSCRIPTION_REQUEST_BAD_EVENT = "stubs/requests/subscription-request-bad-event-type.json";
-    private static final String SUBSCRIPTION_REQUEST_INVALID_CALLBACK = "stubs/requests/subscription-request-invalid-callback-url.json";
+    private static final String SUBSCRIPTION_REQUEST_BAD_EVENT = "stubs/requests/subscription/subscription-request-bad-event-type.json";
+    private static final String SUBSCRIPTION_REQUEST_INVALID_CALLBACK = "stubs/requests/subscription/subscription-request-invalid-callback-url.json";
 
     @Test
     void bad_event_type_should_return_400() throws Exception {
