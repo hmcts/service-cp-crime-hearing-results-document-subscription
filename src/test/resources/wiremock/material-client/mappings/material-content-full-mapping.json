@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/material-query-api/query/api/rest/material/material/6c198796-08bb-4803-b456-fa0c29ca6021/content"
+    "url": "/material-query-api/query/api/rest/material/material/6c198796-08bb-4803-b456-fa0c29ca6021/content"
   },
   "response": {
     "status": 200,
