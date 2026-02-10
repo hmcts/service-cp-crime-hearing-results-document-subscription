@@ -1,1 +1,16 @@
-{"request":{"method":"GET","urlPathPattern":"/material-query-api/query/api/rest/material/material/6c198796-08bb-4803-b456-fa0c29ca6021/content"},"response":{"status":200,"headers":{"Content-Type":"application/vnd.material.query.material+json"},"bodyFileName":"material-with-contenturl.json","transformers":["response-template"]}}
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/material-query-api/query/api/rest/material/material/6c198796-08bb-4803-b456-fa0c29ca6021/content"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/vnd.material.query.material+json"
+    },
+    "bodyFileName": "material-with-contenturl.json",
+    "transformers": [
+      "response-template"
+    ]
+  }
+}
