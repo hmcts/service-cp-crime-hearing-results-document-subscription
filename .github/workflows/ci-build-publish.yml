@@ -89,6 +89,14 @@ jobs:
           name: app-jar
           path: build/libs/${{ steps.repo_vars.outputs.artefact_name }}.jar
 
+      - name: Publish test report to job summary
+        if: always()
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: 'build/test-results/**/*.xml'
+          github-report: true
+          annotate: true
+
   API-Test-PR:
     if: ${{ inputs.run_api_test }}
     needs: [Build]
