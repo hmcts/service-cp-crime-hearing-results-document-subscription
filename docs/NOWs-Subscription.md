@@ -26,6 +26,17 @@ HN->>HN: Build command
 note left of HN: AMP-196
 end
 
+%% Subscriber discovers the NOWS event types
+rect rgba(0, 128, 0, 0.1)
+C->>SS: GET NOWs events
+note right of SS: AMP-200
+end
+
+%% Subscription service returns the event types
+SS->>C: Returns all event types {eventName,displayName,description,categorry}
+note left of Q: AMP-200
+
+
 %% Subscription setup — near-white green
 rect rgba(0, 128, 0, 0.1)
 C->>SS: Subscribed to NOWs events
@@ -38,18 +49,18 @@ HN->>SS: POST /notifications/now {materialId, documentType, defendant, cases, ..
 note right of HN: AMP-274
 
 SS->>MS: GET Query metadata
-note left of SS: AMP-TBC
+note left of SS: AMP-TBC (_need technical story here_)
 
 %% Subscription processing
 
 SS->>SS: Find subscribers for documentType
-note left of SS: AMP-TBC
+note left of SS: AMP-TBC (_need technical story here_)
 
 SS->>Q: For each subscriber:\nEnqueue webhook
 note left of Q: AMP-198
 
 Q->>SS: For each subscriber:\nDequeue webhook
-note left of Q: AMP-TBC
+note left of Q: AMP-TBC (_need technical story here_)
 
 %% Azure Service Bus — near-white yellow
 
