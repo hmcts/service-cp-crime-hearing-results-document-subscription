@@ -89,6 +89,15 @@ jobs:
           name: app-jar
           path: build/libs/${{ steps.repo_vars.outputs.artefact_name }}.jar
 
+      - name: Upload unit and integration test reports
+        if: always()
+        uses: ./.github/actions/upload-test-reports
+        with:
+          artifact_name: unit-integration-test-reports
+          path: |
+            build/reports/tests/test/
+            build/test-results/test/
+
   API-Test-PR:
     if: ${{ inputs.run_api_test }}
     needs: [Build]
@@ -118,13 +127,12 @@ jobs:
 
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: ./.github/actions/upload-test-reports
         with:
-          name: api-test-pr-reports
+          artifact_name: api-test-pr-reports
           path: |
             apiTest/build/reports/tests/test/
             apiTest/build/test-results/test/
-  
 
   Provider-Deploy:
     needs: [ Artefact-Version, Build ]
@@ -267,9 +275,9 @@ jobs:
 
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: ./.github/actions/upload-test-reports
         with:
-          name: api-test-main-reports
+          artifact_name: api-test-main-reports
           path: |
             apiTest/build/reports/tests/test/
             apiTest/build/test-results/test/
