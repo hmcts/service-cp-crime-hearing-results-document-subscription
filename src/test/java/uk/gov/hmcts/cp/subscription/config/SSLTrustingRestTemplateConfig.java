@@ -9,6 +9,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 import java.security.SecureRandom;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 @Configuration
@@ -20,7 +21,10 @@ public class SSLTrustingRestTemplateConfig {
         }
 
         @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
+        public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+            if (chain == null || chain.length == 0) {
+                throw new CertificateException("No server certificates");
+            }
         }
 
         @Override
