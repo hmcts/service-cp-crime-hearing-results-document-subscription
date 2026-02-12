@@ -86,7 +86,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConditionTimeoutException.class)
     public ResponseEntity<String> handleConditionTimeout(final ConditionTimeoutException ex) {
-        boolean isCallbackTimeout = CALLBACK_NOT_READY.equals(ex.getMessage());
+        final boolean isCallbackTimeout = CALLBACK_NOT_READY.equals(ex.getMessage());
         if (isCallbackTimeout) {
             log.error("Callback delivery timed out: {}", ex.getMessage());
         } else {
