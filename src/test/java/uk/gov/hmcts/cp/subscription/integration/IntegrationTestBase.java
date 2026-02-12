@@ -8,6 +8,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
@@ -31,6 +32,11 @@ import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENE
 @AutoConfigureMockMvc
 @Slf4j
 public abstract class IntegrationTestBase {
+
+    protected static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
+    protected static final String NOTIFICATIONS_PCR_URI = "/notifications/pcr";
+    protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
+    protected static final String CALLBACK_URI = "/callback/notify";
 
     @Resource
     protected MockMvc mockMvc;

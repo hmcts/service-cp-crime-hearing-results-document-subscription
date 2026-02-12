@@ -28,9 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class NotificationControllerValidationTest extends IntegrationTestBase {
 
     private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
-    private static final String PCR_REQUEST_VALID = "stubs/requests/pcr-request-valid.json";
-    private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/pcr-request-missing-material.json";
-    private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/pcr-request-missing-event.json";
+    private static final String PCR_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
+    private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
+    private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
     private static final UUID SUBSCRIPTION_ID = randomUUID();
     private static final UUID DOCUMENT_ID = randomUUID();
     private static final String SUBSCRIPTION_DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";

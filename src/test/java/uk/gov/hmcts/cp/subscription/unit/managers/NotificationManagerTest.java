@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.unit.managers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,9 +17,7 @@ import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
-import uk.gov.hmcts.cp.subscription.services.exceptions.CallbackUrlDeliveryException;
 
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;

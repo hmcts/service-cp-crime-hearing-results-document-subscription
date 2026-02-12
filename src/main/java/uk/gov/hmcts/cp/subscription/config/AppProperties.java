@@ -10,12 +10,18 @@ import org.springframework.stereotype.Service;
 @Service
 public class AppProperties {
 
-    private int materialRetryIntervalMilliSecs;
-    private int materialRetryTimeoutMilliSecs;
+    private final int materialRetryIntervalMilliSecs;
+    private final int materialRetryTimeoutMilliSecs;
+    private final int callbackRetryIntervalMilliSecs;
+    private final int callbackRetryTimeoutMilliSecs;
 
     public AppProperties(@Value("${material-client.retry.intervalMilliSecs}") final int materialRetryIntervalMilliSecs,
-                         @Value("${material-client.retry.timeoutMilliSecs}") final int materialRetryTimeoutMilliSecs) {
+                         @Value("${material-client.retry.timeoutMilliSecs}") final int materialRetryTimeoutMilliSecs,
+                         @Value("${callback-client.retry.intervalMilliSecs}") final int callbackRetryIntervalMilliSecs,
+                         @Value("${callback-client.retry.timeoutMilliSecs}") final int callbackRetryTimeoutMilliSecs) {
         this.materialRetryIntervalMilliSecs = materialRetryIntervalMilliSecs;
         this.materialRetryTimeoutMilliSecs = materialRetryTimeoutMilliSecs;
+        this.callbackRetryIntervalMilliSecs = callbackRetryIntervalMilliSecs;
+        this.callbackRetryTimeoutMilliSecs = callbackRetryTimeoutMilliSecs;
     }
 }

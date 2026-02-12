@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,9 +12,7 @@ import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
-import uk.gov.hmcts.cp.subscription.services.exceptions.CallbackUrlDeliveryException;
 
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,40 +68,21 @@ class NotificationControllerTest {
 
     @SneakyThrows
     @Test
-    void json_processing_exception_in_callback_should_throw_callback_url_delivery_exception() {
+    void exception_from_manager_should_propagate_for_global_handler() {
         PcrEventPayload payload = PcrEventPayload.builder()
                 .materialId(MATERIAL_ID)
                 .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();
-        JsonProcessingException cause = new JsonProcessingException("Invalid JSON") {};
+        RuntimeException failure = new RuntimeException("Callback delivery failed");
 
-        doThrow(new CallbackUrlDeliveryException("PCR - Failed to build or deliver callback payload: " + cause.getMessage(), cause))
+        doThrow(failure)
                 .when(notificationManager).processPcrNotification(any(PcrEventPayload.class));
 
-        CallbackUrlDeliveryException thrown = assertThrows(CallbackUrlDeliveryException.class,
+        RuntimeException thrown = assertThrows(RuntimeException.class,
                 () -> notificationController.createNotificationPCR(payload));
 
-        assertThat(thrown.getMessage()).contains("PCR - Failed to build or deliver callback payload");
-        assertThat(thrown.getCause()).isEqualTo(cause);
-    }
-
-    @SneakyThrows
-    @Test
-    void uri_syntax_exception_in_callback_should_throw_callback_url_delivery_exception() {
-        PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(MATERIAL_ID)
-                .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
-                .build();
-        URISyntaxException cause = new URISyntaxException("invalid", "bad uri");
-
-        doThrow(new CallbackUrlDeliveryException("PCR - Failed to build or deliver callback payload: " + cause.getMessage(), cause))
-                .when(notificationManager).processPcrNotification(any(PcrEventPayload.class));
-
-        CallbackUrlDeliveryException thrown = assertThrows(CallbackUrlDeliveryException.class,
-                () -> notificationController.createNotificationPCR(payload));
-
-        assertThat(thrown.getMessage()).contains("PCR - Failed to build or deliver callback payload");
-        assertThat(thrown.getCause()).isEqualTo(cause);
+        assertThat(thrown).isSameAs(failure);
+        verify(notificationManager).processPcrNotification(eq(payload));
     }
 
     @Test

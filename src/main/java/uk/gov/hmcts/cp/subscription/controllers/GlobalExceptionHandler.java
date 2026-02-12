@@ -20,6 +20,9 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    private static final String CALLBACK_NOT_READY = "Callback is not ready";
+    private static final String MATERIAL_NOT_READY = "Material metadata not ready";
+
     @ExceptionHandler({EntityNotFoundException.class, NoHandlerFoundException.class})
     public ResponseEntity<String> handleNotFoundException(final Exception exception) {
         log.error("NotFoundException {}", exception.getMessage());
@@ -83,9 +86,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConditionTimeoutException.class)
     public ResponseEntity<String> handleConditionTimeout(final ConditionTimeoutException ex) {
-        log.error("Material metadata timed out: {}", ex.getMessage());
+        final boolean isCallbackTimeout = CALLBACK_NOT_READY.equals(ex.getMessage());
+        if (isCallbackTimeout) {
+            log.error("Callback delivery timed out: {}", ex.getMessage());
+        } else {
+            log.error("Material metadata timed out: {}", ex.getMessage());
+        }
         return ResponseEntity
                 .status(HttpStatus.GATEWAY_TIMEOUT)
-                .body("Material metadata not ready");
+                .body(isCallbackTimeout ? CALLBACK_NOT_READY : MATERIAL_NOT_READY);
     }
 }
