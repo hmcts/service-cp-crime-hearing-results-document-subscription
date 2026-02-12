@@ -21,6 +21,11 @@ material-client:
     intervalMilliSecs: 5000
     timeoutMilliSecs: 30000
 
+callback-client:
+  retry:
+    intervalMilliSecs: 1000
+    timeoutMilliSecs: 10000
+
 document-service:
   url: ${DOCUMENT_SERVICE_URL:http://localhost:8082}
 

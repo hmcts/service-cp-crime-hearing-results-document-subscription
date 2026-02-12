@@ -79,13 +79,23 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void condition_timeout_should_handle_ok() {
+    void condition_timeout_material_should_handle_ok() {
         ConditionTimeoutException e = new ConditionTimeoutException("timed out");
 
         ResponseEntity<String> response =
                 globalExceptionHandler.handleConditionTimeout(e);
 
         assertErrorFields(response, HttpStatus.GATEWAY_TIMEOUT, "Material metadata not ready");
+    }
+
+    @Test
+    void condition_timeout_callback_should_handle_ok() {
+        ConditionTimeoutException e = new ConditionTimeoutException("Callback is not ready");
+
+        ResponseEntity<String> response =
+                globalExceptionHandler.handleConditionTimeout(e);
+
+        assertErrorFields(response, HttpStatus.GATEWAY_TIMEOUT, "Callback is not ready");
     }
 
     private void assertErrorFields(ResponseEntity<String> errorResponse, HttpStatusCode httpStatusCode, String message) {

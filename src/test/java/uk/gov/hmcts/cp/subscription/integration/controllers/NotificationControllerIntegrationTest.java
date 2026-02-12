@@ -51,7 +51,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void prison_court_register_generated_should_return_success() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression-pcr/pcr-request-prison-court-register.json");
+        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-prison-court-register.json");
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -65,7 +65,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void custodial_result_should_return_unsupported() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression-pcr/pcr-request-custodial-result.json");
+        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-custodial-result.json");
 
         doThrow(new UnsupportedOperationException("CUSTODIAL_RESULT not implemented"))
                 .when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
@@ -83,7 +83,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void material_metadata_not_found_should_return_404() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression-pcr/pcr-request-material-not-found.json");
+        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-material-not-found.json");
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -95,7 +95,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void material_metadata_timeout_should_return_504_via_global_exception_handler() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression-pcr/pcr-request-material-timeout.json");
+        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-material-timeout.json");
 
 
         mockMvc.perform(post(NOTIFICATION_PCR_URI)

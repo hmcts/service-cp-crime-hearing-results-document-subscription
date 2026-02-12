@@ -3,7 +3,6 @@ package uk.gov.hmcts.cp.subscription.integration.e2e;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,11 +20,20 @@ import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.subscription.config.SSLTrustingRestTemplateConfig;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.Objects.nonNull;
@@ -58,8 +66,8 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final String SUBSCRIPTION_REQUEST_E2E = "stubs/requests/subscription/subscription-pcr-request.json";
-    private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression-pcr/pcr-request-prison-court-register.json";
-    private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression-pcr/pcr-request-material-timeout.json";
+    private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
+    private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
 
     @InjectWireMock("callback-client")
     private WireMockServer callbackWireMock;
@@ -80,7 +88,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void test_document_retrieval_success() throws Exception {
+    void should_document_retrieval_success() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
@@ -93,7 +101,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void test_document_retrieval_failure() throws Exception {
+    void should_document_retrieval_failure() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_not_found();
@@ -103,6 +111,17 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
         then_the_material_api_was_polled();
         then_the_subscriber_does_not_receive_a_callback();
+    }
+
+    @Test
+    void should_return_504_when_callback_client_does_not_respond() throws Exception {
+        given_i_am_a_subscriber_with_a_subscription();
+        given_callback_endpoint_returns_server_error();
+        given_material_service_returns_document_success();
+
+        when_a_pcr_event_is_posted_expect_callback_delivery_timeout();
+
+        then_callback_was_attempted();
     }
 
     private void given_i_am_a_subscriber_with_a_subscription() throws Exception {
@@ -121,6 +140,20 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private void given_material_service_returns_document_not_found() {
         stubMaterialMetadataNoContent(MATERIAL_ID_TIMEOUT);
+    }
+
+    private void given_callback_endpoint_returns_server_error() {
+        stubCallbackEndpointReturnsServerError(callbackWireMock, CALLBACK_URI);
+    }
+
+    private void when_a_pcr_event_is_posted_expect_callback_delivery_timeout() throws Exception {
+        postPcrEvent(PCR_EVENT_PAYLOAD_PATH)
+                .andExpect(status().isGatewayTimeout())
+                .andExpect(content().string("Callback is not ready"));
+    }
+
+    private void then_callback_was_attempted() {
+        callbackWireMock.verify(moreThanOrExactly(1), postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
     }
 
     private void when_a_pcr_event_is_posted() throws Exception {
@@ -152,29 +185,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private void then_the_subscriber_receives_a_callback() {
         callbackWireMock.verify(1, postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
-        callbackDocumentId = getDocumentIdFromCallbackServeEvents();
-    }
-
-    private UUID getDocumentIdFromCallbackServeEvents() {
-        return callbackWireMock.getAllServeEvents().stream()
-                .map(ServeEvent::getRequest)
-                .filter(r -> nonNull(r.getUrl()) && r.getUrl().contains(CALLBACK_URI))
-                .map(r -> parseDocumentIdFromBody(r.getBodyAsString()))
-                .findFirst()
-                .orElseThrow(() ->
-                        new AssertionError("Callback request body did not contain documentId"));
-    }
-
-    private UUID parseDocumentIdFromBody(String body) {
-        if (body == null || body.isBlank()) return null;
-        try {
-            return Optional.ofNullable(new ObjectMapper().readTree(body).get("documentId"))
-                    .map(JsonNode::asText)
-                    .map(UUID::fromString)
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
+        callbackDocumentId = getDocumentIdFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
     }
 
     private void then_the_subscriber_does_not_receive_a_callback() {
