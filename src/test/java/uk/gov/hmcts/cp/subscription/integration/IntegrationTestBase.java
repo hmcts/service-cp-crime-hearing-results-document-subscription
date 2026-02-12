@@ -40,14 +40,19 @@ import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENE
 @Slf4j
 public abstract class IntegrationTestBase {
 
-    protected static final String MATERIAL_METADATA_RESPONSE_PATH = "wiremock/material-client/__files/material-response.json";
-    protected static final String MATERIAL_CONTENT_RESPONSE_PATH = "wiremock/material-client/__files/material-with-contenturl.json";
-    protected static final String MATERIAL_PDF_PATH = "wiremock/material-client/__files/material-content.pdf";
-    protected static final String CALLBACK_RESPONSE_PATH = "wiremock/callback-client/__files/callback-accepted.json";
-    protected static final String MATERIAL_URI = "/material-query-api/query/api/rest/material/material/";
-    public static final String METADATA = "/metadata";
-    public static final String APPLICATION_JSON = "application/json";
-    public static final String CONTENT_TYPE = "Content-Type";
+    private static final String MATERIAL_METADATA_RESPONSE_PATH = "wiremock/material-client/files/material-response.json";
+    private static final String MATERIAL_CONTENT_RESPONSE_PATH = "wiremock/material-client/files/material-with-contenturl.json";
+    private static final String MATERIAL_PDF_PATH = "wiremock/material-client/files/material-content.pdf";
+    private static final String CALLBACK_RESPONSE_PATH = "wiremock/callback-client/files/callback-accepted.json";
+    private static final String MATERIAL_URI = "/material-query-api/query/api/rest/material/material/";
+    private static final String METADATA = "/metadata";
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String CONTENT_TYPE = "Content-Type";
+
+    protected static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
+    protected static final String NOTIFICATIONS_PCR_URI = "/notifications/pcr";
+    protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
+    protected static final String CALLBACK_URI = "/callback/notify";
 
     @Resource
     protected MockMvc mockMvc;

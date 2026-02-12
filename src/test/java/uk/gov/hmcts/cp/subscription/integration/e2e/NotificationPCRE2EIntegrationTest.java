@@ -56,10 +56,6 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     private UUID subscriptionId;
     private UUID callbackDocumentId;
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
-    private static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
-    private static final String NOTIFICATIONS_PCR_URI = "/notifications/pcr";
-    private static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
-    private static final String CALLBACK_URI = "/callback/notify";
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final String SUBSCRIPTION_REQUEST_E2E = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression-pcr/pcr-request-prison-court-register.json";

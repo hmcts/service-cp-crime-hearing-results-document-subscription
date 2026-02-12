@@ -32,7 +32,7 @@ services:
       - "9999:9999"
     volumes:
       - ./src/test/resources/mappings:/home/wiremock/mappings
-      - ./src/test/resources/__files:/home/wiremock/__files
+      - ./src/test/resources/files:/home/wiremock/files
     command:
       - "--global-response-templating"
       - "--verbose"
