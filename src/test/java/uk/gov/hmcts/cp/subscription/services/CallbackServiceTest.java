@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestClientException;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
@@ -43,7 +44,7 @@ class CallbackServiceTest {
         when(appProperties.getCallbackRetryTimeoutMilliSecs()).thenReturn(500);
         EventNotificationPayload payload = EventNotificationPayload.builder().build();
 
-        doThrow(new RuntimeException("intermittent failure"))
+        doThrow(new RestClientException("intermittent failure"))
                 .doNothing()
                 .when(callbackClient).sendNotification("url", payload);
 

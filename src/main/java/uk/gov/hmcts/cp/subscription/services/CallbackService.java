@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionTimeoutException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
@@ -37,7 +38,7 @@ public class CallbackService {
                     try {
                         callbackClient.sendNotification(url, eventNotificationPayload);
                         return true;
-                    } catch (Exception e) {
+                    } catch (RestClientException e) {
                         log.warn("Callback delivery failed for {}, retrying: {}", url, e.getMessage());
                         return false;
                     }
