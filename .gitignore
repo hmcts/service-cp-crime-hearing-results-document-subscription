@@ -28,6 +28,7 @@ applicationinsights-agent-*.jar
 *.log
 
 .env
+.envrc
 
 .DS_Store
 */.DS_Store

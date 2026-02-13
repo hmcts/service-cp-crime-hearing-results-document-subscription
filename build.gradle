@@ -28,6 +28,7 @@ apply {
   from("$rootDir/gradle/github/jar.gradle")
 
   from("$rootDir/gradle/dependencies/spring-cloud.gradle")
+  from("$rootDir/gradle/dependencies/spring-actuator.gradle")
 }
 
 dependencies {
