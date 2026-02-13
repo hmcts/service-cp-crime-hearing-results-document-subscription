@@ -1,0 +1,8 @@
+{
+  "notificationEndpoint": {
+    "callbackUrl": "{{callback.url}}"
+  },
+  "eventTypes": [
+    "CUSTODIAL_RESULT"
+  ]
+}
