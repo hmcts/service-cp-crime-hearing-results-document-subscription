@@ -8,7 +8,7 @@ plugins {
   id 'maven-publish'
   id 'com.github.ben-manes.versions' version '0.53.0'
   id 'org.cyclonedx.bom' version '3.1.0'
-  id 'com.gorylenko.gradle-git-properties' version '2.5.5'
+  id 'com.gorylenko.gradle-git-properties' version '2.5.7'
 }
 
 group = 'uk.gov.hmcts.cp'
@@ -39,5 +39,5 @@ dependencies {
   // Yet we still need to add it manually. Grrr. TBC.
   implementation "io.swagger.core.v3:swagger-annotations:2.2.42"
   implementation("org.owasp.encoder:encoder:1.4.0")
-  implementation 'org.awaitility:awaitility:4.2.0'
+  implementation 'org.awaitility:awaitility:4.3.0'
 }
