@@ -1,5 +1,7 @@
 # Dockerfile (project root)
-FROM eclipse-temurin:21
+# Docker base image - note that this is currently overwritten by azure pipelines
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE:-eclipse-temurin:21-jdk}
 
 WORKDIR /app
 
