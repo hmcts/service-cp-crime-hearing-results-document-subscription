@@ -45,8 +45,8 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
         ClientSubscriptionEntity sub2 = insertSubscription("https://subscriber2.example/callback", List.of(CUSTODIAL_RESULT));
         ClientSubscriptionEntity sub3 = insertSubscription("https://subscriber3.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT));
 
-        List<ClientSubscriptionEntity> forPcr = subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED");
-        List<ClientSubscriptionEntity> forCustodial = subscriptionRepository.findByEventType("CUSTODIAL_RESULT");
+        List<ClientSubscriptionEntity> forPcr = subscriptionRepository.findByEventType(PRISON_COURT_REGISTER_GENERATED.name());
+        List<ClientSubscriptionEntity> forCustodial = subscriptionRepository.findByEventType(CUSTODIAL_RESULT.name());
 
         assertThat(forPcr).containsExactlyInAnyOrder(sub1, sub3);
         assertThat(forCustodial).containsExactlyInAnyOrder(sub2, sub3);

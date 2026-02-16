@@ -88,7 +88,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_document_retrieval_success() throws Exception {
+    void document_retrieval_success_should_return_pdf() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
@@ -101,7 +101,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_document_retrieval_failure() throws Exception {
+    void material_not_ready_should_not_send_callback_and_return_504() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_not_found();
@@ -114,7 +114,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_return_504_when_callback_client_does_not_respond() throws Exception {
+    void callback_client_not_responding_should_return_504() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
@@ -125,7 +125,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_return_403_when_subscriber_lost_access_after_pcr_delivered() throws Exception {
+    void subscriber_lost_access_after_pcr_delivered_should_return_403() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
@@ -140,7 +140,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_return_403_when_other_subscription_without_pcr_tries_to_get_document() throws Exception {
+    void other_subscription_without_pcr_attempting_document_retrieval_should_return_403() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
@@ -154,7 +154,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_allow_late_subscriber_with_pcr_to_retrieve_document_when_access_by_event_type() throws Exception {
+    void late_subscriber_with_pcr_should_retrieve_document_when_access_is_by_event_type() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();

@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.integration.stubs;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -19,7 +20,8 @@ public final class SubscriptionStub {
     private static final String SUBSCRIPTION_PCR_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String SUBSCRIPTION_CUSTODIAL_ONLY_PATH = "stubs/requests/subscription/subscription-custodial-only.json";
     private static final String PLACEHOLDER_CALLBACK_URL = "{{callback.url}}";
-    public static final String CLIENT_SUBSCRIPTION_ID = "clientSubscriptionId";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    public static final String CLIENT_SUBSCRIPTION_ID_FIELD = "clientSubscriptionId";
 
     public static UUID createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
                                              String callbackBaseUrl, String callbackUri) throws Exception {
@@ -28,7 +30,7 @@ public final class SubscriptionStub {
                 : callbackBaseUrl + callbackUri;
         String body = loadPayload(SUBSCRIPTION_PCR_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
         String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body);
-        return UUID.fromString(new ObjectMapper().readTree(json).get(CLIENT_SUBSCRIPTION_ID).asText());
+        return extractClientSubscriptionId(json);
     }
 
     public static UUID createSubscriptionCustodialOnly(MockMvc mockMvc, String clientSubscriptionsUri,
@@ -45,16 +47,16 @@ public final class SubscriptionStub {
                 : callbackBaseUrl + callbackUri;
         String body = payloadWithPlaceholder.replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
         String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body);
-        return UUID.fromString(new ObjectMapper().readTree(json).get(CLIENT_SUBSCRIPTION_ID).asText());
+        return extractClientSubscriptionId(json);
     }
 
     public static String postSubscriptionAndReturnJson(MockMvc mockMvc, String clientSubscriptionsUri,
-                                                      String body) throws Exception {
+                                                       String body) throws Exception {
         return mockMvc.perform(post(clientSubscriptionsUri)
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.clientSubscriptionId").exists())
+                .andExpect(jsonPath("$." + CLIENT_SUBSCRIPTION_ID_FIELD).exists())
                 .andReturn().getResponse().getContentAsString();
     }
 
@@ -65,5 +67,10 @@ public final class SubscriptionStub {
 
     private static String loadPayload(String path) throws IOException {
         return new ClassPathResource(path).getContentAsString(StandardCharsets.UTF_8);
+    }
+
+    private static UUID extractClientSubscriptionId(String json) throws IOException {
+        JsonNode node = MAPPER.readTree(json);
+        return UUID.fromString(node.get(CLIENT_SUBSCRIPTION_ID_FIELD).asText());
     }
 }
