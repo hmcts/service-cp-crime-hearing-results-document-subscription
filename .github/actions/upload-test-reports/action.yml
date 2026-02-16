@@ -1,9 +1,7 @@
 # Reusable composite action to upload Gradle test reports as workflow artifacts.
 # Use with if: always() when calling so reports are uploaded even when tests fail.
-# For a web-based view in CI: the workflow also publishes test results to the job summary
-# (see publish-unit-test-result-action in ci-build-publish.yml) so metrics appear on the run page.
 name: Upload test reports
-description: Uploads test reports and JUnit XML as artifacts; run summary is published separately in the workflow
+description: Uploads test reports and JUnit XML results as a workflow artifact
 inputs:
   artifact_name:
     description: Name of the uploaded artifact

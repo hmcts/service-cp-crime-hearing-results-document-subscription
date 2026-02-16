@@ -76,14 +76,6 @@ jobs:
           echo "Building with ARTEFACT_VERSION=$ARTEFACT_VERSION"
           ./gradlew build -DARTEFACT_VERSION=$ARTEFACT_VERSION
 
-      - name: Publish unit and integration test results to job summary
-        if: always() && !cancelled()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: build/test-results/test/**/*.xml
-          check_name: Unit and integration tests
-          report_individual_runs: true
-
       - name: Extract repo name
         id: repo_vars
         run: |
@@ -132,14 +124,6 @@ jobs:
         run: |
           cd apiTest
           ../gradlew test
-
-      - name: Publish API test results to job summary
-        if: always() && !cancelled()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: apiTest/build/test-results/test/**/*.xml
-          check_name: API tests (PR)
-          report_individual_runs: true
 
       - name: Upload test reports
         if: always()
@@ -288,14 +272,6 @@ jobs:
           
           # Clean up containers manually
           docker compose down
-
-      - name: Publish API test results to job summary
-        if: always() && !cancelled()
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        with:
-          files: apiTest/build/test-results/test/**/*.xml
-          check_name: API tests (main)
-          report_individual_runs: true
 
       - name: Upload test reports
         if: always()
