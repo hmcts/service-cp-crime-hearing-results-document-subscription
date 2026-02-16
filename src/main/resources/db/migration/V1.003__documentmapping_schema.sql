@@ -1,5 +1,3 @@
---sql
-drop table if exists document_mapping;
 create table document_mapping (
     document_id             uuid primary key not null,
     material_id             uuid not null,
