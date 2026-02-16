@@ -1,7 +1,5 @@
 package uk.gov.hmcts.cp.subscription.integration.e2e;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,10 +25,12 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionCustodialOnly;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
@@ -50,7 +50,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @EnableWireMock({
@@ -62,10 +61,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
+    private UUID otherSubscriptionId;
+    private UUID lateSubscriptionId;
     private UUID callbackDocumentId;
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
-    private static final String SUBSCRIPTION_REQUEST_E2E = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
     private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
 
@@ -88,7 +88,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_document_retrieval_success() throws Exception {
+    void document_retrieval_success_should_return_pdf() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
@@ -101,7 +101,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_document_retrieval_failure() throws Exception {
+    void material_not_ready_should_not_send_callback_and_return_504() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_not_found();
@@ -114,7 +114,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void should_return_504_when_callback_client_does_not_respond() throws Exception {
+    void callback_client_not_responding_should_return_504() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
@@ -122,6 +122,51 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
         when_a_pcr_event_is_posted_expect_callback_delivery_timeout();
 
         then_callback_was_attempted();
+    }
+
+    @Test
+    void subscriber_lost_access_after_pcr_delivered_should_return_403() throws Exception {
+        given_i_am_a_subscriber_with_a_subscription();
+        given_i_have_a_callback_endpoint();
+        given_material_service_returns_document_success();
+
+        when_a_pcr_event_is_posted();
+        when_material_service_responds();
+        then_the_subscriber_receives_a_callback();
+
+        when_subscriber_loses_access();
+
+        then_subscriber_cannot_retrieve_document();
+    }
+
+    @Test
+    void other_subscription_without_pcr_attempting_document_retrieval_should_return_403() throws Exception {
+        given_i_am_a_subscriber_with_a_subscription();
+        given_i_have_a_callback_endpoint();
+        given_material_service_returns_document_success();
+        given_another_subscription_with_custodial_only();
+
+        when_a_pcr_event_is_posted();
+        when_material_service_responds();
+        then_the_subscriber_receives_a_callback();
+
+        then_other_subscription_cannot_retrieve_document();
+    }
+
+    @Test
+    void late_subscriber_with_pcr_should_retrieve_document_when_access_is_by_event_type() throws Exception {
+        given_i_am_a_subscriber_with_a_subscription();
+        given_i_have_a_callback_endpoint();
+        given_material_service_returns_document_success();
+
+        when_a_pcr_event_is_posted();
+        when_material_service_responds();
+        then_the_subscriber_receives_a_callback();
+        then_the_subscriber_can_retrieve_the_document();
+
+        given_late_subscriber_with_pcr();
+
+        then_late_subscriber_can_retrieve_document();
     }
 
     private void given_i_am_a_subscriber_with_a_subscription() throws Exception {
@@ -196,6 +241,19 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
         getDocumentAndExpectPdf(subscriptionId, callbackDocumentId);
     }
 
+    private void when_subscriber_loses_access() throws Exception {
+        deleteSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, subscriptionId)
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    private void then_subscriber_cannot_retrieve_document() throws Exception {
+        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, callbackDocumentId))
+                .andDo(print())
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Access denied: subscription does not have access to this document"));
+    }
+
     private void getDocumentAndExpectPdf(UUID subId, UUID docId) throws Exception {
         mockMvc.perform(get(DOCUMENT_URI, subId, docId))
                 .andDo(print())
@@ -206,18 +264,25 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void createSubscription() throws Exception {
-        String callbackUrl = callbackBaseUrl.endsWith("/") ? callbackBaseUrl + CALLBACK_URI.substring(1) : callbackBaseUrl + CALLBACK_URI;
-        String body = loadPayload(SUBSCRIPTION_REQUEST_E2E).replace("{{callback.url}}", callbackUrl);
-        String json = postSubscriptionAndReturnJson(body);
-        subscriptionId = UUID.fromString(new ObjectMapper().readTree(json).get("clientSubscriptionId").asText());
+        subscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
     }
 
-    private String postSubscriptionAndReturnJson(String body) throws Exception {
-        return mockMvc.perform(post(CLIENT_SUBSCRIPTIONS_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.clientSubscriptionId").exists())
-                .andReturn().getResponse().getContentAsString();
+    private void given_another_subscription_with_custodial_only() throws Exception {
+        otherSubscriptionId = createSubscriptionCustodialOnly(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+    }
+
+    private void given_late_subscriber_with_pcr() throws Exception {
+        lateSubscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+    }
+
+    private void then_late_subscriber_can_retrieve_document() throws Exception {
+        getDocumentAndExpectPdf(lateSubscriptionId, callbackDocumentId);
+    }
+
+    private void then_other_subscription_cannot_retrieve_document() throws Exception {
+        mockMvc.perform(get(DOCUMENT_URI, otherSubscriptionId, callbackDocumentId))
+                .andDo(print())
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Access denied: subscription does not have access to this document"));
     }
 }
