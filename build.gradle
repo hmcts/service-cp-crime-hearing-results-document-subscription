@@ -3,12 +3,12 @@ plugins {
   id 'java'
   id 'org.springframework.boot' version '4.0.2'
   id 'io.spring.dependency-management' version '1.1.7'
-  id 'org.openapi.generator' version '7.19.0'
+  id 'org.openapi.generator' version '7.20.0'
   id 'jacoco'
   id 'maven-publish'
   id 'com.github.ben-manes.versions' version '0.53.0'
-  id 'org.cyclonedx.bom' version '3.1.0'
-  id 'com.gorylenko.gradle-git-properties' version '2.5.5'
+  id 'org.cyclonedx.bom' version '3.2.0'
+  id 'com.gorylenko.gradle-git-properties' version '2.5.7'
 }
 
 group = 'uk.gov.hmcts.cp'
@@ -37,7 +37,7 @@ dependencies {
   // This is proving to be a real puzzle. This is actually included in the api published pom
   // ( though with scope of "runtime" )
   // Yet we still need to add it manually. Grrr. TBC.
-  implementation "io.swagger.core.v3:swagger-annotations:2.2.42"
+  implementation "io.swagger.core.v3:swagger-annotations:2.2.43"
   implementation("org.owasp.encoder:encoder:1.4.0")
-  implementation 'org.awaitility:awaitility:4.2.0'
+  implementation 'org.awaitility:awaitility:4.3.0'
 }
