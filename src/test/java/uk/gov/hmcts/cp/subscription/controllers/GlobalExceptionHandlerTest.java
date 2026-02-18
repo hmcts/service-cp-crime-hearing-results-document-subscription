@@ -24,7 +24,6 @@ class GlobalExceptionHandlerTest {
     @InjectMocks
     GlobalExceptionHandler globalExceptionHandler;
 
-
     @Test
     void not_found_exceptions_should_handle_ok() {
         NoHandlerFoundException e = new NoHandlerFoundException("GET", "Url", null);

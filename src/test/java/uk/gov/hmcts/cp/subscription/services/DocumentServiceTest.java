@@ -26,7 +26,7 @@ import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_RE
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
-    public static final String MATERIAL_URL = "http://material-servce";
+
     @Mock
     ClockService clockService;
     @Mock
@@ -41,6 +41,7 @@ class DocumentServiceTest {
     @InjectMocks
     DocumentService documentService;
 
+    String materialUrl = "http://material-servce";
     UUID materialId = UUID.fromString("43bb8246-2bdf-487c-a0d3-160bbfd37777");
     UUID documentId = UUID.fromString("2e48f8f1-c057-48f7-92e5-c4183480ea3e");
     DocumentMappingEntity documentMappingEntity = DocumentMappingEntity.builder()
@@ -68,7 +69,7 @@ class DocumentServiceTest {
         when(documentMappingRepository.findById(documentId)).thenReturn(Optional.of(documentMappingEntity));
         when(materialApi.getMaterialByMaterialId(materialId, null, null)).thenReturn(createMaterial());
         ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
-        when(materialClient.getMaterialDocument(MATERIAL_URL)).thenReturn(document);
+        when(materialClient.getMaterialDocument(materialUrl)).thenReturn(document);
 
         DocumentContent documentContent = documentService.getDocumentContent(documentId);
 
@@ -79,7 +80,7 @@ class DocumentServiceTest {
 
     private Material createMaterial() {
         Material material = new Material();
-        material.setContentUrl(MATERIAL_URL);
+        material.setContentUrl(materialUrl);
         MaterialMetadata materialMetadata = new MaterialMetadata();
         materialMetadata.setFileName("file.pdf");
         material.setMetadata(materialMetadata);

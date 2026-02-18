@@ -38,16 +38,16 @@ class CallbackDeliveryServiceTest {
     @InjectMocks
     private CallbackDeliveryService callbackDeliveryService;
 
-    private final UUID DOCUMENT_ID = randomUUID();
-    private final String CALLBACK_URL = "https://callback.example.com";
+    private final UUID documentId = randomUUID();
+    private final String callbackUrl = "https://callback.example.com";
     private final ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().build();
-    private final Subscriber subscriber = Subscriber.builder().notificationEndpoint(CALLBACK_URL).build();
+    private final Subscriber subscriber = Subscriber.builder().notificationEndpoint(callbackUrl).build();
     private final EventNotificationPayload eventNotificationPayload = EventNotificationPayload.builder().build();
 
     @Test
     void processPcrEvent_custodialResult_shouldThrowUnsupportedOperation() {
         PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(EventType.CUSTODIAL_RESULT).build();
-        assertThrows(UnsupportedOperationException.class, () -> callbackDeliveryService.processPcrEvent(pcrEventPayload, DOCUMENT_ID));
+        assertThrows(UnsupportedOperationException.class, () -> callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId));
         verifyNoInteractions(subscriptionRepository, subscriberMapper, callbackService);
     }
 
@@ -55,11 +55,11 @@ class CallbackDeliveryServiceTest {
     void processPcrEvent_shouldMapEventNotificationPayloadFieldsCorrectly() {
         PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(EventType.PRISON_COURT_REGISTER_GENERATED).build();
         when(subscriptionRepository.findByEventType(EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(List.of(subscriptionEntity));
-        when(notificationMapper.mapToPayload(DOCUMENT_ID, pcrEventPayload)).thenReturn(eventNotificationPayload);
+        when(notificationMapper.mapToPayload(documentId, pcrEventPayload)).thenReturn(eventNotificationPayload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
 
-        callbackDeliveryService.processPcrEvent(pcrEventPayload, DOCUMENT_ID);
+        callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId);
 
-        verify(callbackService).sendToSubscriber(CALLBACK_URL, eventNotificationPayload);
+        verify(callbackService).sendToSubscriber(callbackUrl, eventNotificationPayload);
     }
 }

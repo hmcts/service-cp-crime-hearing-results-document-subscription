@@ -12,7 +12,6 @@ import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
@@ -24,18 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationManagerTest {
-
-    private static final UUID MATERIAL_ID = UUID.randomUUID();
-    private static final UUID DOCUMENT_ID = UUID.randomUUID();
-    private static final UUID SUBSCRIPTION_ID = UUID.randomUUID();
 
     @Mock
     NotificationService notificationService;
@@ -52,8 +46,11 @@ class NotificationManagerTest {
     @InjectMocks
     NotificationManager notificationManager;
 
+    UUID materialId = UUID.randomUUID();
+    UUID documentId = UUID.randomUUID();
+    UUID subscriptionId = UUID.randomUUID();
     PcrEventPayload payload = PcrEventPayload.builder()
-            .materialId(MATERIAL_ID)
+            .materialId(materialId)
             .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
             .build();
 
@@ -64,45 +61,35 @@ class NotificationManagerTest {
             .build();
 
     @Test
-    void processPcrNotification_should_process_deliver() throws Exception {
-        doNothing().when(notificationService).processInboundEvent(any(PcrEventPayload.class));
-        when(documentService.getDocumentIdForMaterialId(eq(MATERIAL_ID), eq(EntityEventType.PRISON_COURT_REGISTER_GENERATED)))
-                .thenReturn(DOCUMENT_ID);
-        doNothing().when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), eq(DOCUMENT_ID));
+    void processPcrNotification_should_process_deliver() {
+        when(documentService.getDocumentIdForMaterialId(materialId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(documentId);
 
         notificationManager.processPcrNotification(payload);
 
         verify(notificationService).processInboundEvent(eq(payload));
-        verify(documentService).getDocumentIdForMaterialId(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-        verify(callbackDeliveryService).processPcrEvent(eq(payload), eq(DOCUMENT_ID));
+        verify(callbackDeliveryService).processPcrEvent(payload, documentId);
     }
 
     @Test
     void getPcrDocumentContent_should_return_content_when_subscription_has_access() {
-        when(documentService.getEventTypeForDocument(DOCUMENT_ID)).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-        when(subscriptionService.hasAccess(SUBSCRIPTION_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
-        when(documentService.getDocumentContent(DOCUMENT_ID)).thenReturn(content);
+        when(documentService.getEventTypeForDocument(documentId)).thenReturn(PRISON_COURT_REGISTER_GENERATED);
+        when(subscriptionService.hasAccess(subscriptionId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
+        when(documentService.getDocumentContent(documentId)).thenReturn(content);
 
-        DocumentContent result = notificationManager.getPcrDocumentContent(SUBSCRIPTION_ID, DOCUMENT_ID);
+        DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, documentId);
 
         assertThat(result).isEqualTo(content);
-        verify(documentService).getEventTypeForDocument(DOCUMENT_ID);
-        verify(subscriptionService).hasAccess(SUBSCRIPTION_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-        verify(documentService).getDocumentContent(DOCUMENT_ID);
     }
 
     @Test
     void getPcrDocumentContent_should_throw_forbidden_when_subscription_has_no_access() {
-        when(documentService.getEventTypeForDocument(DOCUMENT_ID)).thenReturn(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-        when(subscriptionService.hasAccess(SUBSCRIPTION_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).thenReturn(false);
+        when(documentService.getEventTypeForDocument(documentId)).thenReturn(PRISON_COURT_REGISTER_GENERATED);
 
         ResponseStatusException thrown = assertThrows(ResponseStatusException.class,
-                () -> notificationManager.getPcrDocumentContent(SUBSCRIPTION_ID, DOCUMENT_ID));
+                () -> notificationManager.getPcrDocumentContent(subscriptionId, documentId));
 
         assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(thrown.getReason()).contains("Access denied");
-        verify(documentService).getEventTypeForDocument(DOCUMENT_ID);
-        verify(subscriptionService).hasAccess(SUBSCRIPTION_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
         verify(documentService, never()).getDocumentContent(any());
     }
 }
