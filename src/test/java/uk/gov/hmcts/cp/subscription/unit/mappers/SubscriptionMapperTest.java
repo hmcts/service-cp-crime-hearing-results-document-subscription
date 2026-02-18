@@ -27,14 +27,13 @@ import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENE
 @ExtendWith(MockitoExtension.class)
 class SubscriptionMapperTest {
 
-    private final static OffsetDateTime MOCKCREATED = OffsetDateTime.of(2025, 12, 1, 11, 30, 50, 582007048, ZoneOffset.UTC);
-    private final static OffsetDateTime MOCKUPDATED = OffsetDateTime.of(2025, 12, 2, 12, 40, 55, 234567890, ZoneOffset.UTC);
-
     @Mock
     ClockService clockService;
 
     SubscriptionMapper mapper = new SubscriptionMapperImpl();
 
+    OffsetDateTime mockCreated = OffsetDateTime.of(2025, 12, 1, 11, 30, 50, 582007048, ZoneOffset.UTC);
+    OffsetDateTime mockUpdated = OffsetDateTime.of(2025, 12, 2, 12, 40, 55, 234567890, ZoneOffset.UTC);
     UUID clientSubscriptionId = UUID.fromString("d730c6e1-66ba-4ef0-a3dd-0b9928faa76d");
     NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
             .callbackUrl("https://example.com")
@@ -43,13 +42,13 @@ class SubscriptionMapperTest {
             .id(clientSubscriptionId)
             .notificationEndpoint(notificationEndpoint.getCallbackUrl().toString())
             .eventTypes(mutableLisOfEventTypes())
-            .createdAt(MOCKCREATED)
-            .updatedAt(MOCKUPDATED)
+            .createdAt(mockCreated)
+            .updatedAt(mockUpdated)
             .build();
 
     @Test
     void create_request_should_map_to_entity_with_sorted_types() {
-        when(clockService.nowOffsetUTC()).thenReturn(MOCKCREATED);
+        when(clockService.nowOffsetUTC()).thenReturn(mockCreated);
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(notificationEndpoint)
                 .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
@@ -73,26 +72,26 @@ class SubscriptionMapperTest {
                 .notificationEndpoint(updatedEndpoint)
                 .eventTypes(List.of(CUSTODIAL_RESULT))
                 .build();
-        when(clockService.nowOffsetUTC()).thenReturn(MOCKUPDATED);
+        when(clockService.nowOffsetUTC()).thenReturn(mockUpdated);
         ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(clockService, existing, request);
 
         assertThat(entity.getId()).isEqualTo(clientSubscriptionId);
         assertThat(entity.getNotificationEndpoint()).isEqualTo("https://updated.com");
         assertThat(entity.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT]");
-        assertThat(entity.getCreatedAt()).isEqualTo(MOCKCREATED);
-        assertThat(entity.getUpdatedAt()).isEqualTo(MOCKUPDATED);
+        assertThat(entity.getCreatedAt()).isEqualTo(mockCreated);
+        assertThat(entity.getUpdatedAt()).isEqualTo(mockUpdated);
     }
 
     @Test
     void entity_should_map_to_response() {
-        when(clockService.now()).thenReturn(MOCKCREATED.toInstant()).thenReturn(MOCKUPDATED.toInstant());
+        when(clockService.now()).thenReturn(mockUpdated.toInstant()).thenReturn(mockUpdated.toInstant());
         ClientSubscription subscription = mapper.mapEntityToResponse(clockService, existing);
 
         assertThat(subscription.getClientSubscriptionId()).isEqualTo(clientSubscriptionId);
         assertThat(subscription.getNotificationEndpoint()).isEqualTo(notificationEndpoint);
         assertThat(subscription.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT, PRISON_COURT_REGISTER_GENERATED]");
-        assertThat(subscription.getCreatedAt()).isEqualTo(MOCKCREATED.toInstant());
-        assertThat(subscription.getUpdatedAt()).isEqualTo(MOCKUPDATED.toInstant());
+        assertThat(subscription.getCreatedAt()).isEqualTo(mockUpdated.toInstant());
+        assertThat(subscription.getUpdatedAt()).isEqualTo(mockUpdated.toInstant());
     }
 
     private List<EntityEventType> mutableLisOfEventTypes() {
