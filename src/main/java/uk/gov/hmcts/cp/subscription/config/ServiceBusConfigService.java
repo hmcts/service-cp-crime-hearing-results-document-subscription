@@ -4,6 +4,7 @@ import com.azure.core.http.HttpClient;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.core.http.policy.HttpPipelinePolicy;
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
+import com.azure.messaging.servicebus.ServiceBusSenderClient;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClientBuilder;
 import lombok.Getter;
@@ -43,8 +44,20 @@ public class ServiceBusConfigService {
         this.maxTries = maxTries;
     }
 
-    public ServiceBusClientBuilder clientBuilder() {
-        return new ServiceBusClientBuilder().connectionString(connectionString);
+    public ServiceBusSenderClient senderClient(final String topicName) {
+        return new ServiceBusClientBuilder()
+                .connectionString(connectionString)
+                .sender()
+                .topicName(topicName)
+                .buildClient();
+    }
+
+    public ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder(final String topicName, final String subscriptionName) {
+        return new ServiceBusClientBuilder()
+                .connectionString(connectionString)
+                .processor()
+                .topicName(topicName)
+                .subscriptionName(subscriptionName);
     }
 
     public ServiceBusAdministrationClient adminClient() {
@@ -67,12 +80,5 @@ public class ServiceBusConfigService {
                 .httpClient(adminHttpClient)
                 .addPolicy(forceHttpPolicy)
                 .buildClient();
-    }
-
-    public ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder(final String topicName, final String subscriptionName) {
-        return clientBuilder()
-                .processor()
-                .topicName(topicName)
-                .subscriptionName(subscriptionName);
     }
 }
