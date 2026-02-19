@@ -84,13 +84,12 @@ class SubscriptionMapperTest {
 
     @Test
     void entity_should_map_to_response() {
-        when(clockService.now()).thenReturn(mockUpdated.toInstant()).thenReturn(mockUpdated.toInstant());
         ClientSubscription subscription = mapper.mapEntityToResponse(clockService, existing);
 
         assertThat(subscription.getClientSubscriptionId()).isEqualTo(clientSubscriptionId);
         assertThat(subscription.getNotificationEndpoint()).isEqualTo(notificationEndpoint);
         assertThat(subscription.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT, PRISON_COURT_REGISTER_GENERATED]");
-        assertThat(subscription.getCreatedAt()).isEqualTo(mockUpdated.toInstant());
+        assertThat(subscription.getCreatedAt()).isEqualTo(mockCreated.toInstant());
         assertThat(subscription.getUpdatedAt()).isEqualTo(mockUpdated.toInstant());
     }
 
