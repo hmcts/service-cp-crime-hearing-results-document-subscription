@@ -24,7 +24,7 @@ public class ServiceBusMessageWrapper {
     }
 
     @SneakyThrows
-    public static ServiceBusMessageWrapper fromJson(String json) {
+    public static ServiceBusMessageWrapper fromJson(final String json) {
         return new ObjectMapper().readValue(json, ServiceBusMessageWrapper.class);
     }
 }

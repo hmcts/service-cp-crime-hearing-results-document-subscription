@@ -18,35 +18,36 @@ import java.util.List;
 @Slf4j
 public class ServiceBusAdminService {
 
-    private ServiceBusConfigService configService;
+    private final ServiceBusConfigService configService;
 
+    @SuppressWarnings({"PMD.AvoidCatchingGenericException","PMD.OnlyOneReturn"})
     public boolean isServiceBusReady() {
         try {
             configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
             return true;
         } catch (Exception e) {
-            log.info("waiting for servicebus to start");
+            log.info("waiting for servicebus to be available");
             return false;
         }
     }
 
-    public void createTopicAndSubscription(String topicName, String subscriptionName) {
-        ServiceBusAdministrationClient adminClient = configService.adminClient();
-        List<String> topics = adminClient.listTopics().stream().map(TopicProperties::getName).toList();
+    public void createTopicAndSubscription(final String topicName, final String subscriptionName) {
+        final ServiceBusAdministrationClient adminClient = configService.adminClient();
+        final List<String> topics = adminClient.listTopics().stream().map(TopicProperties::getName).toList();
         if (topics.contains(topicName)) {
             log.info("Topic {} already exists", topicName);
         } else {
             log.info("Creating topic {}", topicName);
-            CreateTopicOptions createTopicOptions = new CreateTopicOptions();
+            final CreateTopicOptions createTopicOptions = new CreateTopicOptions();
             createTopicOptions.setDefaultMessageTimeToLive(Duration.ofHours(1));
             adminClient.createTopic(topicName, createTopicOptions);
         }
 
-        List<String> subscriptions = adminClient.listSubscriptions(topicName).stream().map(SubscriptionProperties::getSubscriptionName).toList();
+        final List<String> subscriptions = adminClient.listSubscriptions(topicName).stream().map(SubscriptionProperties::getSubscriptionName).toList();
         if (subscriptions.contains(subscriptionName)) {
             log.info("Subscription {}/{} already exists", topicName, subscriptionName);
         } else {
-            CreateSubscriptionOptions options = new CreateSubscriptionOptions();
+            final CreateSubscriptionOptions options = new CreateSubscriptionOptions();
             options.setLockDuration(Duration.ofMinutes(1));
             options.setMaxDeliveryCount(1);
             adminClient.createSubscription(topicName, subscriptionName, options);

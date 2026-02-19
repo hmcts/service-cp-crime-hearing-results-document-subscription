@@ -11,10 +11,10 @@ import java.util.List;
 @Service
 @Getter
 public class RetryConfigService {
-    final List<Integer> retryDelaySeconds;
+    private final List<Integer> retryDelaySeconds;
 
     public RetryConfigService(
-            @Value("${service-bus.retry-seconds}") List<Integer> retryDelaySeconds
+            @Value("${service-bus.retry-seconds}") final List<Integer> retryDelaySeconds
     ) {
         log.info("RetryConfigService using retryDelaySeconds {}", retryDelaySeconds);
         this.retryDelaySeconds = retryDelaySeconds;

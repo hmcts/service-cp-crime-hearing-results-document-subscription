@@ -17,15 +17,15 @@ public class ServiceBusRetryService {
     private RetryConfigService retryConfigService;
     private ClockService clockService;
 
-    public int getDelaySecs(int failureCount) {
-        List<Integer> retryConfig = retryConfigService.getRetryDelaySeconds();
-        int retryIndex = failureCount < retryConfig.size() ? failureCount : retryConfig.size() - 1;
-        int retryDelaySecs = retryConfig.get(retryIndex);
+    public int getDelaySecs(final int failureCount) {
+        final List<Integer> retryConfig = retryConfigService.getRetryDelaySeconds();
+        final int retryIndex = failureCount < retryConfig.size() ? failureCount : retryConfig.size() - 1;
+        final int retryDelaySecs = retryConfig.get(retryIndex);
         log.info("retry delay {} seconds", retryDelaySecs);
         return retryDelaySecs;
     }
 
-    public OffsetDateTime getNextTryTime(int failureCount) {
+    public OffsetDateTime getNextTryTime(final int failureCount) {
         return clockService.nowOffsetUTC().plusSeconds(getDelaySecs(failureCount));
     }
 }
