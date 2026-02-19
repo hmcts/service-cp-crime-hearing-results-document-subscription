@@ -13,7 +13,7 @@ import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.subscription.config.TrustSSLCertificatesInTestConfig;
+import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesInTestConfig;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.io.IOException;
@@ -50,7 +50,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
-@Import(TrustSSLCertificatesInTestConfig.class)
+@Import(IgnoreSSLCertificatesInTestConfig.class)
 class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
