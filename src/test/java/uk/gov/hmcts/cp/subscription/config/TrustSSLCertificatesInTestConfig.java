@@ -13,7 +13,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 @Configuration
-public class SSLTrustingRestTemplateConfig {
+public class TrustSSLCertificatesInTestConfig {
 
     private static final X509TrustManager TRUST_ALL = new X509TrustManager() {
         @Override

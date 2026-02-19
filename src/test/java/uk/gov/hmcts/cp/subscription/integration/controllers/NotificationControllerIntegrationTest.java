@@ -3,10 +3,15 @@ package uk.gov.hmcts.cp.subscription.integration.controllers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
+import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
+import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,16 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
-import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
-import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
-
-
 @EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0)})
-@ActiveProfiles("test")
 class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
