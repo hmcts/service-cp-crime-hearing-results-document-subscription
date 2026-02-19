@@ -35,8 +35,8 @@ public class ServiceBusConfigService {
             @Value("${service-bus.max-tries}") final int maxTries
     ) {
         log.info("ServiceBusConfigService initialised with enabled {}", enabled);
-        log.info("ServiceBusConfigService initialised with adminConnectionString \"{}\"", adminConnectionString);
-        log.info("ServiceBusConfigService initialised with connectionString \"{}\"", connectionString);
+        log.info("ServiceBusConfigService initialised with adminConnectionString starting:\"{}\"", adminConnectionString.substring(0, 20));
+        log.info("ServiceBusConfigService initialised with connectionString starting:\"{}\"", connectionString.substring(0, 20));
         log.info("ServiceBusConfigService initialised with maxTries \"{}\"", maxTries);
         this.enabled = enabled;
         this.adminConnectionString = adminConnectionString;
