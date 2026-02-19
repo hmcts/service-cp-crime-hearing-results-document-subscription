@@ -1,0 +1,22 @@
+package uk.gov.hmcts.cp.subscription.config;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Slf4j
+@Service
+@Getter
+public class RetryConfigService {
+    final List<Integer> retryDelaySeconds;
+
+    public RetryConfigService(
+            @Value("${service-bus.retry-seconds}") List<Integer> retryDelaySeconds
+    ) {
+        log.info("RetryConfigService using retryDelaySeconds {}", retryDelaySeconds);
+        this.retryDelaySeconds = retryDelaySeconds;
+    }
+}
