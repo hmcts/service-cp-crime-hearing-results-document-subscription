@@ -40,4 +40,6 @@ dependencies {
   implementation "io.swagger.core.v3:swagger-annotations:2.2.43"
   implementation("org.owasp.encoder:encoder:1.4.0")
   implementation 'org.awaitility:awaitility:4.3.0'
+
+  implementation("com.azure:azure-messaging-servicebus:7.17.17")
 }
