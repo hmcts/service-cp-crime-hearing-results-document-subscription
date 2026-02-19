@@ -1,33 +1,20 @@
 package uk.gov.hmcts.cp.subscription.integration.e2e;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
-
-import com.github.tomakehurst.wiremock.WireMockServer;
-
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.subscription.config.SSLTrustingRestTemplateConfig;
+import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesInTestConfig;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-
-import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionCustodialOnly;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -42,22 +29,28 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
-
-import org.springframework.test.web.servlet.ResultActions;
-
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionCustodialOnly;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
 
 @EnableWireMock({
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
-@ActiveProfiles("test")
-@Import(SSLTrustingRestTemplateConfig.class)
+@Import(IgnoreSSLCertificatesInTestConfig.class)
 class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
