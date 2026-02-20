@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,8 +10,10 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
+import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,9 +27,16 @@ class SubscriptionControllerTest {
 
     @Mock
     SubscriptionService subscriptionService;
+    @Mock
+    HttpServletRequest httpRequest;
 
     @InjectMocks
     SubscriptionController subscriptionController;
+
+    @BeforeEach
+    void setResolvedClientId() {
+        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn("test-client-id");
+    }
 
     ClientSubscriptionRequest createRequest = ClientSubscriptionRequest.builder()
             .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
@@ -34,11 +44,12 @@ class SubscriptionControllerTest {
             .build();
     ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
     UUID subscriptionId = UUID.randomUUID();
+    String clientId = "test-client-id";
 
     @Test
     void create_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.saveSubscription(createRequest)).thenReturn(response);
+        when(subscriptionService.saveSubscription(createRequest, clientId)).thenReturn(response);
         var result = subscriptionController.createClientSubscription(createRequest);
         assertThat(result.getStatusCode().value()).isEqualTo(201);
         assertThat(result.getBody()).isEqualTo(response);
@@ -47,9 +58,9 @@ class SubscriptionControllerTest {
     @Test
     void update_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.updateSubscription(subscriptionId, updateRequest)).thenReturn(response);
+        when(subscriptionService.updateSubscription(subscriptionId, updateRequest, clientId)).thenReturn(response);
         var result = subscriptionController.updateClientSubscription(subscriptionId, updateRequest);
-        verify(subscriptionService).updateSubscription(subscriptionId, updateRequest);
+        verify(subscriptionService).updateSubscription(subscriptionId, updateRequest, clientId);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
     }
@@ -57,9 +68,9 @@ class SubscriptionControllerTest {
     @Test
     void get_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.getSubscription(subscriptionId)).thenReturn(response);
+        when(subscriptionService.getSubscription(subscriptionId, clientId)).thenReturn(response);
         var result = subscriptionController.getClientSubscription(subscriptionId);
-        verify(subscriptionService).getSubscription(subscriptionId);
+        verify(subscriptionService).getSubscription(subscriptionId, clientId);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
     }
@@ -67,7 +78,7 @@ class SubscriptionControllerTest {
     @Test
     void delete_controller_should_call_service() {
         var result = subscriptionController.deleteClientSubscription(subscriptionId);
-        verify(subscriptionService).deleteSubscription(subscriptionId);
+        verify(subscriptionService).deleteSubscription(subscriptionId, clientId);
         assertThat(result.getStatusCode().value()).isEqualTo(204);
     }
 }

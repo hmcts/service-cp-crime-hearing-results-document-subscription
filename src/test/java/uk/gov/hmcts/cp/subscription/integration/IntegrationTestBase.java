@@ -14,6 +14,7 @@ import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
+import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
@@ -37,6 +38,8 @@ public abstract class IntegrationTestBase {
     protected static final String NOTIFICATIONS_PCR_URI = "/notifications/pcr";
     protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
     protected static final String CALLBACK_URI = "/callback/notify";
+    protected static final String TEST_CLIENT_ID = "test-client-id";
+    protected static final String AUTHORIZATION_HEADER_VALUE = JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID);
 
     @Resource
     protected MockMvc mockMvc;
@@ -73,6 +76,7 @@ public abstract class IntegrationTestBase {
 
     protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<EntityEventType> entityEventTypes) {
         ClientSubscriptionEntity subscription = ClientSubscriptionEntity.builder()
+                .clientId(TEST_CLIENT_ID)
                 .eventTypes(entityEventTypes)
                 .notificationEndpoint(notificationUri)
                 .createdAt(OffsetDateTime.now())

@@ -35,7 +35,7 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
         mockMvc.perform(put("/client-subscriptions/{id}", existing.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("client-id-todo", "1234")
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .content(body))
                 .andDo(print())
                 .andExpect(status().isOk())

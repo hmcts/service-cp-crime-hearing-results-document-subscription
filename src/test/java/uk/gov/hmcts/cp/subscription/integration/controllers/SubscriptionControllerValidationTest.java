@@ -18,6 +18,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
     void bad_event_type_should_return_400() throws Exception {
         String body = loadPayload(SUBSCRIPTION_REQUEST_BAD_EVENT);
         mockMvc.perform(post(CLIENT_SUBSCRIPTIONS)
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
@@ -28,6 +29,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
     void callback_url_invalid_should_return_400() throws Exception {
         String body = loadPayload(SUBSCRIPTION_REQUEST_INVALID_CALLBACK);
         mockMvc.perform(post(CLIENT_SUBSCRIPTIONS)
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest());

@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.subscription.integration.stubs;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -17,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public final class SubscriptionStub {
 
+    private static final String TEST_CLIENT_ID = "test-client-id";
     private static final String SUBSCRIPTION_PCR_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String SUBSCRIPTION_CUSTODIAL_ONLY_PATH = "stubs/requests/subscription/subscription-custodial-only.json";
     private static final String PLACEHOLDER_CALLBACK_URL = "{{callback.url}}";
@@ -53,6 +55,7 @@ public final class SubscriptionStub {
     public static String postSubscriptionAndReturnJson(MockMvc mockMvc, String clientSubscriptionsUri,
                                                        String body) throws Exception {
         return mockMvc.perform(post(clientSubscriptionsUri)
+                        .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -62,7 +65,8 @@ public final class SubscriptionStub {
 
     public static ResultActions deleteSubscription(MockMvc mockMvc, String clientSubscriptionsUri,
                                                    UUID clientSubscriptionId) throws Exception {
-        return mockMvc.perform(delete(clientSubscriptionsUri + "/{clientSubscriptionId}", clientSubscriptionId));
+        return mockMvc.perform(delete(clientSubscriptionsUri + "/{clientSubscriptionId}", clientSubscriptionId)
+                .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID)));
     }
 
     private static String loadPayload(String path) throws IOException {

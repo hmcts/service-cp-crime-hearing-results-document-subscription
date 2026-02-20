@@ -25,8 +25,8 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
     void delete_client_subscription_should_delete_subscription() throws Exception {
         ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
         mockMvc.perform(delete("/client-subscriptions/{id}", entity.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("client-id-todo", "1234"))
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNoContent());
         assertThat(subscriptionRepository.findAll()).hasSize(0);

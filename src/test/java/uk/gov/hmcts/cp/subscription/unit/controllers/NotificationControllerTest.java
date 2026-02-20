@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +11,7 @@ import org.springframework.http.MediaType;
 import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
+import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 
@@ -28,21 +30,25 @@ import static org.springframework.http.HttpStatus.ACCEPTED;
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
 
-    private static final UUID MATERIAL_ID = UUID.randomUUID();
-    private static final UUID DOCUMENT_ID = UUID.randomUUID();
-    private static final UUID SUBSCRIPTION_ID = UUID.randomUUID();
-
     @Mock
     NotificationManager notificationManager;
 
+    @Mock
+    HttpServletRequest httpRequest;
+
     @InjectMocks
     NotificationController notificationController;
+
+    UUID materialId = UUID.randomUUID();
+    UUID documentId = UUID.randomUUID();
+    UUID subscriptionId = UUID.randomUUID();
+    String clientId = "test-client-id";
 
     @SneakyThrows
     @Test
     void valid_pcr_payload_should_process_deliver_callbackurl_and_return_accepted() {
         PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(MATERIAL_ID)
+                .materialId(materialId)
                 .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();
         doNothing().when(notificationManager).processPcrNotification(any(PcrEventPayload.class));
@@ -56,7 +62,7 @@ class NotificationControllerTest {
     @SneakyThrows
     @Test
     void runtime_exception_should_propagate() {
-        PcrEventPayload payload = PcrEventPayload.builder().materialId(MATERIAL_ID).build();
+        PcrEventPayload payload = PcrEventPayload.builder().materialId(materialId).build();
 
         doThrow(new RuntimeException("processing failed"))
                 .when(notificationManager)
@@ -70,7 +76,7 @@ class NotificationControllerTest {
     @Test
     void exception_from_manager_should_propagate_for_global_handler() {
         PcrEventPayload payload = PcrEventPayload.builder()
-                .materialId(MATERIAL_ID)
+                .materialId(materialId)
                 .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();
         RuntimeException failure = new RuntimeException("Callback delivery failed");
@@ -87,21 +93,22 @@ class NotificationControllerTest {
 
     @Test
     void get_pcr_document_should_return_200_with_content_from_manager() throws Exception {
+        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn(clientId);
         byte[] pdfBody = "PDF content".getBytes();
         DocumentContent content = DocumentContent.builder()
                 .body(pdfBody)
                 .contentType(MediaType.APPLICATION_PDF)
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
-        when(notificationManager.getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID))).thenReturn(content);
+        when(notificationManager.getPcrDocumentContent(eq(subscriptionId), eq(clientId), eq(documentId))).thenReturn(content);
 
-        var response = notificationController.getDocument(SUBSCRIPTION_ID, DOCUMENT_ID);
+        var response = notificationController.getDocument(subscriptionId, documentId);
 
         assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getInputStream().readAllBytes()).isEqualTo(pdfBody);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("PrisonCourtRegister.pdf");
-        verify(notificationManager).getPcrDocumentContent(SUBSCRIPTION_ID, DOCUMENT_ID);
+        verify(notificationManager).getPcrDocumentContent(subscriptionId, clientId, documentId);
     }
 }

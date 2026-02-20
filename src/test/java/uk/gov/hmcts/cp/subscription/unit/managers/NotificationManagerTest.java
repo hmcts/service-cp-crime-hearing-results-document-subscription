@@ -49,6 +49,7 @@ class NotificationManagerTest {
     UUID materialId = UUID.randomUUID();
     UUID documentId = UUID.randomUUID();
     UUID subscriptionId = UUID.randomUUID();
+    String clientId = "test-client-id";
     PcrEventPayload payload = PcrEventPayload.builder()
             .materialId(materialId)
             .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
@@ -73,10 +74,10 @@ class NotificationManagerTest {
     @Test
     void getPcrDocumentContent_should_return_content_when_subscription_has_access() {
         when(documentService.getEventTypeForDocument(documentId)).thenReturn(PRISON_COURT_REGISTER_GENERATED);
-        when(subscriptionService.hasAccess(subscriptionId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
+        when(subscriptionService.hasAccess(subscriptionId, clientId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
         when(documentService.getDocumentContent(documentId)).thenReturn(content);
 
-        DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, documentId);
+        DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, clientId, documentId);
 
         assertThat(result).isEqualTo(content);
     }
@@ -86,7 +87,7 @@ class NotificationManagerTest {
         when(documentService.getEventTypeForDocument(documentId)).thenReturn(PRISON_COURT_REGISTER_GENERATED);
 
         ResponseStatusException thrown = assertThrows(ResponseStatusException.class,
-                () -> notificationManager.getPcrDocumentContent(subscriptionId, documentId));
+                () -> notificationManager.getPcrDocumentContent(subscriptionId, clientId, documentId));
 
         assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(thrown.getReason()).contains("Access denied");

@@ -30,8 +30,8 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
     void save_client_subscription_should_save_subscription() throws Exception {
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
         mockMvc.perform(post("/client-subscriptions")
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("client-id-todo", "1234")
                         .content(body))
                 .andDo(print())
                 .andExpect(status().isCreated())

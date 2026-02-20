@@ -23,6 +23,7 @@ import static java.util.stream.Collectors.toList;
 public interface SubscriptionMapper {
 
     @Mapping(target = "id", expression = "java(null)")
+    @Mapping(target = "clientId", ignore = true)
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(target = "createdAt", expression = "java(clockService.nowOffsetUTC())")
@@ -30,6 +31,7 @@ public interface SubscriptionMapper {
     ClientSubscriptionEntity mapCreateRequestToEntity(@Context ClockService clockService, ClientSubscriptionRequest request);
 
     @Mapping(source = "existing.id", target = "id")
+    @Mapping(source = "existing.clientId", target = "clientId")
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(source = "existing.createdAt", target = "createdAt")

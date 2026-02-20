@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
@@ -32,6 +34,7 @@ import java.util.UUID;
 public class NotificationController implements NotificationApi {
 
     private final NotificationManager notificationManager;
+    private final HttpServletRequest httpRequest;
 
     @Override
     public ResponseEntity<Void> createNotificationPCR(@Valid @RequestBody final PcrEventPayload pcrEventPayload) {
@@ -48,7 +51,8 @@ public class NotificationController implements NotificationApi {
     public ResponseEntity<Resource> getDocument(
             @NotNull @PathVariable("clientSubscriptionId") final UUID clientSubscriptionId,
             @NotNull @PathVariable("documentId") final UUID documentId) {
-        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, documentId);
+        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId,
+                ClientIdResolutionFilter.getResolvedClientId(httpRequest), documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);

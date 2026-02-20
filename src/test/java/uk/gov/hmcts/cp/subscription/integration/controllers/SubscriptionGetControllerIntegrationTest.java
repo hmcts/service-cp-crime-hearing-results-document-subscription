@@ -28,7 +28,7 @@ class SubscriptionGetControllerIntegrationTest extends IntegrationTestBase {
     void get_subscription_should_return_expected() throws Exception {
         ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
         mockMvc.perform(get("/client-subscriptions/{id}", entity.getId())
-                        .header("client-id-todo", "1234"))
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clientSubscriptionId").value(entity.getId().toString()))
@@ -39,9 +39,9 @@ class SubscriptionGetControllerIntegrationTest extends IntegrationTestBase {
     @Test
     void get_no_subscription_should_return_404() throws Exception {
         mockMvc.perform(get("/client-subscriptions/{id}", subscriptionId)
-                        .header("client-id-todo", "1234"))
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("No row with the given identifier exists for entity [uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity with id '0a3f88fb-1573-43aa-92be-40ad86e561fe']"));
+                .andExpect(content().string("Subscription not found"));
     }
 }
