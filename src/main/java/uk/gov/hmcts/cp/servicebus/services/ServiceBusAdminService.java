@@ -23,10 +23,11 @@ public class ServiceBusAdminService {
     @SuppressWarnings({"PMD.AvoidCatchingGenericException","PMD.OnlyOneReturn"})
     public boolean isServiceBusReady() {
         try {
-            configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
+            List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
+            log.info("ServiceBus has topics:{}", topics);
             return true;
         } catch (Exception e) {
-            log.info("waiting for servicebus to be available");
+            log.info("ServiceBus is not available. Error:{}", e.getMessage());
             return false;
         }
     }
@@ -47,7 +48,9 @@ public class ServiceBusAdminService {
         if (subscriptions.contains(subscriptionName)) {
             log.info("Subscription {}/{} already exists", topicName, subscriptionName);
         } else {
+            log.info("Creating subscription {}/{}", topicName, subscriptionName);
             final CreateSubscriptionOptions options = new CreateSubscriptionOptions();
+            options.setDefaultMessageTimeToLive(Duration.ofHours(1));
             options.setLockDuration(Duration.ofMinutes(1));
             options.setMaxDeliveryCount(1);
             adminClient.createSubscription(topicName, subscriptionName, options);

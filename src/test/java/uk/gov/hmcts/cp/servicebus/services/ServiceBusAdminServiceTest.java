@@ -75,6 +75,7 @@ class ServiceBusAdminServiceTest {
         assertThat(topicCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
 
         verify(serviceBusAdministrationClient).createSubscription(eq("topic1"), eq("subscription1"), subscriptionCaptor.capture());
+        assertThat(subscriptionCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
         assertThat(subscriptionCaptor.getValue().getLockDuration()).isEqualTo(Duration.ofMinutes(1));
         assertThat(subscriptionCaptor.getValue().getMaxDeliveryCount()).isEqualTo(1);
     }
