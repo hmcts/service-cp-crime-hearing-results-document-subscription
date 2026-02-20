@@ -1,11 +1,9 @@
 package uk.gov.hmcts.cp.servicebus.model;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.SneakyThrows;
 
 import java.util.UUID;
 
@@ -15,16 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ServiceBusMessageWrapper {
     private UUID correlationId;
-    private int failCount;
+    private int failureCount;
     private String message;
-
-    @SneakyThrows
-    public String toJson() {
-        return new ObjectMapper().writeValueAsString(this);
-    }
-
-    @SneakyThrows
-    public static ServiceBusMessageWrapper fromJson(final String json) {
-        return new ObjectMapper().readValue(json, ServiceBusMessageWrapper.class);
-    }
 }

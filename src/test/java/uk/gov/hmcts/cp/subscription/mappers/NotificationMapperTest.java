@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
+import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendantCasesInner;
@@ -55,5 +56,27 @@ class NotificationMapperTest {
         assertThat(response.getDocumentId()).isEqualTo(documentId);
         assertThat(response.getDocumentGeneratedTimestamp()).isEqualTo(now);
         assertThat(response.getPrisonEmailAddress()).isEqualTo("prison@example.com");
+    }
+
+    @Test
+    void mapper_should_convert_to_json_and_back_again() {
+        EventNotificationPayloadCasesInner casesInner = EventNotificationPayloadCasesInner.builder()
+                .urn("CTAB1234567")
+                .build();
+        EventNotificationPayload payload = EventNotificationPayload.builder()
+                .masterDefendantId(UUID.randomUUID())
+                .defendantName("Jayne Doe")
+                .defendantDateOfBirth(LocalDate.of(2000, 1, 1))
+                .documentId(UUID.randomUUID())
+                .documentGeneratedTimestamp(Instant.now())
+                .prisonEmailAddress("wansdworth@example.com")
+                .cases(List.of(casesInner))
+                .build();
+
+        String json = notificationMapper.mapToJson(payload);
+
+        EventNotificationPayload payloadAgain = notificationMapper.mapFromJson(json);
+
+        assertThat(payloadAgain).isEqualTo(payloadAgain);
     }
 }
