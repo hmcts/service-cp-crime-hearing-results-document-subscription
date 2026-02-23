@@ -1,10 +1,10 @@
 package uk.gov.hmcts.cp.subscription.integration.stubs;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -20,7 +20,6 @@ public final class SubscriptionStub {
     private static final String SUBSCRIPTION_PCR_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String SUBSCRIPTION_CUSTODIAL_ONLY_PATH = "stubs/requests/subscription/subscription-custodial-only.json";
     private static final String PLACEHOLDER_CALLBACK_URL = "{{callback.url}}";
-    private static final ObjectMapper MAPPER = new ObjectMapper();
     public static final String CLIENT_SUBSCRIPTION_ID_FIELD = "clientSubscriptionId";
 
     public static UUID createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
@@ -70,7 +69,7 @@ public final class SubscriptionStub {
     }
 
     private static UUID extractClientSubscriptionId(String json) throws IOException {
-        JsonNode node = MAPPER.readTree(json);
+        JsonNode node = new JsonMapper().toJsonNode(json);
         return UUID.fromString(node.get(CLIENT_SUBSCRIPTION_ID_FIELD).asText());
     }
 }

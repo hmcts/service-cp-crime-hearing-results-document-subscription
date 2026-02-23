@@ -10,10 +10,10 @@ import java.util.List;
 @Slf4j
 @Service
 @Getter
-public class RetryConfigService {
+public class RetryServiceConfig {
     private final List<Integer> retryDelaySeconds;
 
-    public RetryConfigService(
+    public RetryServiceConfig(
             @Value("${service-bus.retry-seconds}") final List<Integer> retryDelaySeconds
     ) {
         log.info("RetryConfigService using retryDelaySeconds {}", retryDelaySeconds);
