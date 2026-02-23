@@ -37,8 +37,8 @@ public interface SubscriptionMapper {
     ClientSubscriptionEntity mapUpdateRequestToEntity(@Context ClockService clockService, ClientSubscriptionEntity existing, ClientSubscriptionRequest request);
 
     @Mapping(source = "id", target = "clientSubscriptionId")
-    @Mapping(target = "createdAt", expression = "java(clockService.now())")
-    @Mapping(target = "updatedAt", expression = "java(clockService.now())")
+    @Mapping(target = "createdAt", expression = "java(entity.getCreatedAt().toInstant())")
+    @Mapping(target = "updatedAt", expression = "java(entity.getUpdatedAt().toInstant())")
     ClientSubscription mapEntityToResponse(@Context ClockService clockService, ClientSubscriptionEntity entity);
 
     @Named("mapWithSortedEventTypes")

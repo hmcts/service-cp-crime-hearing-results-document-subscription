@@ -43,15 +43,19 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.eventTypes.[0]").value("CUSTODIAL_RESULT"))
                 .andExpect(jsonPath("$.eventTypes.[1]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
-        verifyCreatedAtIsUnchanged(existing.getId(), existing.getCreatedAt());
+        verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(existing.getId(), existing.getCreatedAt());
     }
 
     // Pipeline fails because expected is nanoSecs and actual is microSecs
     // Very puzzling.
-    void verifyCreatedAtIsUnchanged(UUID subscriptionId, OffsetDateTime expectedCreatedAt) {
+    void verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(UUID subscriptionId, OffsetDateTime expectedCreatedAt) {
+        ClientSubscriptionEntity entity = subscriptionRepository.findById(subscriptionId).orElseThrow();
         String expected = expectedCreatedAt.format(DateTimeFormatter.BASIC_ISO_DATE);
-        String actual = subscriptionRepository.findById(subscriptionId).get().getCreatedAt().format(DateTimeFormatter.BASIC_ISO_DATE);
-        log.info("Comparing actual:{} with expected:{}", actual, expected);
-        assertThat(actual).isEqualTo(expected);
+        String actualCreated = entity.getCreatedAt().format(DateTimeFormatter.BASIC_ISO_DATE);
+        log.info("Comparing actual:{} with expected:{}", actualCreated, expected);
+        assertThat(actualCreated).isEqualTo(expected);
+        assertThat(entity.getUpdatedAt()).isNotNull();
+        assertThat(entity.getUpdatedAt()).isNotEqualTo(entity.getCreatedAt());
+        assertThat(entity.getUpdatedAt()).isAfter(entity.getCreatedAt());
     }
 }

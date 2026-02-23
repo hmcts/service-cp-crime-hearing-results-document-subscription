@@ -18,13 +18,13 @@ spring:
 material-client:
   url: ${MATERIAL_CLIENT_URL:http://localhost:8081}
   retry:
-    intervalMilliSecs: 5000
-    timeoutMilliSecs: 30000
+    intervalMilliSecs: ${MATERIAL_CLIENT_INTERVAL_MSECS:100}
+    timeoutMilliSecs: ${MATERIAL_CLIENT_TIMEOUT_MSECS:500}
 
 callback-client:
   retry:
-    intervalMilliSecs: 1000
-    timeoutMilliSecs: 10000
+    intervalMilliSecs: ${CALLBACK_CLIENT_INTERVAL_MSECS:200}
+    timeoutMilliSecs: ${CALLBACK_CLIENT_TIMEOUT_MSECS:5000}
 
 service-bus:
   enabled: ${SERVICE_BUS_ENABLED:false}
