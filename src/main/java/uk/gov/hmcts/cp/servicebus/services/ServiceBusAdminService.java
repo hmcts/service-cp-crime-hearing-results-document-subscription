@@ -23,7 +23,7 @@ public class ServiceBusAdminService {
     @SuppressWarnings({"PMD.AvoidCatchingGenericException","PMD.OnlyOneReturn"})
     public boolean isServiceBusReady() {
         try {
-            List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
+            final List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
             log.info("ServiceBus has topics:{}", topics);
             return true;
         } catch (Exception e) {
