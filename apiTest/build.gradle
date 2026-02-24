@@ -59,7 +59,7 @@ tasks.named('build') {
 }
 
 dockerCompose {
-  useComposeFiles = ['docker-compose-apitest.yml']
+  useComposeFiles = ['docker-compose.yml']
   startedServices = ['db', 'app']
 
   buildBeforeUp = true
