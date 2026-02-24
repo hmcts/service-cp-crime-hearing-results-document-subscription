@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.services;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -77,6 +78,13 @@ class JsonMapperTest {
 
         Example exampleAgain = jsonMapper.fromJson(json, Example.class);
         assertThat(exampleAgain).usingRecursiveComparison().isEqualTo(example);
+    }
+
+    @Test
+    void json_node_pointer_should_get_field_value(){
+        String json = "{\"listEmbeddedExample\":[{\"stringField\":\"some text\",\"dateField\":\"2026-01-31T12:30:45.0000005Z\"}]}";
+        JsonNode jsonNode = jsonMapper.toJsonNode(json);
+        assertThat(jsonNode.at("/listEmbeddedExample/0/stringField").textValue()).isEqualTo("some text");
     }
 
     @Builder

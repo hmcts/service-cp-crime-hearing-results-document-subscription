@@ -4,12 +4,13 @@ import com.azure.messaging.servicebus.administration.models.SubscriptionProperti
 import com.azure.messaging.servicebus.administration.models.TopicProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.subscription.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @SpringBootTest
-@Disabled // Run manually untIl we add the docker compose gradle up ... or sort TestContainers would be better
+@ContextConfiguration(initializers = TestContainersInitialise.class)
 public class ServiceBusAdminIntegrationTest {
 
     @Autowired
@@ -30,7 +31,7 @@ public class ServiceBusAdminIntegrationTest {
         if (adminService.isServiceBusReady()) {
             log.info("ServiceBus is up and running");
         } else {
-            throw new RuntimeException("ServiceBus is not running. Please start it in docker-compose");
+            throw new RuntimeException("ServiceBus is not running. Run gradlew composeUp / composeDown");
         }
     }
 

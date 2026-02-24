@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.integration.stubs;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import org.springframework.core.io.ClassPathResource;
@@ -8,7 +7,6 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -52,14 +50,6 @@ public final class CallbackStub {
     }
 
     private static UUID parseDocumentIdFromBody(String body) {
-        if (body.isEmpty()) return null;
-        try {
-            return Optional.ofNullable(jsonMapper.toJsonNode(body).get("documentId"))
-                    .map(JsonNode::asText)
-                    .map(UUID::fromString)
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
+        return jsonMapper.getUUIDAtPath(body, "/documentId");
     }
 }

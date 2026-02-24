@@ -122,10 +122,10 @@ These XML reports are useful for CI/CD integration.
 docker logs apitest-app-1
 
 # Or using docker-compose
-docker-compose -f docker-compose.yml logs app
+docker-compose -f docker-compose-apitest.yml logs app
 
 # View all container logs
-docker-compose -f docker-compose.yml logs
+docker-compose -f docker-compose-apitest.yml logs
 ```
 
 **Common causes:**
@@ -144,7 +144,7 @@ lsof -i :8082
 # Check what's using port 5432
 lsof -i :5432
 
-# Stop conflicting services or change ports in docker-compose.yml
+# Stop conflicting services or change ports in docker-compose-apitest.yml
 ```
 
 ### Issue: Cannot connect to database
