@@ -23,23 +23,23 @@ public class JsonMapper {
     }
 
     @SneakyThrows
-    public String toJson(Object object) {
+    public String toJson(final Object object) {
         return objectMapper.writeValueAsString(object);
     }
 
     @SneakyThrows
-    public <T> T fromJson(String json, Class<T> clazz) {
+    public <T> T fromJson(final String json, final Class<T> clazz) {
         return objectMapper.readValue(json, clazz);
     }
 
     @SneakyThrows
-    public JsonNode toJsonNode(String json) {
+    public JsonNode toJsonNode(final String json) {
         return objectMapper.readTree(json);
     }
 
     @SneakyThrows
-    public UUID getUUIDAtPath(String json, String jsonPointer) {
-        String uuid = toJsonNode(json).at(jsonPointer).textValue();
+    public UUID getUUIDAtPath(final String json, final String jsonPointer) {
+        final String uuid = toJsonNode(json).at(jsonPointer).textValue();
         return uuid == null ? null : UUID.fromString(uuid);
     }
 }
