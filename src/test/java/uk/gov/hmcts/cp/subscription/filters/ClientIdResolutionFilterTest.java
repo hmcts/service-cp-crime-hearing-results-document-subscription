@@ -10,12 +10,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.jwtWithClaims;
 
 @ExtendWith(MockitoExtension.class)
 class ClientIdResolutionFilterTest {
@@ -28,12 +28,14 @@ class ClientIdResolutionFilterTest {
     HttpServletResponse httpResponse;
     @Mock
     FilterChain filterChain;
+    @Mock
+    JwtTokenParser jwtTokenParser;
 
     private ClientIdResolutionFilter filter;
 
     @BeforeEach
     void setUp() throws Exception {
-        filter = new ClientIdResolutionFilter();
+        filter = new ClientIdResolutionFilter(jwtTokenParser);
     }
 
     @Test
@@ -48,7 +50,7 @@ class ClientIdResolutionFilterTest {
     void valid_bearer_with_azp_should_set_client_id_and_continue() throws Exception {
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         ReflectionTestUtils.setField(filter, "oauthEnabled", true);
-        when(httpRequest.getHeader("Authorization")).thenReturn("Bearer " + jwtWithClaims("{\"azp\":\"test-client-id\"}"));
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn("test-client-id");
         filter.doFilter(httpRequest, httpResponse, filterChain);
         verify(httpRequest).setAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID, "test-client-id");
         verify(filterChain).doFilter(httpRequest, httpResponse);
@@ -58,7 +60,7 @@ class ClientIdResolutionFilterTest {
     void no_bearer_token_should_return_401() throws Exception {
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         ReflectionTestUtils.setField(filter, "oauthEnabled", true);
-        when(httpRequest.getHeader("Authorization")).thenReturn(null);
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(null);
         filter.doFilter(httpRequest, httpResponse, filterChain);
         verify(httpResponse).setStatus(401);
         verify(filterChain, never()).doFilter(httpRequest, httpResponse);
@@ -68,7 +70,7 @@ class ClientIdResolutionFilterTest {
     void token_without_azp_should_return_401() throws Exception {
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         ReflectionTestUtils.setField(filter, "oauthEnabled", true);
-        when(httpRequest.getHeader("Authorization")).thenReturn("Bearer " + jwtWithClaims("{\"sub\":\"other\"}"));
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(null);
         filter.doFilter(httpRequest, httpResponse, filterChain);
         verify(httpResponse).setStatus(401);
         verify(filterChain, never()).doFilter(httpRequest, httpResponse);

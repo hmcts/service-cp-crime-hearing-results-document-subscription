@@ -1,28 +1,29 @@
 package uk.gov.hmcts.cp.subscription.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.annotation.Nonnull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import uk.gov.hmcts.cp.subscription.util.ClientTokenUtil;
+import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
 import java.io.IOException;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class ClientIdResolutionFilter extends OncePerRequestFilter {
 
     public static final String RESOLVED_CLIENT_ID = "resolvedClientId";
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JwtTokenParser jwtTokenParser;
 
     @Value("${subscription.oauth-enabled:true}")
     private boolean oauthEnabled;
@@ -47,7 +48,7 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
 
         final String clientId;
         if (oauthEnabled) {
-            clientId = ClientTokenUtil.extractClientIdFromToken(request, objectMapper);
+            clientId = jwtTokenParser.extractClientIdFromToken(request);
             if (!StringUtils.hasText(clientId)) {
                 log.warn("Subscription request rejected: no client ID in token");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

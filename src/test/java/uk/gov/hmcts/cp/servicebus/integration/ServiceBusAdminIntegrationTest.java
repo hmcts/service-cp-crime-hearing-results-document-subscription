@@ -29,11 +29,8 @@ public class ServiceBusAdminIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        if (adminService.isServiceBusReady()) {
-            log.info("ServiceBus is up and running");
-        } else {
-            throw new RuntimeException("ServiceBus is not running. Run gradlew composeUp / composeDown");
-        }
+        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        log.info("ServiceBus is up and running");
     }
 
     @Test
