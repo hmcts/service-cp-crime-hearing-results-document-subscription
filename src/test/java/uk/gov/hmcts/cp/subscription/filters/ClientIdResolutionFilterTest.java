@@ -12,6 +12,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -48,11 +50,12 @@ class ClientIdResolutionFilterTest {
 
     @Test
     void valid_bearer_with_azp_should_set_client_id_and_continue() throws Exception {
+        UUID testClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         ReflectionTestUtils.setField(filter, "oauthEnabled", true);
-        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn("test-client-id");
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(testClientUuid);
         filter.doFilter(httpRequest, httpResponse, filterChain);
-        verify(httpRequest).setAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID, "test-client-id");
+        verify(httpRequest).setAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID, testClientUuid);
         verify(filterChain).doFilter(httpRequest, httpResponse);
     }
 
@@ -60,7 +63,7 @@ class ClientIdResolutionFilterTest {
     void no_bearer_token_should_return_401() throws Exception {
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         ReflectionTestUtils.setField(filter, "oauthEnabled", true);
-        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(null);
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn((UUID) null);
         filter.doFilter(httpRequest, httpResponse, filterChain);
         verify(httpResponse).setStatus(401);
         verify(filterChain, never()).doFilter(httpRequest, httpResponse);
@@ -70,7 +73,7 @@ class ClientIdResolutionFilterTest {
     void token_without_azp_should_return_401() throws Exception {
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         ReflectionTestUtils.setField(filter, "oauthEnabled", true);
-        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(null);
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn((UUID) null);
         filter.doFilter(httpRequest, httpResponse, filterChain);
         verify(httpResponse).setStatus(401);
         verify(filterChain, never()).doFilter(httpRequest, httpResponse);
@@ -78,11 +81,12 @@ class ClientIdResolutionFilterTest {
 
     @Test
     void oauth_disabled_with_default_should_use_default_client_id() throws Exception {
+        UUID defaultUuid = UUID.fromString("aaaaaaaa-bbbb-4ccc-dddd-eeeeeeeeeeee");
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         ReflectionTestUtils.setField(filter, "oauthEnabled", false);
-        ReflectionTestUtils.setField(filter, "defaultClientId", "local-client");
+        ReflectionTestUtils.setField(filter, "defaultClientId", defaultUuid.toString());
         filter.doFilter(httpRequest, httpResponse, filterChain);
-        verify(httpRequest).setAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID, "local-client");
+        verify(httpRequest).setAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID, defaultUuid);
         verify(filterChain).doFilter(httpRequest, httpResponse);
     }
 }

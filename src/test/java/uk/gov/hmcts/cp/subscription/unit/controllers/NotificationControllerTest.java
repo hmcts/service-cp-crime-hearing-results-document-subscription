@@ -42,7 +42,7 @@ class NotificationControllerTest {
     UUID materialId = UUID.randomUUID();
     UUID documentId = UUID.randomUUID();
     UUID subscriptionId = UUID.randomUUID();
-    String clientId = "test-client-id";
+    UUID resolvedClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
     @SneakyThrows
     @Test
@@ -93,14 +93,14 @@ class NotificationControllerTest {
 
     @Test
     void get_pcr_document_should_return_200_with_content_from_manager() throws Exception {
-        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn(clientId);
+        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn(resolvedClientUuid);
         byte[] pdfBody = "PDF content".getBytes();
         DocumentContent content = DocumentContent.builder()
                 .body(pdfBody)
                 .contentType(MediaType.APPLICATION_PDF)
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
-        when(notificationManager.getPcrDocumentContent(eq(subscriptionId), eq(clientId), eq(documentId))).thenReturn(content);
+        when(notificationManager.getPcrDocumentContent(eq(subscriptionId), eq(resolvedClientUuid), eq(documentId))).thenReturn(content);
 
         var response = notificationController.getDocument(subscriptionId, documentId);
 
@@ -109,6 +109,6 @@ class NotificationControllerTest {
         assertThat(response.getBody().getInputStream().readAllBytes()).isEqualTo(pdfBody);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("PrisonCourtRegister.pdf");
-        verify(notificationManager).getPcrDocumentContent(subscriptionId, clientId, documentId);
+        verify(notificationManager).getPcrDocumentContent(subscriptionId, resolvedClientUuid, documentId);
     }
 }

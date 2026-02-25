@@ -42,7 +42,7 @@ class SubscriptionServiceTest {
             .build();
     ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
     UUID subscriptionId = UUID.fromString("2ca16eb5-3998-4bb7-adce-4bb9b3b7223c");
-    String clientId = "test-client-id";
+    UUID clientId = UUID.fromString("11111111-2222-3333-4444-555555555555");
     ClientSubscriptionEntity requestEntity = ClientSubscriptionEntity.builder()
             .id(subscriptionId)
             .clientId(clientId)

@@ -30,8 +30,8 @@ public class ClientSubscriptionEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "client_id", length = 256)
-    private String clientId;
+    @Column(name = "client_id")
+    private UUID clientId;
 
     private String notificationEndpoint;
     @Enumerated(EnumType.STRING)

@@ -9,12 +9,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -31,8 +31,8 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
     @Value("${subscription.default-client-id:}")
     private String defaultClientId;
 
-    public static String getResolvedClientId(final HttpServletRequest request) {
-        return (String) request.getAttribute(RESOLVED_CLIENT_ID);
+    public static UUID getResolvedClientId(final HttpServletRequest request) {
+        return (UUID) request.getAttribute(RESOLVED_CLIENT_ID);
     }
 
     @Override
@@ -46,16 +46,16 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
                                     @Nonnull final HttpServletResponse response,
                                     @Nonnull final FilterChain filterChain) throws ServletException, IOException {
 
-        final String clientId;
+        final UUID clientId;
         if (oauthEnabled) {
             clientId = jwtTokenParser.extractClientIdFromToken(request);
-            if (!StringUtils.hasText(clientId)) {
+            if (clientId == null) {
                 log.warn("Subscription request rejected: no client ID in token");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             }
         } else {
-            clientId = defaultClientId;
+            clientId = UUID.fromString(defaultClientId);
         }
         request.setAttribute(RESOLVED_CLIENT_ID, clientId);
         filterChain.doFilter(request, response);

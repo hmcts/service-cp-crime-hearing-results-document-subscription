@@ -14,16 +14,15 @@ public class JwtTokenParser {
 
     private final JsonMapper jsonMapper;
 
-    public JwtTokenParser(JsonMapper jsonMapper) {
+    public JwtTokenParser(final JsonMapper jsonMapper) {
         this.jsonMapper = jsonMapper;
     }
 
-    public String extractClientIdFromToken(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(BEARER_PREFIX.length()).trim();
-        String[] chunks = token.split("\\.");
-        Base64.Decoder decoder = Base64.getUrlDecoder();
-        String payloadJson = new String(decoder.decode(chunks[1]), StandardCharsets.UTF_8);
-        UUID clientId = jsonMapper.getUUIDAtPath(payloadJson, AZP_JSON_POINTER);
-        return clientId.toString();
+    public UUID extractClientIdFromToken(final HttpServletRequest request) {
+        final String token = request.getHeader("Authorization").substring(BEARER_PREFIX.length()).trim();
+        final String[] chunks = token.split("\\.");
+        final Base64.Decoder decoder = Base64.getUrlDecoder();
+        final String payloadJson = new String(decoder.decode(chunks[1]), StandardCharsets.UTF_8);
+        return jsonMapper.getUUIDAtPath(payloadJson, AZP_JSON_POINTER);
     }
 }

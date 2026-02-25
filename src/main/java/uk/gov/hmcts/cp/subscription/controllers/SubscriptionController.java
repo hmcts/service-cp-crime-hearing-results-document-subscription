@@ -25,7 +25,7 @@ public class SubscriptionController implements SubscriptionApi {
 
     @Override
     public ResponseEntity<ClientSubscription> createClientSubscription(final ClientSubscriptionRequest request) {
-        final String clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
+        final UUID clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
         log.info("createClientSubscription callbackUrl:{} clientId:{}",
                 Encode.forJava(request.getNotificationEndpoint().getCallbackUrl()), clientId);
         final ClientSubscription response = subscriptionService.saveSubscription(request, clientId);
@@ -36,7 +36,7 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     public ResponseEntity<ClientSubscription> updateClientSubscription(final UUID clientSubscriptionId,
                                                                        final ClientSubscriptionRequest request) {
-        final String clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
+        final UUID clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
         final ClientSubscription response = subscriptionService.updateSubscription(clientSubscriptionId, request, clientId);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -44,7 +44,7 @@ public class SubscriptionController implements SubscriptionApi {
 
     @Override
     public ResponseEntity<ClientSubscription> getClientSubscription(final UUID clientSubscriptionId) {
-        final String clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
+        final UUID clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
         log.info("getClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
         final ClientSubscription response = subscriptionService.getSubscription(clientSubscriptionId, clientId);
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -52,7 +52,7 @@ public class SubscriptionController implements SubscriptionApi {
 
     @Override
     public ResponseEntity<Void> deleteClientSubscription(final UUID clientSubscriptionId) {
-        final String clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
+        final UUID clientId = ClientIdResolutionFilter.getResolvedClientId(httpRequest);
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
         subscriptionService.deleteSubscription(clientSubscriptionId, clientId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

@@ -38,9 +38,10 @@ class SubscriptionMapperTest {
     NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
             .callbackUrl("https://example.com")
             .build();
+    UUID testClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
     ClientSubscriptionEntity existing = ClientSubscriptionEntity.builder()
             .id(clientSubscriptionId)
-            .clientId("test-client-id")
+            .clientId(testClientUuid)
             .notificationEndpoint(notificationEndpoint.getCallbackUrl().toString())
             .eventTypes(mutableLisOfEventTypes())
             .createdAt(mockCreated)
@@ -77,7 +78,7 @@ class SubscriptionMapperTest {
         ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(clockService, existing, request);
 
         assertThat(entity.getId()).isEqualTo(clientSubscriptionId);
-        assertThat(entity.getClientId()).isEqualTo("test-client-id");
+        assertThat(entity.getClientId()).isEqualTo(testClientUuid);
         assertThat(entity.getNotificationEndpoint()).isEqualTo("https://updated.com");
         assertThat(entity.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT]");
         assertThat(entity.getCreatedAt()).isEqualTo(mockCreated);

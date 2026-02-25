@@ -33,9 +33,11 @@ class SubscriptionControllerTest {
     @InjectMocks
     SubscriptionController subscriptionController;
 
+    private static final UUID TEST_CLIENT_UUID = UUID.fromString("11111111-2222-3333-4444-555555555555");
+
     @BeforeEach
     void setResolvedClientId() {
-        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn("test-client-id");
+        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn(TEST_CLIENT_UUID);
     }
 
     ClientSubscriptionRequest createRequest = ClientSubscriptionRequest.builder()
@@ -44,12 +46,11 @@ class SubscriptionControllerTest {
             .build();
     ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
     UUID subscriptionId = UUID.randomUUID();
-    String clientId = "test-client-id";
 
     @Test
     void create_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.saveSubscription(createRequest, clientId)).thenReturn(response);
+        when(subscriptionService.saveSubscription(createRequest, TEST_CLIENT_UUID)).thenReturn(response);
         var result = subscriptionController.createClientSubscription(createRequest);
         assertThat(result.getStatusCode().value()).isEqualTo(201);
         assertThat(result.getBody()).isEqualTo(response);
@@ -58,9 +59,9 @@ class SubscriptionControllerTest {
     @Test
     void update_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.updateSubscription(subscriptionId, updateRequest, clientId)).thenReturn(response);
+        when(subscriptionService.updateSubscription(subscriptionId, updateRequest, TEST_CLIENT_UUID)).thenReturn(response);
         var result = subscriptionController.updateClientSubscription(subscriptionId, updateRequest);
-        verify(subscriptionService).updateSubscription(subscriptionId, updateRequest, clientId);
+        verify(subscriptionService).updateSubscription(subscriptionId, updateRequest, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
     }
@@ -68,9 +69,9 @@ class SubscriptionControllerTest {
     @Test
     void get_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.getSubscription(subscriptionId, clientId)).thenReturn(response);
+        when(subscriptionService.getSubscription(subscriptionId, TEST_CLIENT_UUID)).thenReturn(response);
         var result = subscriptionController.getClientSubscription(subscriptionId);
-        verify(subscriptionService).getSubscription(subscriptionId, clientId);
+        verify(subscriptionService).getSubscription(subscriptionId, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
     }
@@ -78,7 +79,7 @@ class SubscriptionControllerTest {
     @Test
     void delete_controller_should_call_service() {
         var result = subscriptionController.deleteClientSubscription(subscriptionId);
-        verify(subscriptionService).deleteSubscription(subscriptionId, clientId);
+        verify(subscriptionService).deleteSubscription(subscriptionId, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(204);
     }
 }

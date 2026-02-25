@@ -14,7 +14,7 @@ import java.time.Clock;
 public class AppConfig {
 
     @Bean
-    public JwtTokenParser jwtTokenParser(JsonMapper jsonMapper) {
+    public JwtTokenParser jwtTokenParser(final JsonMapper jsonMapper) {
         return new JwtTokenParser(jsonMapper);
     }
 
