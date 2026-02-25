@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS client_subscription;
 
 CREATE TABLE client_subscription (
     id                      uuid PRIMARY KEY NOT NULL,
-    client_id               uuid,
+    client_id               uuid NOT NULL UNIQUE,
     notification_endpoint   varchar(2048) NOT NULL,
     event_types             varchar(128)[] NOT NULL,
     created_at              timestamp NOT NULL,

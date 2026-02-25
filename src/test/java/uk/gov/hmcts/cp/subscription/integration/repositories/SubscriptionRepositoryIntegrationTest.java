@@ -7,6 +7,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.gov.hmcts.cp.subscription.model.EntityEventType.CUSTODIAL_RESULT;
@@ -41,9 +42,12 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
     @Transactional
     @Test
     void findByEventType_should_return_subscriptions_for_event_type() {
-        ClientSubscriptionEntity sub1 = insertSubscription("https://subscriber1.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED));
-        ClientSubscriptionEntity sub2 = insertSubscription("https://subscriber2.example/callback", List.of(CUSTODIAL_RESULT));
-        ClientSubscriptionEntity sub3 = insertSubscription("https://subscriber3.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT));
+        UUID client1 = UUID.fromString("11111111-2222-3333-4444-555555555551");
+        UUID client2 = UUID.fromString("11111111-2222-3333-4444-555555555552");
+        UUID client3 = UUID.fromString("11111111-2222-3333-4444-555555555553");
+        ClientSubscriptionEntity sub1 = insertSubscription("https://subscriber1.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED), client1);
+        ClientSubscriptionEntity sub2 = insertSubscription("https://subscriber2.example/callback", List.of(CUSTODIAL_RESULT), client2);
+        ClientSubscriptionEntity sub3 = insertSubscription("https://subscriber3.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT), client3);
 
         List<ClientSubscriptionEntity> forPcr = subscriptionRepository.findByEventType(PRISON_COURT_REGISTER_GENERATED.name());
         List<ClientSubscriptionEntity> forCustodial = subscriptionRepository.findByEventType(CUSTODIAL_RESULT.name());

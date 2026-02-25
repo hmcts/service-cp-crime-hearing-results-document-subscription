@@ -75,8 +75,12 @@ public abstract class IntegrationTestBase {
     }
 
     protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<EntityEventType> entityEventTypes) {
+        return insertSubscription(notificationUri, entityEventTypes, TEST_CLIENT_ID);
+    }
+
+    protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<EntityEventType> entityEventTypes, UUID clientId) {
         ClientSubscriptionEntity subscription = ClientSubscriptionEntity.builder()
-                .clientId(TEST_CLIENT_ID)
+                .clientId(clientId)
                 .eventTypes(entityEventTypes)
                 .notificationEndpoint(notificationUri)
                 .createdAt(OffsetDateTime.now())

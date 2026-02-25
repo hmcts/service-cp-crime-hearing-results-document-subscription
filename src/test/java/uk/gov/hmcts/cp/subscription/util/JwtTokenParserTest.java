@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.util;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
@@ -8,6 +9,8 @@ import java.util.Base64;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class JwtTokenParserTest {
 
@@ -16,12 +19,11 @@ class JwtTokenParserTest {
     @Test
     void jwt_token_with_azp_is_extracted() {
         String token = buildTestToken(AZP_UUID);
-        JsonMapper jsonMapper = new JsonMapper();
-        String[] chunks = token.split("\\.");
-        Base64.Decoder decoder = Base64.getUrlDecoder();
-        String payloadJson = new String(decoder.decode(chunks[1]), StandardCharsets.UTF_8);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
 
-        UUID clientId = jsonMapper.getUUIDAtPath(payloadJson, "/azp");
+        JwtTokenParser parser = new JwtTokenParser(new JsonMapper());
+        UUID clientId = parser.extractClientIdFromToken(request);
 
         assertThat(clientId).isEqualTo(UUID.fromString(AZP_UUID));
     }
@@ -29,14 +31,8 @@ class JwtTokenParserTest {
     private static String buildTestToken(String azpValue) {
         String header = "{\"alg\":\"none\",\"typ\":\"JWT\"}";
         String payload = "{\"azp\":\"" + azpValue + "\"}";
-        String headerB64 = base64UrlEncode(header);
-        String payloadB64 = base64UrlEncode(payload);
+        String headerB64 = Base64.getUrlEncoder().encodeToString(header.getBytes(StandardCharsets.UTF_8));
+        String payloadB64 = Base64.getUrlEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
         return headerB64 + "." + payloadB64 + ".sig";
-    }
-
-    private static String base64UrlEncode(String s) {
-        String b64 = Base64.getUrlEncoder().withoutPadding().encodeToString(s.getBytes(StandardCharsets.UTF_8));
-        int pad = (4 - b64.length() % 4) % 4;
-        return pad == 0 ? b64 : b64 + "====".substring(0, pad);
     }
 }

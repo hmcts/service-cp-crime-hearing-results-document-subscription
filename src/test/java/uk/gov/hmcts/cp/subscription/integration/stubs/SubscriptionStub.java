@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public final class SubscriptionStub {
 
-    private static final String TEST_CLIENT_ID = "test-client-id";
+    private static final String TEST_CLIENT_ID = "11111111-2222-3333-4444-555555555555";
     private static final String SUBSCRIPTION_PCR_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String SUBSCRIPTION_CUSTODIAL_ONLY_PATH = "stubs/requests/subscription/subscription-custodial-only.json";
     private static final String PLACEHOLDER_CALLBACK_URL = "{{callback.url}}";
@@ -26,35 +26,47 @@ public final class SubscriptionStub {
 
     public static UUID createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
                                              String callbackBaseUrl, String callbackUri) throws Exception {
+        return createSubscriptionPcr(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, TEST_CLIENT_ID);
+    }
+
+    public static UUID createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
+                                             String callbackBaseUrl, String callbackUri,
+                                             String clientId) throws Exception {
         String callbackUrl = callbackBaseUrl.endsWith("/")
                 ? callbackBaseUrl + callbackUri.substring(1)
                 : callbackBaseUrl + callbackUri;
         String body = loadPayload(SUBSCRIPTION_PCR_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
-        String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body);
+        String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body, clientId);
         return extractClientSubscriptionId(json);
     }
 
     public static UUID createSubscriptionCustodialOnly(MockMvc mockMvc, String clientSubscriptionsUri,
                                                        String callbackBaseUrl, String callbackUri) throws Exception {
+        return createSubscriptionCustodialOnly(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, TEST_CLIENT_ID);
+    }
+
+    public static UUID createSubscriptionCustodialOnly(MockMvc mockMvc, String clientSubscriptionsUri,
+                                                       String callbackBaseUrl, String callbackUri,
+                                                       String clientId) throws Exception {
         String payload = loadPayload(SUBSCRIPTION_CUSTODIAL_ONLY_PATH);
-        return createSubscriptionFromPayload(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, payload);
+        return createSubscriptionFromPayload(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, payload, clientId);
     }
 
     public static UUID createSubscriptionFromPayload(MockMvc mockMvc, String clientSubscriptionsUri,
                                                      String callbackBaseUrl, String callbackUri,
-                                                     String payloadWithPlaceholder) throws Exception {
+                                                     String payloadWithPlaceholder, String clientId) throws Exception {
         String callbackUrl = callbackBaseUrl.endsWith("/")
                 ? callbackBaseUrl + callbackUri.substring(1)
                 : callbackBaseUrl + callbackUri;
         String body = payloadWithPlaceholder.replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
-        String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body);
+        String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body, clientId);
         return extractClientSubscriptionId(json);
     }
 
     public static String postSubscriptionAndReturnJson(MockMvc mockMvc, String clientSubscriptionsUri,
-                                                       String body) throws Exception {
+                                                       String body, String clientId) throws Exception {
         return mockMvc.perform(post(clientSubscriptionsUri)
-                        .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID))
+                        .header("Authorization", JwtHelper.bearerTokenWithAzp(clientId))
                         .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -64,8 +76,13 @@ public final class SubscriptionStub {
 
     public static ResultActions deleteSubscription(MockMvc mockMvc, String clientSubscriptionsUri,
                                                    UUID clientSubscriptionId) throws Exception {
+        return deleteSubscription(mockMvc, clientSubscriptionsUri, clientSubscriptionId, TEST_CLIENT_ID);
+    }
+
+    public static ResultActions deleteSubscription(MockMvc mockMvc, String clientSubscriptionsUri,
+                                                   UUID clientSubscriptionId, String clientId) throws Exception {
         return mockMvc.perform(delete(clientSubscriptionsUri + "/{clientSubscriptionId}", clientSubscriptionId)
-                .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID)));
+                .header("Authorization", JwtHelper.bearerTokenWithAzp(clientId)));
     }
 
     private static String loadPayload(String path) throws IOException {
