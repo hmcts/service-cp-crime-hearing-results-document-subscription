@@ -1,14 +1,12 @@
 package uk.gov.hmcts.cp.subscription.integration.stubs;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import org.springframework.core.io.ClassPathResource;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -22,12 +20,10 @@ import static java.util.Objects.nonNull;
  */
 public final class CallbackStub {
 
+    static JsonMapper jsonMapper = new JsonMapper();
     private static final String CALLBACK_RESPONSE_PATH = "wiremock/callback-client/files/callback-accepted.json";
     private static final String APPLICATION_JSON = "application/json";
     private static final String CONTENT_TYPE = "Content-Type";
-
-    private CallbackStub() {
-    }
 
     public static void stubCallbackEndpoint(WireMockServer server, String callbackUri) throws IOException {
         String body = new ClassPathResource(CALLBACK_RESPONSE_PATH).getContentAsString(StandardCharsets.UTF_8);
@@ -54,14 +50,6 @@ public final class CallbackStub {
     }
 
     private static UUID parseDocumentIdFromBody(String body) {
-        if (body.isEmpty()) return null;
-        try {
-            return Optional.ofNullable(new ObjectMapper().readTree(body).get("documentId"))
-                    .map(JsonNode::asText)
-                    .map(UUID::fromString)
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
+        return jsonMapper.getUUIDAtPath(body, "/documentId");
     }
 }

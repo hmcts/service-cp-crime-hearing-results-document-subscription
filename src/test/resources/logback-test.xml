@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- Quieter logging for tests: WARN by default to reduce noise -->
+    <!-- Simple plain text logging for tests -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{HH:mm:ss.SSS} %-5level %C{5} - %msg%n</pattern>
@@ -8,6 +8,7 @@
         </encoder>
     </appender>
 
+    <!-- WARN by default to reduce noise in tests -->
     <root level="WARN">
         <appender-ref ref="CONSOLE"/>
     </root>
