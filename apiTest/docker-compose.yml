@@ -63,6 +63,7 @@ services:
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
       DATASOURCE_USERNAME: postgres
       DATASOURCE_PASSWORD: postgres
+      SUBSCRIPTION_OAUTH_ENABLED: true
     depends_on:
       - db
     ports:
