@@ -41,7 +41,7 @@ class ClientIdResolutionFilterTest {
     @BeforeEach
     void setUp() {
         httpResponse = new MockHttpServletResponse();
-        SubscriptionClientConfig configOauthEnabled = new SubscriptionClientConfig(true, "", "X-Client-Id");
+        SubscriptionClientConfig configOauthEnabled = new SubscriptionClientConfig(true, "X-Client-Id");
         filter = new ClientIdResolutionFilter(jwtTokenParser, configOauthEnabled);
     }
 
@@ -83,7 +83,7 @@ class ClientIdResolutionFilterTest {
         UUID clientId = UUID.fromString("aaaaaaaa-bbbb-4ccc-dddd-eeeeeeeeeeee");
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(clientId.toString());
-        SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false, "", "X-Client-Id");
+        SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false, "X-Client-Id");
         ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
         AtomicReference<String> mdcClientId = new AtomicReference<>();
         FilterChain chainThatCapturesMdc = (req, res) -> mdcClientId.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
@@ -98,7 +98,7 @@ class ClientIdResolutionFilterTest {
         UUID client1 = UUID.fromString("aaaaaaaa-1111-4444-8888-111111111111");
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(client1.toString());
-        SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false, "00000000-0000-0000-0000-000000000000", "X-Client-Id");
+        SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false, "X-Client-Id");
         ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
         AtomicReference<String> captured = new AtomicReference<>();
         FilterChain chainThatCapturesMdc = (req, res) -> captured.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
