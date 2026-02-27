@@ -26,15 +26,14 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
     public static final String MDC_CLIENT_ID = "clientId";
 
     private static final String CLIENT_SUBSCRIPTIONS_PREFIX = "/client-subscriptions";
+    private static final String CLIENT_ID_HEADER = "X-Client-Id";
 
     private final JwtTokenParser jwtTokenParser;
     private final boolean oauthEnabled;
-    private final String clientIdHeaderName;
 
     public ClientIdResolutionFilter(final JwtTokenParser jwtTokenParser, final SubscriptionClientConfig config) {
         this.jwtTokenParser = jwtTokenParser;
         this.oauthEnabled = config.isOauthEnabled();
-        this.clientIdHeaderName = config.getClientIdHeaderName().trim();
     }
 
     @Override
@@ -69,7 +68,7 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
             }
             return clientId;
         }
-        final String headerValue = request.getHeader(clientIdHeaderName);
+        final String headerValue = request.getHeader(CLIENT_ID_HEADER);
         if (isNull(headerValue) || headerValue.isBlank()) {
             log.warn("Subscription request rejected: missing or blank client ID header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing client ID header");

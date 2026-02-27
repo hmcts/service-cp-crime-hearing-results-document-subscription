@@ -11,13 +11,10 @@ import org.springframework.stereotype.Service;
 public class SubscriptionClientConfig {
 
     private final boolean oauthEnabled;
-    private final String clientIdHeaderName;
 
     public SubscriptionClientConfig(
-            @Value("${subscription.oauth-enabled:true}") final boolean oauthEnabled,
-            @Value("${subscription.client-id-header:X-Client-Id}") final String clientIdHeaderName) {
+            @Value("${subscription.oauth-enabled:true}") final boolean oauthEnabled) {
         this.oauthEnabled = oauthEnabled;
-        this.clientIdHeaderName = clientIdHeaderName;
-        log.info("SubscriptionClientConfig oauthEnabled={} clientIdHeader={}", oauthEnabled, clientIdHeaderName);
+        log.info("SubscriptionClientConfig oauthEnabled={}", oauthEnabled);
     }
 }
