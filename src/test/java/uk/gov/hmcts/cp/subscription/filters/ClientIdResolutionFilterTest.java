@@ -9,8 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
@@ -19,7 +19,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,8 +30,7 @@ class ClientIdResolutionFilterTest {
 
     @Mock
     HttpServletRequest httpRequest;
-    @Mock
-    HttpServletResponse httpResponse;
+    MockHttpServletResponse httpResponse = new MockHttpServletResponse();
     @Mock
     FilterChain filterChain;
     @Mock
@@ -42,6 +40,7 @@ class ClientIdResolutionFilterTest {
 
     @BeforeEach
     void setUp() {
+        httpResponse = new MockHttpServletResponse();
         SubscriptionClientConfig configOauthEnabled = new SubscriptionClientConfig(true, "", "X-Client-Id");
         filter = new ClientIdResolutionFilter(jwtTokenParser, configOauthEnabled);
     }
@@ -69,15 +68,13 @@ class ClientIdResolutionFilterTest {
     }
 
     @Test
-    void no_client_id_in_token_should_throw_401() throws Exception {
+    void no_client_id_in_token_should_return_401() throws Exception {
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(null);
 
-        assertThatThrownBy(() -> filter.doFilter(httpRequest, httpResponse, filterChain))
-                .isInstanceOf(ResponseStatusException.class)
-                .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
-                        .isEqualTo(HttpStatus.UNAUTHORIZED));
+        filter.doFilter(httpRequest, httpResponse, filterChain);
 
+        assertThat(httpResponse.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
         verify(filterChain, never()).doFilter(httpRequest, httpResponse);
     }
 

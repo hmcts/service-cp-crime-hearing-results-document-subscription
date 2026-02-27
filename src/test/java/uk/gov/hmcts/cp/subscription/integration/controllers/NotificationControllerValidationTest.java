@@ -30,6 +30,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     private static final String PCR_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
     private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
     private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
+    private static final String PCR_REQUEST_NULL_EVENT = "stubs/requests/progression/pcr-request-null-event.json";
     private static final String SUBSCRIPTION_DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @Autowired

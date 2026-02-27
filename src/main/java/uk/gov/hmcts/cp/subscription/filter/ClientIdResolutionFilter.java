@@ -41,21 +41,24 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
         return !request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX);
     }
-
+    
     @Override
     protected void doFilterInternal(@Nonnull final HttpServletRequest request,
                                     @Nonnull final HttpServletResponse response,
                                     @Nonnull final FilterChain filterChain) throws ServletException, IOException {
-        final UUID clientId = resolveClientId(request);
         try {
+            final UUID clientId = resolveClientId(request);
             MDC.put(MDC_CLIENT_ID, clientId.toString());
-            filterChain.doFilter(request, response);
-        } finally {
-            MDC.remove(MDC_CLIENT_ID);
+            try {
+                filterChain.doFilter(request, response);
+            } finally {
+                MDC.remove(MDC_CLIENT_ID);
+            }
+        } catch (ResponseStatusException ex) {
+            response.sendError(ex.getStatusCode().value(), ex.getReason());
         }
     }
 
-    @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.OnlyOneReturn"})
     private UUID resolveClientId(final HttpServletRequest request) {
         if (oauthEnabled) {
             final UUID clientId = jwtTokenParser.extractClientIdFromToken(request);
@@ -66,7 +69,7 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
             return clientId;
         }
         final String headerValue = request.getHeader(clientIdHeaderName);
-        if (isNull(headerValue)) {
+        if (isNull(headerValue) || headerValue.isBlank()) {
             log.warn("Subscription request rejected: missing or blank client ID header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing client ID header");
         }
