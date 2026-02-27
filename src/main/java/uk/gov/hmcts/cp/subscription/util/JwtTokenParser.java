@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.util;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
@@ -12,6 +13,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JwtTokenParser {
 
     private static final String BEARER_PREFIX = "Bearer ";
@@ -19,10 +21,6 @@ public class JwtTokenParser {
     private static final int MAX_NUMBER_OF_CHUNKS = 2;
 
     private final JsonMapper jsonMapper;
-
-    public JwtTokenParser(final JsonMapper jsonMapper) {
-        this.jsonMapper = jsonMapper;
-    }
 
     @SuppressWarnings({"PMD.AvoidCatchingGenericException", "PMD.OnlyOneReturn"})
     public UUID extractClientIdFromToken(final HttpServletRequest request) {

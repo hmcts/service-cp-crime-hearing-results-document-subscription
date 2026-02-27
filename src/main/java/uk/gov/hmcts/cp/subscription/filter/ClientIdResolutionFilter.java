@@ -29,11 +29,11 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
     private static final String CLIENT_ID_HEADER = "X-Client-Id";
 
     private final JwtTokenParser jwtTokenParser;
-    private final boolean oauthEnabled;
+    private final SubscriptionClientConfig config;
 
     public ClientIdResolutionFilter(final JwtTokenParser jwtTokenParser, final SubscriptionClientConfig config) {
         this.jwtTokenParser = jwtTokenParser;
-        this.oauthEnabled = config.isOauthEnabled();
+        this.config = config;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
 
     @SuppressWarnings("PMD.OnlyOneReturn")
     private UUID resolveClientId(final HttpServletRequest request) {
-        if (oauthEnabled) {
+        if (config.isOauthEnabled()) {
             final UUID clientId = jwtTokenParser.extractClientIdFromToken(request);
             if (isNull(clientId)) {
                 log.warn("Subscription request rejected: no client ID in token");
@@ -73,6 +73,6 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
             log.warn("Subscription request rejected: missing or blank client ID header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing client ID header");
         }
-        return UUID.fromString(headerValue.trim());
+        return UUID.fromString(headerValue);
     }
 }
