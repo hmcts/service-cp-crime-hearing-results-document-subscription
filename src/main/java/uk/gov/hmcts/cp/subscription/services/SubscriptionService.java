@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
@@ -26,6 +28,10 @@ public class SubscriptionService {
 
     @Transactional
     public ClientSubscription saveSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
+        subscriptionRepository.findFirstByClientId(clientId).ifPresent(existing -> {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "subscription already exist with " + existing.getId());
+        });
         ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, request);
         entity = entity.toBuilder().clientId(clientId).build();
         return mapper.mapEntityToResponse(clockService, subscriptionRepository.save(entity));

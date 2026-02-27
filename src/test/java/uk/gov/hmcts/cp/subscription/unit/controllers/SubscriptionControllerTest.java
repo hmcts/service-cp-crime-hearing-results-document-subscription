@@ -1,11 +1,13 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -13,7 +15,6 @@ import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,8 +28,6 @@ class SubscriptionControllerTest {
 
     @Mock
     SubscriptionService subscriptionService;
-    @Mock
-    HttpServletRequest httpRequest;
 
     @InjectMocks
     SubscriptionController subscriptionController;
@@ -36,8 +35,13 @@ class SubscriptionControllerTest {
     private static final UUID TEST_CLIENT_UUID = UUID.fromString("11111111-2222-3333-4444-555555555555");
 
     @BeforeEach
-    void setResolvedClientId() {
-        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn(TEST_CLIENT_UUID);
+    void setMdcClientId() {
+        MDC.put(ClientIdResolutionFilter.MDC_CLIENT_ID, TEST_CLIENT_UUID.toString());
+    }
+
+    @AfterEach
+    void clearMdcClientId() {
+        MDC.remove(ClientIdResolutionFilter.MDC_CLIENT_ID);
     }
 
     ClientSubscriptionRequest createRequest = ClientSubscriptionRequest.builder()

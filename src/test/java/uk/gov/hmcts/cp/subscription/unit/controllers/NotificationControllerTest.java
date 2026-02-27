@@ -1,12 +1,14 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
@@ -33,9 +35,6 @@ class NotificationControllerTest {
     @Mock
     NotificationManager notificationManager;
 
-    @Mock
-    HttpServletRequest httpRequest;
-
     @InjectMocks
     NotificationController notificationController;
 
@@ -43,6 +42,16 @@ class NotificationControllerTest {
     UUID documentId = UUID.randomUUID();
     UUID subscriptionId = UUID.randomUUID();
     UUID resolvedClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
+
+    @BeforeEach
+    void setMdcClientId() {
+        MDC.put(ClientIdResolutionFilter.MDC_CLIENT_ID, resolvedClientUuid.toString());
+    }
+
+    @AfterEach
+    void clearMdcClientId() {
+        MDC.remove(ClientIdResolutionFilter.MDC_CLIENT_ID);
+    }
 
     @SneakyThrows
     @Test
@@ -93,7 +102,6 @@ class NotificationControllerTest {
 
     @Test
     void get_pcr_document_should_return_200_with_content_from_manager() throws Exception {
-        when(httpRequest.getAttribute(ClientIdResolutionFilter.RESOLVED_CLIENT_ID)).thenReturn(resolvedClientUuid);
         byte[] pdfBody = "PDF content".getBytes();
         DocumentContent content = DocumentContent.builder()
                 .body(pdfBody)

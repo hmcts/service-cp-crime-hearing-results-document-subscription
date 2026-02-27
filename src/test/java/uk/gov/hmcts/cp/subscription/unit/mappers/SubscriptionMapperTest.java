@@ -59,10 +59,11 @@ class SubscriptionMapperTest {
         ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, request);
 
         assertThat(entity.getId()).isNull();
+        assertThat(entity.getClientId()).isNull();
         assertThat(entity.getNotificationEndpoint()).isEqualTo("https://example.com");
         assertThat(entity.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT, PRISON_COURT_REGISTER_GENERATED]");
-        assertThat(entity.getCreatedAt()).isNotNull();
-        assertThat(entity.getUpdatedAt()).isNotNull();
+        assertThat(entity.getCreatedAt()).isEqualTo(mockCreated);
+        assertThat(entity.getUpdatedAt()).isEqualTo(mockCreated);
     }
 
     @Test

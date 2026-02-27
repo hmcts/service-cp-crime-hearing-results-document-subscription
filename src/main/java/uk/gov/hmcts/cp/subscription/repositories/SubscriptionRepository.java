@@ -15,6 +15,8 @@ public interface SubscriptionRepository extends JpaRepository<ClientSubscription
 
     Optional<ClientSubscriptionEntity> findByIdAndClientId(UUID id, UUID clientId);
 
+    Optional<ClientSubscriptionEntity> findFirstByClientId(UUID clientId);
+
     @Query(value = "SELECT * FROM client_subscription WHERE :eventType = ANY(event_types)", nativeQuery = true)
     List<ClientSubscriptionEntity> findByEventType(@Param("eventType") String eventType);
 

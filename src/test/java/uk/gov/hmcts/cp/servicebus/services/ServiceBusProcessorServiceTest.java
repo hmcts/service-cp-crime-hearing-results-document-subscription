@@ -2,11 +2,9 @@ package uk.gov.hmcts.cp.servicebus.services;
 
 import com.azure.core.util.BinaryData;
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
-import com.azure.messaging.servicebus.ServiceBusMessage;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
-import com.azure.messaging.servicebus.ServiceBusSenderClient;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
+import org.slf4j.LoggerFactory;
+
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)

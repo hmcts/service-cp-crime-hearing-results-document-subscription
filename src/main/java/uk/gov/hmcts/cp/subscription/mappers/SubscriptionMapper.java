@@ -35,7 +35,7 @@ public interface SubscriptionMapper {
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(source = "existing.createdAt", target = "createdAt")
-    @Mapping(expression = "java(clockService.nowOffsetUTC())", target = "updatedAt")
+    @Mapping(target = "updatedAt", expression = "java(clockService.nowOffsetUTC())")
     ClientSubscriptionEntity mapUpdateRequestToEntity(@Context ClockService clockService, ClientSubscriptionEntity existing, ClientSubscriptionRequest request);
 
     @Mapping(source = "id", target = "clientSubscriptionId")

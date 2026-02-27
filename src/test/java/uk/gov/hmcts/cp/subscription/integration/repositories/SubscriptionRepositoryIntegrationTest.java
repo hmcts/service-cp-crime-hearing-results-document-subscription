@@ -45,9 +45,9 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
         UUID client1 = UUID.fromString("11111111-2222-3333-4444-555555555551");
         UUID client2 = UUID.fromString("11111111-2222-3333-4444-555555555552");
         UUID client3 = UUID.fromString("11111111-2222-3333-4444-555555555553");
-        ClientSubscriptionEntity sub1 = insertSubscription("https://subscriber1.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED), client1);
-        ClientSubscriptionEntity sub2 = insertSubscription("https://subscriber2.example/callback", List.of(CUSTODIAL_RESULT), client2);
-        ClientSubscriptionEntity sub3 = insertSubscription("https://subscriber3.example/callback", List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT), client3);
+        ClientSubscriptionEntity sub1 = insertSubscription(client1, List.of(PRISON_COURT_REGISTER_GENERATED), "https://subscriber1.example/callback");
+        ClientSubscriptionEntity sub2 = insertSubscription(client2, List.of(CUSTODIAL_RESULT), "https://subscriber2.example/callback");
+        ClientSubscriptionEntity sub3 = insertSubscription(client3, List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT), "https://subscriber3.example/callback");
 
         List<ClientSubscriptionEntity> forPcr = subscriptionRepository.findByEventType(PRISON_COURT_REGISTER_GENERATED.name());
         List<ClientSubscriptionEntity> forCustodial = subscriptionRepository.findByEventType(CUSTODIAL_RESULT.name());
