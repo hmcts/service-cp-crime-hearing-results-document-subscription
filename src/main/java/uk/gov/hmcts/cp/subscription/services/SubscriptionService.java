@@ -1,12 +1,11 @@
 package uk.gov.hmcts.cp.subscription.services;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import jakarta.persistence.EntityNotFoundException;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
@@ -32,24 +31,24 @@ public class SubscriptionService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist with " + existing.getId());
         });
-        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clockService, request);
+        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(request, clockService.nowOffsetUTC());
         entity = entity.toBuilder().clientId(clientId).build();
-        return mapper.mapEntityToResponse(clockService, subscriptionRepository.save(entity));
+        return mapper.mapEntityToResponse(subscriptionRepository.save(entity));
     }
 
     @Transactional
     public ClientSubscription updateSubscription(final UUID clientSubscriptionId, final ClientSubscriptionRequest request, final UUID clientId) {
         final ClientSubscriptionEntity existing = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        final ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(clockService, existing, request);
-        return mapper.mapEntityToResponse(clockService, subscriptionRepository.save(entity));
+        final ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, clockService.nowOffsetUTC());
+        return mapper.mapEntityToResponse(subscriptionRepository.save(entity));
     }
 
     @Transactional
     public ClientSubscription getSubscription(final UUID clientSubscriptionId, final UUID clientId) {
         final ClientSubscriptionEntity entity = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        return mapper.mapEntityToResponse(clockService, entity);
+        return mapper.mapEntityToResponse(entity);
     }
 
     @Transactional

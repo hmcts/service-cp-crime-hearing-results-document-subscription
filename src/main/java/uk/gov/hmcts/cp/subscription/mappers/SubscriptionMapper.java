@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.mappers;
 
-import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -11,8 +10,8 @@ import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
-import uk.gov.hmcts.cp.subscription.services.ClockService;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -26,22 +25,22 @@ public interface SubscriptionMapper {
     @Mapping(target = "clientId", ignore = true)
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
-    @Mapping(target = "createdAt", expression = "java(clockService.nowOffsetUTC())")
-    @Mapping(target = "updatedAt", expression = "java(clockService.nowOffsetUTC())")
-    ClientSubscriptionEntity mapCreateRequestToEntity(@Context ClockService clockService, ClientSubscriptionRequest request);
+    @Mapping(source = "now", target = "createdAt")
+    @Mapping(source = "now", target = "updatedAt")
+    ClientSubscriptionEntity mapCreateRequestToEntity(ClientSubscriptionRequest request, OffsetDateTime now);
 
     @Mapping(source = "existing.id", target = "id")
     @Mapping(source = "existing.clientId", target = "clientId")
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(source = "existing.createdAt", target = "createdAt")
-    @Mapping(target = "updatedAt", expression = "java(clockService.nowOffsetUTC())")
-    ClientSubscriptionEntity mapUpdateRequestToEntity(@Context ClockService clockService, ClientSubscriptionEntity existing, ClientSubscriptionRequest request);
+    @Mapping(source = "now", target = "updatedAt")
+    ClientSubscriptionEntity mapUpdateRequestToEntity(ClientSubscriptionEntity existing, ClientSubscriptionRequest request, OffsetDateTime now);
 
     @Mapping(source = "id", target = "clientSubscriptionId")
     @Mapping(target = "createdAt", expression = "java(entity.getCreatedAt().toInstant())")
     @Mapping(target = "updatedAt", expression = "java(entity.getUpdatedAt().toInstant())")
-    ClientSubscription mapEntityToResponse(@Context ClockService clockService, ClientSubscriptionEntity entity);
+    ClientSubscription mapEntityToResponse(ClientSubscriptionEntity entity);
 
     @Named("mapWithSortedEventTypes")
     static List<EntityEventType> sortedEventTypes(final List<EventType> events) {
