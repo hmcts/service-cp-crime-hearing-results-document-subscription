@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
@@ -31,10 +32,10 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
@@ -51,6 +52,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
 @Import(IgnoreSSLCertificatesInTestConfig.class)
+@TestPropertySource(properties = "subscription.oauth-enabled=true")
 class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
@@ -61,6 +63,12 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
     private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
+    private static final String CALLBACK_URI_OTHER = "/callback/other";
+    private static final String CALLBACK_URI_LATE = "/callback/late";
+
+    private static final String CLIENT_ID_OTHER = "22222222-2222-3333-4444-555555555555";
+    private static final String CLIENT_ID_LATE = "33333333-2222-3333-4444-555555555555";
+
 
     @InjectWireMock("callback-client")
     private WireMockServer callbackWireMock;
@@ -208,12 +216,13 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
         return mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(loadPayload(payloadPath)))
-                .andDo(print());
+                        .content(loadPayload(payloadPath)));
     }
 
     private void when_material_service_responds() {
-        await().atMost(Duration.ofSeconds(5))
+        await()
+                .pollInterval(Duration.ofMillis(50))
+                .atMost(Duration.ofSeconds(3))
                 .untilAsserted(() -> verify(materialApi, atLeastOnce()).getMaterialMetadataByMaterialId(any(UUID.class)));
     }
 
@@ -236,24 +245,30 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private void when_subscriber_loses_access() throws Exception {
         deleteSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, subscriptionId)
-                .andDo(print())
                 .andExpect(status().isNoContent());
     }
 
     private void then_subscriber_cannot_retrieve_document() throws Exception {
-        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, callbackDocumentId))
-                .andDo(print())
+        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, callbackDocumentId)
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("Access denied: subscription does not have access to this document"));
     }
 
     private void getDocumentAndExpectPdf(UUID subId, UUID docId) throws Exception {
-        mockMvc.perform(get(DOCUMENT_URI, subId, docId))
-                .andDo(print())
+        mockMvc.perform(get(DOCUMENT_URI, subId, docId)
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
-                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")));
+    }
+
+    private void getDocumentAndExpectPdf(UUID subId, UUID docId, String clientId) throws Exception {
+        mockMvc.perform(get(DOCUMENT_URI, subId, docId)
+                        .header("Authorization", bearerTokenWithAzp(clientId)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")));
     }
 
     private void createSubscription() throws Exception {
@@ -261,20 +276,20 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void given_another_subscription_with_custodial_only() throws Exception {
-        otherSubscriptionId = createSubscriptionCustodialOnly(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        otherSubscriptionId = createSubscriptionCustodialOnly(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_OTHER, CLIENT_ID_OTHER);
     }
 
     private void given_late_subscriber_with_pcr() throws Exception {
-        lateSubscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        lateSubscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_LATE, CLIENT_ID_LATE);
     }
 
     private void then_late_subscriber_can_retrieve_document() throws Exception {
-        getDocumentAndExpectPdf(lateSubscriptionId, callbackDocumentId);
+        getDocumentAndExpectPdf(lateSubscriptionId, callbackDocumentId, CLIENT_ID_LATE);
     }
 
     private void then_other_subscription_cannot_retrieve_document() throws Exception {
-        mockMvc.perform(get(DOCUMENT_URI, otherSubscriptionId, callbackDocumentId))
-                .andDo(print())
+        mockMvc.perform(get(DOCUMENT_URI, otherSubscriptionId, callbackDocumentId)
+                        .header("Authorization", bearerTokenWithAzp(CLIENT_ID_OTHER)))
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("Access denied: subscription does not have access to this document"));
     }

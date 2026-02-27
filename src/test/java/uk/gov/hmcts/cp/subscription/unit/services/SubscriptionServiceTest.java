@@ -5,6 +5,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -14,13 +16,18 @@ import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
@@ -39,41 +46,84 @@ class SubscriptionServiceTest {
             .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
             .build();
     ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
-    ClientSubscriptionEntity requestEntity = ClientSubscriptionEntity.builder().build();
-    ClientSubscriptionEntity savedEntity = ClientSubscriptionEntity.builder().build();
-    ClientSubscriptionEntity updatedEntity = ClientSubscriptionEntity.builder().build();
-    ClientSubscription response = ClientSubscription.builder().build();
     UUID subscriptionId = UUID.fromString("2ca16eb5-3998-4bb7-adce-4bb9b3b7223c");
+    UUID clientId = UUID.fromString("11111111-2222-3333-4444-555555555555");
+    OffsetDateTime now = OffsetDateTime.now();
+    ClientSubscriptionEntity requestEntity = ClientSubscriptionEntity.builder()
+            .id(subscriptionId)
+            .clientId(clientId)
+            .build();
+    ClientSubscriptionEntity savedEntity = ClientSubscriptionEntity.builder()
+            .id(subscriptionId)
+            .clientId(clientId)
+            .build();
+    ClientSubscriptionEntity updatedEntity = ClientSubscriptionEntity.builder()
+            .id(subscriptionId)
+            .clientId(clientId)
+            .build();
+    ClientSubscription response = ClientSubscription.builder().build();
 
     @Test
     void save_request_should_save_new_entity() {
-        when(mapper.mapCreateRequestToEntity(clockService, createRequest)).thenReturn(requestEntity);
-        when(subscriptionRepository.save(requestEntity)).thenReturn(savedEntity);
-        when(mapper.mapEntityToResponse(clockService, savedEntity)).thenReturn(response);
+        when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.empty());
+        when(clockService.nowOffsetUTC()).thenReturn(now);
+        when(mapper.mapCreateRequestToEntity(createRequest, now)).thenReturn(requestEntity);
+        when(subscriptionRepository.save(any(ClientSubscriptionEntity.class))).thenReturn(savedEntity);
+        when(mapper.mapEntityToResponse(savedEntity)).thenReturn(response);
 
-        ClientSubscription result = subscriptionService.saveSubscription(createRequest);
+        ClientSubscription result = subscriptionService.saveSubscription(createRequest, clientId);
 
-        verify(mapper).mapCreateRequestToEntity(clockService, createRequest);
-        verify(subscriptionRepository).save(requestEntity);
         assertThat(result).isEqualTo(response);
+    }
+
+    @Test
+    void save_request_should_throw_conflict_when_subscription_already_exists() {
+        when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.of(savedEntity));
+
+        assertThatThrownBy(() -> subscriptionService.saveSubscription(createRequest, clientId))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(e -> {
+                    ResponseStatusException ex = (ResponseStatusException) e;
+                    assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(ex.getReason()).isEqualTo("subscription already exist with " + subscriptionId);
+                });
+
+        verify(subscriptionRepository, never()).save(any());
     }
 
     @Test
     void update_request_should_update_existing_entity() {
-        when(subscriptionRepository.getReferenceById(subscriptionId)).thenReturn(savedEntity);
-        when(mapper.mapUpdateRequestToEntity(clockService, savedEntity, updateRequest)).thenReturn(requestEntity);
+        when(subscriptionRepository.findByIdAndClientId(subscriptionId, clientId)).thenReturn(Optional.of(savedEntity));
+        when(clockService.nowOffsetUTC()).thenReturn(now);
+        when(mapper.mapUpdateRequestToEntity(savedEntity, updateRequest, now)).thenReturn(requestEntity);
         when(subscriptionRepository.save(requestEntity)).thenReturn(updatedEntity);
-        when(mapper.mapEntityToResponse(clockService, updatedEntity)).thenReturn(response);
+        when(mapper.mapEntityToResponse(updatedEntity)).thenReturn(response);
 
-        ClientSubscription result = subscriptionService.updateSubscription(subscriptionId, updateRequest);
+        ClientSubscription result = subscriptionService.updateSubscription(subscriptionId, updateRequest, clientId);
 
+        verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
         verify(subscriptionRepository).save(requestEntity);
         assertThat(result).isEqualTo(response);
     }
 
     @Test
-    void delete_should_delete_entity() {
-        subscriptionService.deleteSubscription(subscriptionId);
-        verify(subscriptionRepository).deleteById(subscriptionId);
+    void get_should_return_subscription_when_owned_by_client() {
+        when(subscriptionRepository.findByIdAndClientId(subscriptionId, clientId)).thenReturn(Optional.of(savedEntity));
+        when(mapper.mapEntityToResponse(savedEntity)).thenReturn(response);
+
+        ClientSubscription result = subscriptionService.getSubscription(subscriptionId, clientId);
+
+        verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
+        assertThat(result).isEqualTo(response);
+    }
+
+    @Test
+    void delete_should_delete_entity_when_owned_by_client() {
+        when(subscriptionRepository.findByIdAndClientId(subscriptionId, clientId)).thenReturn(Optional.of(savedEntity));
+
+        subscriptionService.deleteSubscription(subscriptionId, clientId);
+
+        verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
+        verify(subscriptionRepository).delete(savedEntity);
     }
 }

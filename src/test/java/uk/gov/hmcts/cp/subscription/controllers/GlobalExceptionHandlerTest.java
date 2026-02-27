@@ -15,8 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 @ExtendWith(MockitoExtension.class)
 class GlobalExceptionHandlerTest {
@@ -100,5 +99,14 @@ class GlobalExceptionHandlerTest {
     private void assertErrorFields(ResponseEntity<String> errorResponse, HttpStatusCode httpStatusCode, String message) {
         assertThat(errorResponse.getStatusCode()).isEqualTo(httpStatusCode);
         assertThat(errorResponse.getBody()).isEqualTo(message);
+    }
+
+    @Test
+    void conflict_response_status_exception_should_return_409_with_message() {
+        ResponseStatusException e = new ResponseStatusException(CONFLICT, "subscription already exist with some-id");
+
+        ResponseEntity<String> response = globalExceptionHandler.handleResponseStatusException(e);
+
+        assertErrorFields(response, CONFLICT, "subscription already exist with some-id");
     }
 }

@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,6 +29,9 @@ public class ClientSubscriptionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "client_id")
+    private UUID clientId;
 
     private String notificationEndpoint;
     @Enumerated(EnumType.STRING)

@@ -23,7 +23,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -53,7 +52,6 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
-                .andDo(print())
                 .andExpect(status().isAccepted());
 
         verify(callbackDeliveryService, times(1)).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
@@ -70,7 +68,6 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
-                .andDo(print())
                 .andExpect(status().isNotImplemented())
                 .andExpect(content().string("Unsupported"));
 
@@ -85,7 +82,6 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
-                .andDo(print())
                 .andExpect(status().isNotFound());
     }
 
@@ -98,7 +94,6 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
-                .andDo(print())
                 .andExpect(status().isGatewayTimeout())
                 .andExpect(content().string("Material metadata not ready"));
     }
@@ -111,8 +106,8 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
         DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
 
         mockMvc.perform(get(DOCUMENT_URI,
-                        subscription.getId(), document.getDocumentId()))
-                .andDo(print())
+                        subscription.getId(), document.getDocumentId())
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "application/pdf"))
                 .andExpect(header().string("Content-Disposition",
@@ -128,8 +123,8 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
         DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
 
         mockMvc.perform(get(DOCUMENT_URI,
-                        subscription.getId(), document.getDocumentId()))
-                .andDo(print())
+                        subscription.getId(), document.getDocumentId())
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isForbidden());
     }
 }

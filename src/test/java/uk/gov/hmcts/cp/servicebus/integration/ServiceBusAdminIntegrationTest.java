@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 @SpringBootTest
@@ -28,11 +29,8 @@ public class ServiceBusAdminIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        if (adminService.isServiceBusReady()) {
-            log.info("ServiceBus is up and running");
-        } else {
-            throw new RuntimeException("ServiceBus is not running. Run gradlew composeUp / composeDown");
-        }
+        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        log.info("ServiceBus is up and running");
     }
 
     @Test

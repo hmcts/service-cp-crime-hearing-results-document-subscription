@@ -16,7 +16,6 @@ import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,8 +30,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     private static final String PCR_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
     private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
     private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
-    private static final UUID SUBSCRIPTION_ID = randomUUID();
-    private static final UUID DOCUMENT_ID = randomUUID();
+    private static final String PCR_REQUEST_NULL_EVENT = "stubs/requests/progression/pcr-request-null-event.json";
     private static final String SUBSCRIPTION_DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @Autowired
@@ -40,6 +38,9 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
 
     @MockitoBean
     private NotificationManager notificationManager;
+
+    UUID subscriptionId = randomUUID();
+    UUID documentId = randomUUID();
 
     @Test
     void bad_content_type_should_return_415() throws Exception {
@@ -105,10 +106,11 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
-                .when(notificationManager).getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
+                .when(notificationManager).getPcrDocumentContent(subscriptionId, TEST_CLIENT_ID, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
-                        SUBSCRIPTION_ID, DOCUMENT_ID))
+                        subscriptionId, documentId)
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isForbidden())
                 .andExpect(content().string("Access denied: subscription does not have access to this document"));
@@ -117,7 +119,8 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_400_when_invalid_subscription_uuid() throws Exception {
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
-                        "invalid-uuid", DOCUMENT_ID))
+                        "invalid-uuid", documentId)
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
@@ -125,18 +128,20 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_400_when_invalid_document_uuid() throws Exception {
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
-                        SUBSCRIPTION_ID, "invalid-uuid"))
+                        subscriptionId, "invalid-uuid")
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void get_document_should_return_404_when_document_not_found() throws Exception {
-        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + DOCUMENT_ID))
-                .when(notificationManager).getPcrDocumentContent(eq(SUBSCRIPTION_ID), eq(DOCUMENT_ID));
+        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId))
+                .when(notificationManager).getPcrDocumentContent(subscriptionId, TEST_CLIENT_ID, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
-                        SUBSCRIPTION_ID, DOCUMENT_ID))
+                        subscriptionId, documentId)
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
