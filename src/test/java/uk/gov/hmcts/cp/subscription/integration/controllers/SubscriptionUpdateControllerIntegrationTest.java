@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.time.OffsetDateTime;
@@ -44,6 +45,32 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.eventTypes.[1]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
         verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(existing.getId(), existing.getCreatedAt());
+    }
+
+    @Test
+    void update_non_existent_subscription_should_return_404() throws Exception {
+        String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
+        mockMvc.perform(put("/client-subscriptions/{id}", UUID.randomUUID())
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void update_subscription_belonging_to_different_client_should_return_404() throws Exception {
+        UUID otherClientId = UUID.fromString("99999999-9999-9999-9999-999999999999");
+        ClientSubscriptionEntity otherClientSubscription = insertSubscription(
+                otherClientId, List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED), "https://other-client.com/callback");
+
+        String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
+        mockMvc.perform(put("/client-subscriptions/{id}", otherClientSubscription.getId())
+                        .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID.toString()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 
     // Pipeline fails because expected is nanoSecs and actual is microSecs

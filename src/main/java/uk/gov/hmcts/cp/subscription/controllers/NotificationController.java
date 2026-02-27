@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.slf4j.MDC;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
@@ -51,8 +52,8 @@ public class NotificationController implements NotificationApi {
     public ResponseEntity<Resource> getDocument(
             @NotNull @PathVariable("clientSubscriptionId") final UUID clientSubscriptionId,
             @NotNull @PathVariable("documentId") final UUID documentId) {
-        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId,
-                ClientIdResolutionFilter.getResolvedClientId(httpRequest), documentId);
+        final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
+        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, clientId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);

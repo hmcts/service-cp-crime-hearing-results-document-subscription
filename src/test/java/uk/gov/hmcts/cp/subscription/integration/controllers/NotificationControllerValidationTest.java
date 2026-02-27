@@ -16,7 +16,6 @@ import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,6 +30,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     private static final String PCR_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
     private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
     private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
+    private static final String PCR_REQUEST_NULL_EVENT = "stubs/requests/progression/pcr-request-null-event.json";
     private static final String SUBSCRIPTION_DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @Autowired
@@ -106,7 +106,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
-                .when(notificationManager).getPcrDocumentContent(eq(subscriptionId), eq(TEST_CLIENT_ID), eq(documentId));
+                .when(notificationManager).getPcrDocumentContent(subscriptionId, TEST_CLIENT_ID, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         subscriptionId, documentId)
@@ -137,7 +137,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_404_when_document_not_found() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId))
-                .when(notificationManager).getPcrDocumentContent(eq(subscriptionId), eq(TEST_CLIENT_ID), eq(documentId));
+                .when(notificationManager).getPcrDocumentContent(subscriptionId, TEST_CLIENT_ID, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         subscriptionId, documentId)

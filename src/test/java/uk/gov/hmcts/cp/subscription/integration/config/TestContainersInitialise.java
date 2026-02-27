@@ -24,7 +24,8 @@ public class TestContainersInitialise implements ApplicationContextInitializer<C
         TestPropertyValues.of(
                 "spring.datasource.url=" + POSTGRE_SQL_CONTAINER.getJdbcUrl(),
                 "spring.datasource.username=" + POSTGRE_SQL_CONTAINER.getUsername(),
-                "spring.datasource.password=" + POSTGRE_SQL_CONTAINER.getPassword()
+                "spring.datasource.password=" + POSTGRE_SQL_CONTAINER.getPassword(),
+                "subscription.oauth-enabled=true"
         ).applyTo(applicationContext.getEnvironment());
     }
 }

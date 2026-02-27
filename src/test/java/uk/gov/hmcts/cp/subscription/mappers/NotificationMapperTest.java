@@ -3,6 +3,7 @@ package uk.gov.hmcts.cp.subscription.mappers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
@@ -10,6 +11,7 @@ import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendantCasesInner;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendantCustodyEstablishmentDetails;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -20,6 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationMapperTest {
+    @Spy
+    JsonMapper jsonMapper;
 
     @InjectMocks
     NotificationMapper notificationMapper;

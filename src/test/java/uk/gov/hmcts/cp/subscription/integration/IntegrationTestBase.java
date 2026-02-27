@@ -18,10 +18,12 @@ import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
+import uk.gov.hmcts.cp.subscription.services.ClockService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,8 +40,8 @@ public abstract class IntegrationTestBase {
     protected static final String NOTIFICATIONS_PCR_URI = "/notifications/pcr";
     protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
     protected static final String CALLBACK_URI = "/callback/notify";
-    protected static final String TEST_CLIENT_ID = "test-client-id";
-    protected static final String AUTHORIZATION_HEADER_VALUE = JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID);
+    protected static final UUID TEST_CLIENT_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
+    protected static final String AUTHORIZATION_HEADER_VALUE = JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID.toString());
 
     @Resource
     protected MockMvc mockMvc;
@@ -49,6 +51,9 @@ public abstract class IntegrationTestBase {
 
     @Autowired
     protected DocumentMappingRepository documentMappingRepository;
+
+    @Autowired
+    protected ClockService clockService;
 
     protected NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
             .callbackUrl("https://my-callback-url")
@@ -75,12 +80,17 @@ public abstract class IntegrationTestBase {
     }
 
     protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<EntityEventType> entityEventTypes) {
+        return insertSubscription(TEST_CLIENT_ID, entityEventTypes, notificationUri);
+    }
+
+    protected ClientSubscriptionEntity insertSubscription(UUID clientId, List<EntityEventType> entityEventTypes, String notificationUri) {
+        OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         ClientSubscriptionEntity subscription = ClientSubscriptionEntity.builder()
-                .clientId(TEST_CLIENT_ID)
+                .clientId(clientId)
                 .eventTypes(entityEventTypes)
                 .notificationEndpoint(notificationUri)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
         return subscriptionRepository.save(subscription);
     }
@@ -90,10 +100,11 @@ public abstract class IntegrationTestBase {
     }
 
     protected DocumentMappingEntity insertDocument(UUID materialId, EntityEventType eventType) {
+        OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         DocumentMappingEntity document = DocumentMappingEntity.builder()
                 .materialId(materialId)
                 .eventType(eventType)
-                .createdAt(OffsetDateTime.now())
+                .createdAt(now)
                 .build();
         return documentMappingRepository.save(document);
     }

@@ -10,8 +10,10 @@ import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.cp.subscription.model.EntityEventType.CUSTODIAL_RESULT;
@@ -31,7 +33,7 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
-                        .contentType(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andDo(print())
                 .andExpect(status().isCreated())
@@ -40,6 +42,28 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.eventTypes.[1]").value(PRISON_COURT_REGISTER_GENERATED.name()))
                 .andExpect(jsonPath("$.createdAt").exists());
         assertThatEventTypesAreSortedInDatabase();
+    }
+
+    @Test
+    void duplicate_subscription_should_return_409_with_existing_subscription_id() throws Exception {
+        String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
+        mockMvc.perform(post("/client-subscriptions")
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated());
+
+        List<ClientSubscriptionEntity> saved = subscriptionRepository.findAll();
+        assertThat(saved).hasSize(1);
+        String existingId = saved.get(0).getId().toString();
+
+        mockMvc.perform(post("/client-subscriptions")
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(content().string(containsString("subscription already exist with " + existingId)));
     }
 
     private void assertThatEventTypesAreSortedInDatabase() {

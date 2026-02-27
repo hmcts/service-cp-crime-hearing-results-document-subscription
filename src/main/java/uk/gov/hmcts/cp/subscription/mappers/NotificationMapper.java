@@ -1,18 +1,20 @@
 package uk.gov.hmcts.cp.subscription.mappers;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendant;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.util.List;
 import java.util.UUID;
 
 @Component
+@AllArgsConstructor
 public class NotificationMapper {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JsonMapper jsonMapper;
 
     public EventNotificationPayload mapToPayload(final UUID documentId, final PcrEventPayload pcrEventPayload) {
         final PcrEventPayloadDefendant defendant = pcrEventPayload.getDefendant();
@@ -32,10 +34,10 @@ public class NotificationMapper {
     }
 
     public String mapToJson(final EventNotificationPayload payload) {
-        return objectMapper.writeValueAsString(payload);
+        return jsonMapper.toJson(payload);
     }
 
     public EventNotificationPayload mapFromJson(final String json) {
-        return objectMapper.readValue(json, EventNotificationPayload.class);
+        return jsonMapper.fromJson(json, EventNotificationPayload.class);
     }
 }

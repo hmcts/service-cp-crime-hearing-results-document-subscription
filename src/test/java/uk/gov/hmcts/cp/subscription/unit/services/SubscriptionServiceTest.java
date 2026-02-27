@@ -18,9 +18,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +47,7 @@ class SubscriptionServiceTest {
             .build();
     ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
     UUID subscriptionId = UUID.fromString("2ca16eb5-3998-4bb7-adce-4bb9b3b7223c");
-    String clientId = "test-client-id";
+    UUID clientId = UUID.fromString("11111111-2222-3333-4444-555555555555");
     ClientSubscriptionEntity requestEntity = ClientSubscriptionEntity.builder()
             .id(subscriptionId)
             .clientId(clientId)
@@ -59,6 +64,7 @@ class SubscriptionServiceTest {
 
     @Test
     void save_request_should_save_new_entity() {
+        when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.empty());
         when(mapper.mapCreateRequestToEntity(clockService, createRequest)).thenReturn(requestEntity);
         when(subscriptionRepository.save(any(ClientSubscriptionEntity.class))).thenReturn(savedEntity);
         when(mapper.mapEntityToResponse(clockService, savedEntity)).thenReturn(response);
@@ -68,6 +74,21 @@ class SubscriptionServiceTest {
         verify(mapper).mapCreateRequestToEntity(clockService, createRequest);
         verify(subscriptionRepository).save(any(ClientSubscriptionEntity.class));
         assertThat(result).isEqualTo(response);
+    }
+
+    @Test
+    void save_request_should_throw_conflict_when_subscription_already_exists() {
+        when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.of(savedEntity));
+
+        assertThatThrownBy(() -> subscriptionService.saveSubscription(createRequest, clientId))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(e -> {
+                    ResponseStatusException ex = (ResponseStatusException) e;
+                    assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+                    assertThat(ex.getReason()).isEqualTo("subscription already exist with " + subscriptionId);
+                });
+
+        verify(subscriptionRepository, never()).save(any());
     }
 
     @Test

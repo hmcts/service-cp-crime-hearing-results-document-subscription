@@ -1,12 +1,13 @@
 package uk.gov.hmcts.cp.subscription.integration.helpers;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JwtHelper {
-
-    private JwtHelper() {
-    }
 
     public static String bearerTokenWithAzp(String clientId) {
         return "Bearer " + jwtWithClaims("{\"azp\":\"" + clientId + "\"}");

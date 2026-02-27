@@ -5,7 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.subscription.config.RetryConfigService;
+import uk.gov.hmcts.cp.subscription.config.RetryServiceConfig;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 
 import java.time.OffsetDateTime;
@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ServiceBusRetryServiceTest {
     @Mock
-    RetryConfigService retryConfigService;
+    RetryServiceConfig retryServiceConfig;
     @Mock
     ClockService clockService;
 
@@ -26,7 +26,7 @@ class ServiceBusRetryServiceTest {
 
     @Test
     void retry_delay_should_be_correct() {
-        when(retryConfigService.getRetryDelaySeconds()).thenReturn(List.of(1, 2));
+        when(retryServiceConfig.getRetryDelaySeconds()).thenReturn(List.of(1, 2));
 
         assertThat(retryService.getDelaySecs(0)).isEqualTo(1);
         assertThat(retryService.getDelaySecs(1)).isEqualTo(2);
@@ -36,7 +36,7 @@ class ServiceBusRetryServiceTest {
     @Test
     void retry_time_should_be_correct() {
         OffsetDateTime now = OffsetDateTime.now();
-        when(retryConfigService.getRetryDelaySeconds()).thenReturn(List.of(1, 3600));
+        when(retryServiceConfig.getRetryDelaySeconds()).thenReturn(List.of(1, 3600));
         when(clockService.nowOffsetUTC()).thenReturn(now);
 
         assertThat(retryService.getNextTryTime(0)).isEqualTo(now.plusSeconds(1));

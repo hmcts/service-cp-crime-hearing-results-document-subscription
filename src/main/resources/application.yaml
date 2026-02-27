@@ -38,7 +38,7 @@ document-service:
 
 subscription:
   oauth-enabled: ${SUBSCRIPTION_OAUTH_ENABLED:false}
-  default-client-id: ${SUBSCRIPTION_DEFAULT_CLIENT_ID:test-client-id}
+  client-id-header: ${SUBSCRIPTION_CLIENT_ID_HEADER:X-Client-Id}
 
 management:
   endpoints:

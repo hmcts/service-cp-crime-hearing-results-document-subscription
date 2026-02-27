@@ -1,16 +1,18 @@
 package uk.gov.hmcts.cp.servicebus.mapper;
 
 import com.azure.messaging.servicebus.ServiceBusMessage;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Component
+@AllArgsConstructor
 public class ServiceBusMapper {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JsonMapper jsonMapper;
 
     public String mapToJson(final UUID correlationId, final String message, final int failureCount) {
         final ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder()
@@ -18,11 +20,11 @@ public class ServiceBusMapper {
                 .message(message)
                 .failureCount(failureCount)
                 .build();
-        return objectMapper.writeValueAsString(wrapper);
+        return jsonMapper.toJson(wrapper);
     }
 
     public ServiceBusMessageWrapper mapFromJson(final String json) {
-        return objectMapper.readValue(json, ServiceBusMessageWrapper.class);
+        return jsonMapper.fromJson(json, ServiceBusMessageWrapper.class);
     }
 
     public ServiceBusMessage mapToMessage(final String wrappedMessage, final OffsetDateTime nextTryTime) {

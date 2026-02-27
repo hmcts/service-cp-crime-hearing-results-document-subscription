@@ -8,22 +8,36 @@ services:
     ports:
       - "5432:5432"
 
-  app:
-    # If DOCKER_IMAGE environment variable is set, it will use that image
-    # Otherwise, it will use the build section below
-    image: ${DOCKER_IMAGE}
-    build:
-      context: ..
-      dockerfile: Dockerfile
+  # WARNING - See readme.md for running mssql on macbook with apple chip
+  sqledge:
+    image: "mcr.microsoft.com/azure-sql-edge:latest"
+    platform: linux/amd64
+    networks:
+      sb-emulator:
+        aliases:
+          - "sqledge"
     environment:
-      SERVER_PORT: 8082
-      DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
-      DATASOURCE_USERNAME: postgres
-      DATASOURCE_PASSWORD: postgres
-    depends_on:
-      - db
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Str0ngPassword!"
+
+  servicebus-emulator:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    volumes:
+      - "./service-bus-config.json:/ServiceBus_Emulator/ConfigFiles/Config.json"
     ports:
-      - "8082:8082"
+      - "5672:5672"
+      - "5300:5300"
+    environment:
+      SQL_SERVER: sqledge
+      MSSQL_SA_PASSWORD: "Str0ngPassword!"
+      ACCEPT_EULA: "Y"
+      SQL_WAIT_INTERVAL: 60
+    depends_on:
+      - sqledge
+    networks:
+      sb-emulator:
+        aliases:
+          - "sb-emulator"
 
   wiremock:
     image: wiremock/wiremock:3.6.0
@@ -36,3 +50,25 @@ services:
     command:
       - "--global-response-templating"
       - "--verbose"
+
+  app:
+    # If DOCKER_IMAGE environment variable is set, it will use that image
+    # Otherwise, it will use the build section below
+    image: ${DOCKER_IMAGE}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      SERVER_PORT: 8082
+      DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: postgres
+      SUBSCRIPTION_OAUTH_ENABLED: true
+    depends_on:
+      - db
+    ports:
+      - "8082:8082"
+
+networks:
+  sb-emulator:
+

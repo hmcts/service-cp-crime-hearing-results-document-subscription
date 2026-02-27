@@ -15,6 +15,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Probably best as a separate app with its own gradle build
  */
 class SubscriptionApiTest {
+    private static final String TEST_CLIENT_ID = "11111111-2222-3333-4444-555555555555";
+    private static final String AUTHORIZATION = "Authorization";
+    private static final String BEARER_TOKEN = JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID);
+
     private final String baseUrl = System.getProperty("app.baseUrl", "http://localhost:8082");
     private final RestClient http = RestClient.create();
 
@@ -24,6 +28,7 @@ class SubscriptionApiTest {
         final String body = "{\"notificationEndpoint\":{\"callbackUrl\":\"https://my-callback-url\"},\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\",\"CUSTODIAL_RESULT\"]}";
         final var postResult = http.post()
                 .uri(postUrl)
+                .header(AUTHORIZATION, BEARER_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
@@ -37,6 +42,7 @@ class SubscriptionApiTest {
         final String getUrl = String.format("%s/client-subscriptions/%s", baseUrl, subscriptionId);
         final var getResult = http.get()
                 .uri(getUrl)
+                .header(AUTHORIZATION, BEARER_TOKEN)
                 .retrieve()
                 .toEntity(String.class);
         assertThat(getResult.getStatusCode()).isEqualTo(HttpStatus.OK);

@@ -12,7 +12,7 @@ public class SubscriberMapper {
                 entity.getId(),
                 entity.getEventTypes(),
                 entity.getNotificationEndpoint(),
-                null
+                entity.getClientId()
         );
     }
 }
