@@ -59,6 +59,7 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
         }
     }
 
+    @SuppressWarnings("PMD.OnlyOneReturn")
     private UUID resolveClientId(final HttpServletRequest request) {
         if (oauthEnabled) {
             final UUID clientId = jwtTokenParser.extractClientIdFromToken(request);
