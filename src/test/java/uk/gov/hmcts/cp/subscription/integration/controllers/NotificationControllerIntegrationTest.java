@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -25,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0)})
@@ -58,23 +58,6 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void custodial_result_should_return_unsupported() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-custodial-result.json");
-
-        doThrow(new UnsupportedOperationException("CUSTODIAL_RESULT not implemented"))
-                .when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
-
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(pcrPayload))
-                .andExpect(status().isNotImplemented())
-                .andExpect(content().string("Unsupported"));
-
-        verify(callbackDeliveryService, times(1)).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
-    }
-
-    @Test
     void material_metadata_not_found_should_return_404() throws Exception {
         String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-material-not-found.json");
 
@@ -95,7 +78,8 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
                 .andExpect(status().isGatewayTimeout())
-                .andExpect(content().string("Material metadata not ready"));
+                .andExpect(jsonPath("$.error").value("gateway_timeout"))
+                .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
     @Test
@@ -115,16 +99,4 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
     }
 
-    @Test
-    void get_document_should_return_403_when_subscription_does_not_have_event_type() throws Exception {
-        ClientSubscriptionEntity subscription = insertSubscription(
-                CALLBACK_URL,
-                List.of(EntityEventType.CUSTODIAL_RESULT));
-        DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-
-        mockMvc.perform(get(DOCUMENT_URI,
-                        subscription.getId(), document.getDocumentId())
-                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
-                .andExpect(status().isForbidden());
-    }
 }

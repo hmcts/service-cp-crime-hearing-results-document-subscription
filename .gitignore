@@ -2,6 +2,8 @@ bin/*
 !bin/run-in-docker.sh
 .gradle
 /build/
+apiTest/build/
+apiTest/.gradle/
 /gradlew.bat
 !gradle/wrapper/gradle-wrapper.properties
 *.class

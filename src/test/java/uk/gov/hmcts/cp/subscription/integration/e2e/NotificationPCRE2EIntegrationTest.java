@@ -19,6 +19,7 @@ import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
@@ -32,8 +33,8 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
@@ -43,7 +44,6 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionCustodialOnly;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
 
@@ -195,7 +195,8 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     private void when_a_pcr_event_is_posted_expect_callback_delivery_timeout() throws Exception {
         postPcrEvent(PCR_EVENT_PAYLOAD_PATH)
                 .andExpect(status().isGatewayTimeout())
-                .andExpect(content().string("Callback is not ready"));
+                .andExpect(jsonPath("$.error").value("gateway_timeout"))
+                .andExpect(jsonPath("$.message").value("Callback is not ready"));
     }
 
     private void then_callback_was_attempted() {
@@ -209,7 +210,8 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
     private void when_a_pcr_event_is_posted_with_timeout() throws Exception {
         postPcrEvent(PCR_EVENT_TIMEOUT_PATH)
                 .andExpect(status().isGatewayTimeout())
-                .andExpect(content().string("Material metadata not ready"));
+                .andExpect(jsonPath("$.error").value("gateway_timeout"))
+                .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
     private ResultActions postPcrEvent(String payloadPath) throws Exception {
@@ -252,7 +254,8 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(get(DOCUMENT_URI, subscriptionId, callbackDocumentId)
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Access denied: subscription does not have access to this document"));
+                .andExpect(jsonPath("$.error").value("invalid_request"))
+                .andExpect(jsonPath("$.message").value("Access denied: subscription does not have access to this document"));
     }
 
     private void getDocumentAndExpectPdf(UUID subId, UUID docId) throws Exception {
@@ -275,8 +278,11 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
         subscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
     }
 
-    private void given_another_subscription_with_custodial_only() throws Exception {
-        otherSubscriptionId = createSubscriptionCustodialOnly(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_OTHER, CLIENT_ID_OTHER);
+    private void given_another_subscription_with_custodial_only() {
+        // Directly insert a subscription with no event types to simulate a client
+        // that has no access to PCR documents, bypassing API validation.
+        otherSubscriptionId = insertSubscription(
+                UUID.fromString(CLIENT_ID_OTHER), List.of(), callbackBaseUrl + CALLBACK_URI_OTHER).getId();
     }
 
     private void given_late_subscriber_with_pcr() throws Exception {
@@ -291,6 +297,7 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(get(DOCUMENT_URI, otherSubscriptionId, callbackDocumentId)
                         .header("Authorization", bearerTokenWithAzp(CLIENT_ID_OTHER)))
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Access denied: subscription does not have access to this document"));
+                .andExpect(jsonPath("$.error").value("invalid_request"))
+                .andExpect(jsonPath("$.message").value("Access denied: subscription does not have access to this document"));
     }
 }

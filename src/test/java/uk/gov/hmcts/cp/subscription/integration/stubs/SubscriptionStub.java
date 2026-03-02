@@ -20,7 +20,6 @@ public final class SubscriptionStub {
 
     private static final String TEST_CLIENT_ID = "11111111-2222-3333-4444-555555555555";
     private static final String SUBSCRIPTION_PCR_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
-    private static final String SUBSCRIPTION_CUSTODIAL_ONLY_PATH = "stubs/requests/subscription/subscription-custodial-only.json";
     private static final String PLACEHOLDER_CALLBACK_URL = "{{callback.url}}";
     public static final String CLIENT_SUBSCRIPTION_ID_FIELD = "clientSubscriptionId";
 
@@ -38,18 +37,6 @@ public final class SubscriptionStub {
         String body = loadPayload(SUBSCRIPTION_PCR_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
         String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body, clientId);
         return extractClientSubscriptionId(json);
-    }
-
-    public static UUID createSubscriptionCustodialOnly(MockMvc mockMvc, String clientSubscriptionsUri,
-                                                       String callbackBaseUrl, String callbackUri) throws Exception {
-        return createSubscriptionCustodialOnly(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, TEST_CLIENT_ID);
-    }
-
-    public static UUID createSubscriptionCustodialOnly(MockMvc mockMvc, String clientSubscriptionsUri,
-                                                       String callbackBaseUrl, String callbackUri,
-                                                       String clientId) throws Exception {
-        String payload = loadPayload(SUBSCRIPTION_CUSTODIAL_ONLY_PATH);
-        return createSubscriptionFromPayload(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, payload, clientId);
     }
 
     public static UUID createSubscriptionFromPayload(MockMvc mockMvc, String clientSubscriptionsUri,

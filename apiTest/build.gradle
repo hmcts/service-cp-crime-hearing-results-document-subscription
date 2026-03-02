@@ -60,11 +60,10 @@ tasks.named('build') {
 
 dockerCompose {
   useComposeFiles = ['docker-compose.yml']
-  startedServices = ['db', 'app']
+  startedServices = ['db', 'wiremock', 'app']
 
   buildBeforeUp = true
   waitForTcpPorts = true
-  upAdditionalArgs = ['--wait', '--wait-timeout', '120']
 
   captureContainersOutput = true
   removeOrphans = true
@@ -91,8 +90,8 @@ dependencies {
   testImplementation "org.springframework:spring-web"
   testImplementation "org.springframework.boot:spring-boot-starter-test"
   testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-  testCompileOnly "org.projectlombok:lombok"
-  testAnnotationProcessor "org.projectlombok:lombok"
+  testCompileOnly "org.projectlombok:lombok:1.18.42"
+  testAnnotationProcessor "org.projectlombok:lombok:1.18.42"
 }
 
 repositories {

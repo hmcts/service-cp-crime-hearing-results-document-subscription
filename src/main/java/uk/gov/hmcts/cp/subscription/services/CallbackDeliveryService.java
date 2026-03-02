@@ -33,9 +33,6 @@ public class CallbackDeliveryService {
 
     public void processPcrEvent(final PcrEventPayload pcrEventPayload, final UUID documentId) {
         final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
-        if (eventType == EntityEventType.CUSTODIAL_RESULT) {
-            throw new UnsupportedOperationException("CUSTODIAL_RESULT not implemented");
-        }
         final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType.name());
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, pcrEventPayload);
         for (final ClientSubscriptionEntity entity : entities) {

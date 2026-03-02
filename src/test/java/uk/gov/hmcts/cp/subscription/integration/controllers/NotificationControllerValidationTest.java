@@ -20,7 +20,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Import(GlobalExceptionHandler.class)
@@ -30,7 +30,6 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     private static final String PCR_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
     private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
     private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
-    private static final String PCR_REQUEST_NULL_EVENT = "stubs/requests/progression/pcr-request-null-event.json";
     private static final String SUBSCRIPTION_DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @Autowired
@@ -113,7 +112,8 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isForbidden())
-                .andExpect(content().string("Access denied: subscription does not have access to this document"));
+                .andExpect(jsonPath("$.error").value("invalid_request"))
+                .andExpect(jsonPath("$.message").value("Access denied: subscription does not have access to this document"));
     }
 
     @Test

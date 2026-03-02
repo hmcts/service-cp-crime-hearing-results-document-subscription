@@ -27,7 +27,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.openapi.model.EventType.CUSTODIAL_RESULT;
 import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
 @SpringBootTest
@@ -60,7 +59,7 @@ public abstract class IntegrationTestBase {
             .build();
     protected ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
             .notificationEndpoint(notificationEndpoint)
-            .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
+            .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
             .build();
 
     protected void clearClientSubscriptionTable() {
