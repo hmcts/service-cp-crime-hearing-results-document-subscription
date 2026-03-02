@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,23 +52,6 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
                 .andExpect(status().isAccepted());
-
-        verify(callbackDeliveryService, times(1)).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
-    }
-
-    @Test
-    void custodial_result_should_return_unsupported() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-custodial-result.json");
-
-        doThrow(new UnsupportedOperationException("CUSTODIAL_RESULT not implemented"))
-                .when(callbackDeliveryService).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
-
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(pcrPayload))
-                .andExpect(status().isNotImplemented())
-                .andExpect(content().string("Unsupported"));
 
         verify(callbackDeliveryService, times(1)).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
     }
@@ -115,16 +97,4 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
     }
 
-    @Test
-    void get_document_should_return_403_when_subscription_does_not_have_event_type() throws Exception {
-        ClientSubscriptionEntity subscription = insertSubscription(
-                CALLBACK_URL,
-                List.of(EntityEventType.CUSTODIAL_RESULT));
-        DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
-
-        mockMvc.perform(get(DOCUMENT_URI,
-                        subscription.getId(), document.getDocumentId())
-                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
-                .andExpect(status().isForbidden());
-    }
 }

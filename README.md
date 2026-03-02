@@ -4,8 +4,8 @@ The Court Hearing Cases Event Subscription API publishes events relating to crim
 
 ## Software required (macOS)
 
-- **Java 21** – required to build and run the service.  
-  Check with `java -version`. Install via [SDKMAN](https://sdkman.io/), [Homebrew](https://brew.sh/) (`brew install openjdk@21`), or from [Adoptium](https://adoptium.net/).
+- **Java 25** – required to build and run the service.  
+  Check with `java -version`. Install via [SDKMAN](https://sdkman.io/), [Homebrew](https://brew.sh/) (`brew install openjdk@25`), or from [Adoptium](https://adoptium.net/).
 
 - **Docker** – required to run PostgreSQL locally.  
   Install from [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/). Check with `docker --version`.

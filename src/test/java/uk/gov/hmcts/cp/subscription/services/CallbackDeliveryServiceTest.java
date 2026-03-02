@@ -19,9 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,13 +41,6 @@ class CallbackDeliveryServiceTest {
     private final ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().build();
     private final Subscriber subscriber = Subscriber.builder().notificationEndpoint(callbackUrl).build();
     private final EventNotificationPayload eventNotificationPayload = EventNotificationPayload.builder().build();
-
-    @Test
-    void processPcrEvent_custodialResult_shouldThrowUnsupportedOperation() {
-        PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(EventType.CUSTODIAL_RESULT).build();
-        assertThrows(UnsupportedOperationException.class, () -> callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId));
-        verifyNoInteractions(subscriptionRepository, subscriberMapper, callbackService);
-    }
 
     @Test
     void processPcrEvent_shouldMapEventNotificationPayloadFieldsCorrectly() {

@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.context.request.NativeWebRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +17,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.MDC;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 
 import java.net.URLEncoder;
+import java.util.Optional;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -32,10 +35,15 @@ import java.util.UUID;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationController implements NotificationApi {
+public class NotificationController implements InternalApi, NotificationApi {
 
     private final NotificationManager notificationManager;
     private final HttpServletRequest httpRequest;
+
+    @Override
+    public Optional<NativeWebRequest> getRequest() {
+        return Optional.empty();
+    }
 
     @Override
     public ResponseEntity<Void> createNotificationPCR(@Valid @RequestBody final PcrEventPayload pcrEventPayload) {

@@ -19,6 +19,7 @@ import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
@@ -43,7 +44,6 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionCustodialOnly;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
 
@@ -275,8 +275,11 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
         subscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
     }
 
-    private void given_another_subscription_with_custodial_only() throws Exception {
-        otherSubscriptionId = createSubscriptionCustodialOnly(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_OTHER, CLIENT_ID_OTHER);
+    private void given_another_subscription_with_custodial_only() {
+        // Directly insert a subscription with no event types to simulate a client
+        // that has no access to PCR documents, bypassing API validation.
+        otherSubscriptionId = insertSubscription(
+                UUID.fromString(CLIENT_ID_OTHER), List.of(), callbackBaseUrl + CALLBACK_URI_OTHER).getId();
     }
 
     private void given_late_subscriber_with_pcr() throws Exception {
