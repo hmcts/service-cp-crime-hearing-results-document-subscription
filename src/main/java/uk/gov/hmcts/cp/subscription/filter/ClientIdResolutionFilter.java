@@ -46,7 +46,21 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
                                     @Nonnull final HttpServletResponse response,
                                     @Nonnull final FilterChain filterChain) throws ServletException, IOException {
         try {
+            if (log.isDebugEnabled()) {
+                final String authHeader = request.getHeader("Authorization");
+                log.debug(
+                    "Resolving client ID for URI '{}' oauthEnabled={} authHeaderPresent={} authHeaderLength={} authHeaderPrefix='{}'",
+                    request.getRequestURI(),
+                    config.isOauthEnabled(),
+                    authHeader != null,
+                    authHeader != null ? authHeader.length() : 0,
+                    authHeader != null && authHeader.length() >= 20 ? authHeader.substring(0, 20) : authHeader
+                );
+            }
             final UUID clientId = resolveClientId(request);
+            if (log.isDebugEnabled()) {
+                log.debug("Resolved clientId={}", clientId);
+            }
             MDC.put(MDC_CLIENT_ID, clientId.toString());
             try {
                 filterChain.doFilter(request, response);
@@ -72,6 +86,10 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
         if (isNull(headerValue) || headerValue.isBlank()) {
             log.warn("Subscription request rejected: missing or blank client ID header");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing client ID header");
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("Using X-Client-Id header value prefix='{}'",
+                headerValue.length() >= 8 ? headerValue.substring(0, 8) : headerValue);
         }
         return UUID.fromString(headerValue);
     }

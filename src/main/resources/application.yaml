@@ -39,6 +39,11 @@ document-service:
 subscription:
   oauth-enabled: ${SUBSCRIPTION_OAUTH_ENABLED:true}
 
+logging:
+  level:
+    uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter: DEBUG
+    uk.gov.hmcts.cp.subscription.util.JwtTokenParser: DEBUG
+
 management:
   endpoints:
     web:
