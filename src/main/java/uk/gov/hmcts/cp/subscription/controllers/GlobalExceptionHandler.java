@@ -31,6 +31,11 @@ public class GlobalExceptionHandler {
     private static final String ERROR_UNSUPPORTED_MEDIA_TYPE = "unsupported_media_type";
     private static final String ERROR_INTERNAL = "internal_error";
     private static final String ERROR_TIMEOUT = "gateway_timeout";
+    public static final String NOTIFICATION_ENDPOINT_CALLBACK_URL = "notificationEndpoint.callbackUrl";
+    public static final String EVENT_TYPES = "eventTypes";
+    public static final String NOTIFICATION_ENDPOINT = "notificationEndpoint";
+    public static final String SIZE = "Size";
+    public static final String NOT_NULL = "NotNull";
 
     @ExceptionHandler({EntityNotFoundException.class, NoHandlerFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFoundException(final Exception exception) {
@@ -51,16 +56,17 @@ public class GlobalExceptionHandler {
                 .body(errorResponse(ERROR_INVALID_REQUEST, message));
     }
 
+    @SuppressWarnings("PMD.OnlyOneReturn")
     private static String toMessage(final FieldError fieldError) {
         final String field = fieldError.getField();
         final String code = fieldError.getCode();
-        if ("eventTypes".equals(field) && "Size".equals(code)) {
+        if (EVENT_TYPES.equals(field) && SIZE.equals(code)) {
             return "eventTypes must contain at least one value";
         }
-        if ("notificationEndpoint".equals(field) && "NotNull".equals(code)) {
+        if (NOTIFICATION_ENDPOINT.equals(field) && NOT_NULL.equals(code)) {
             return "notificationEndpoint is required";
         }
-        if ("notificationEndpoint.callbackUrl".equals(field)) {
+        if (NOTIFICATION_ENDPOINT_CALLBACK_URL.equals(field)) {
             return "notificationEndpoint.callbackUrl must be a valid HTTPS URL";
         }
         return field + " " + fieldError.getDefaultMessage();
