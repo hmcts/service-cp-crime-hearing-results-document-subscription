@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.config;
+package uk.gov.hmcts.cp.servicebus.config;
 
 import com.azure.core.http.HttpClient;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
@@ -22,17 +22,16 @@ import java.net.URL;
 public class ServiceBusConfigService {
     public static final int ADMIN_CONNECTION_PORT = 5300;
     public static final String TOPIC_NAME = "amp-topics";
-
-    private final boolean enabled;
-    private final String adminConnectionString;
-    private final String connectionString;
-    private final int maxTries;
+    private boolean enabled;
+    private String adminConnectionString;
+    private String connectionString;
+    private int maxTries;
 
     public ServiceBusConfigService(
-            @Value("${service-bus.enabled}") final boolean enabled,
-            @Value("${service-bus.admin-connection}") final String adminConnectionString,
-            @Value("${service-bus.connection}") final String connectionString,
-            @Value("${service-bus.max-tries}") final int maxTries
+            @Value("${service-bus.enabled}") boolean enabled,
+            @Value("${service-bus.admin-connection}") String adminConnectionString,
+            @Value("${service-bus.connection}") String connectionString,
+            @Value("${service-bus.max-tries}") int maxTries
     ) {
         log.info("ServiceBusConfigService initialised with enabled {}", enabled);
         log.info("ServiceBusConfigService initialised with adminConnectionString starting:\"{}\"", adminConnectionString.substring(0, 20));
@@ -44,30 +43,18 @@ public class ServiceBusConfigService {
         this.maxTries = maxTries;
     }
 
-    public ServiceBusSenderClient senderClient(final String topicName) {
-        return new ServiceBusClientBuilder()
-                .connectionString(connectionString)
-                .sender()
-                .topicName(topicName)
-                .buildClient();
-    }
-
-    public ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder(final String topicName, final String subscriptionName) {
-        return new ServiceBusClientBuilder()
-                .connectionString(connectionString)
-                .processor()
-                .topicName(topicName)
-                .subscriptionName(subscriptionName);
+    public ServiceBusClientBuilder clientBuilder() {
+        return new ServiceBusClientBuilder().connectionString(connectionString);
     }
 
     public ServiceBusAdministrationClient adminClient() {
-        final HttpClient adminHttpClient = new NettyAsyncHttpClientBuilder()
+        HttpClient adminHttpClient = new NettyAsyncHttpClientBuilder()
                 .port(ADMIN_CONNECTION_PORT)
                 .build();
-        final HttpPipelinePolicy forceHttpPolicy = (context, next) -> {
+        HttpPipelinePolicy forceHttpPolicy = (context, next) -> {
             try {
-                final URL current = context.getHttpRequest().getUrl();
-                final URL httpUrl = new URL("http", current.getHost(), ADMIN_CONNECTION_PORT, current.getFile());
+                URL current = context.getHttpRequest().getUrl();
+                URL httpUrl = new URL("http", current.getHost(), ADMIN_CONNECTION_PORT, current.getFile());
                 context.getHttpRequest().setUrl(httpUrl);
             } catch (MalformedURLException e) {
                 return Mono.error(e);
@@ -80,5 +67,20 @@ public class ServiceBusConfigService {
                 .httpClient(adminHttpClient)
                 .addPolicy(forceHttpPolicy)
                 .buildClient();
+    }
+
+    public ServiceBusSenderClient senderClient(String topicName) {
+        return clientBuilder()
+                .sender()
+                .topicName(topicName)
+                .buildClient();
+    }
+
+
+    public ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder(String topicName, String subscriptionName) {
+        return clientBuilder()
+                .processor()
+                .topicName(topicName)
+                .subscriptionName(subscriptionName);
     }
 }

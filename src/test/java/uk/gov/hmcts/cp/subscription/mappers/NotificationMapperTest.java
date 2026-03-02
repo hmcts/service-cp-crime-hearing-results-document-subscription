@@ -83,4 +83,17 @@ class NotificationMapperTest {
 
         assertThat(payloadAgain).isEqualTo(payloadAgain);
     }
+
+    @Test
+    void mapper_should_convert_payload_to_json_and_back_again() {
+        PcrEventPayload pcrEventPayload = PcrEventPayload.builder()
+                .defendant(defendant)
+                .timestamp(now)
+                .build();
+        EventNotificationPayload payload = notificationMapper.mapToPayload(documentId, pcrEventPayload);
+
+        String json = notificationMapper.mapToJson(payload);
+        EventNotificationPayload payloadAgain = notificationMapper.mapFromJson(json);
+        assertThat(payloadAgain).isEqualTo(payload);
+    }
 }

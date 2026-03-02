@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.MDC;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -14,10 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.slf4j.MDC;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 
@@ -43,7 +43,8 @@ public class NotificationController implements NotificationApi {
                 pcrEventPayload.getEventId(),
                 pcrEventPayload.getMaterialId(),
                 pcrEventPayload.getEventType());
-
+        // TODO should we get a separate correlationId ? Should we use a cross cutting approach ?
+        UUID correlationId = pcrEventPayload.getEventId();
         notificationManager.processPcrNotification(pcrEventPayload);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }

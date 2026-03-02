@@ -8,7 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
-import uk.gov.hmcts.cp.subscription.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -39,11 +39,11 @@ class ServiceBusClientServiceTest {
     @Test
     void queue_message_should_pass_to_topic() {
         when(configService.senderClient("topic1")).thenReturn(senderClient);
-        when(serviceBusMapper.mapToJson(correlationId, "message", 0)).thenReturn("wrapped-message");
+        when(serviceBusMapper.mapToJson("message", 0)).thenReturn("wrapped-message");
         when(retryService.getNextTryTime(0)).thenReturn(nextTryTime);
         when(serviceBusMapper.mapToMessage("wrapped-message", nextTryTime)).thenReturn(serviceBusMessage);
 
-        clientService.queueMessage("topic1", correlationId, "message", 0);
+        clientService.queueMessage("topic1", "message", 0);
 
         verify(senderClient).sendMessage(serviceBusMessage);
         verify(senderClient).close();

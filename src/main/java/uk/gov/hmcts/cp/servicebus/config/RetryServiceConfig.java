@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.config;
+package uk.gov.hmcts.cp.servicebus.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

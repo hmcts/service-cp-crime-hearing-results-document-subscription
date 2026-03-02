@@ -3,7 +3,7 @@ package uk.gov.hmcts.cp.servicebus.services;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.subscription.config.RetryServiceConfig;
+import uk.gov.hmcts.cp.servicebus.config.RetryServiceConfig;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 
 import java.time.OffsetDateTime;

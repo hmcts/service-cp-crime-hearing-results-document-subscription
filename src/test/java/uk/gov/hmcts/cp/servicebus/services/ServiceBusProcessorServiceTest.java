@@ -17,19 +17,14 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.subscription.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-import org.slf4j.LoggerFactory;
-
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,8 +47,6 @@ class ServiceBusProcessorServiceTest {
     ServiceBusProcessorClient processorClient;
     @Mock
     ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder;
-
-    UUID correlationId = UUID.fromString("b159b5fe-f602-400f-8bff-f06118e2f5bb");
 
     @Mock
     BinaryData binaryData;
@@ -81,7 +74,7 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void handle_message_should_pass_to_callback_client_with_success() {
-        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().correlationId(correlationId).message("wrapped-message").build();
+        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().message("wrapped-message").build();
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
@@ -95,7 +88,7 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void handle_message_should_requeue_if_callback_client_errors() {
-        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().correlationId(correlationId).message("wrapped-message").build();
+        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().message("wrapped-message").build();
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
@@ -108,12 +101,12 @@ class ServiceBusProcessorServiceTest {
 
         serviceBusProcessorService.handleMessage("topic1", "subscription1", context);
 
-        verify(serviceBusClientService).queueMessage("topic1", correlationId, "wrapped-message", 1);
+        verify(serviceBusClientService).queueMessage("topic1", "wrapped-message", 1);
     }
 
     @Test
     void handle_message_should_error_if_callback_client_errors_finally() {
-        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().correlationId(correlationId).message("wrapped-message").build();
+        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().message("wrapped-message").build();
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);

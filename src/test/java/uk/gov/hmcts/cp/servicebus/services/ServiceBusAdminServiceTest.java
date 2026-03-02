@@ -13,7 +13,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.subscription.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 
 import java.time.Duration;
 import java.util.stream.Stream;

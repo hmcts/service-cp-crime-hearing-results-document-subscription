@@ -10,7 +10,7 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.subscription.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 
 @Service
@@ -39,18 +39,18 @@ public class ServiceBusProcessorService {
     @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public void handleMessage(final String topicName, final String subscriptionName, final ServiceBusReceivedMessageContext context) {
         final ServiceBusMessageWrapper wrappedMessage = serviceBusMapper.mapFromJson(String.valueOf(context.getMessage().getBody()));
-        log.info("Processing {}/{} correlationId:{}", topicName, subscriptionName, wrappedMessage.getCorrelationId());
+        log.info("Processing {}/{}", topicName, subscriptionName);
         try {
             final EventNotificationPayload payload = notificationMapper.mapFromJson(wrappedMessage.getMessage());
             callbackClient.sendNotification("todo-url-for-sub", payload);
         } catch (Exception exception) {
             final int failCount = wrappedMessage.getFailureCount() + 1;
-            log.error("handleMessage correlationId:{} failCount:{}/{} with exception.", wrappedMessage.getCorrelationId(), failCount, configService.getMaxTries(), exception);
+            log.error("handleMessage failCount:{}/{} with exception.", failCount, configService.getMaxTries(), exception);
             if (failCount >= configService.getMaxTries()) {
-                log.error("handleMessage correlationId:{} failed finally", wrappedMessage.getCorrelationId());
+                log.error("handleMessage failed finally");
                 throw exception;
             }
-            clientService.queueMessage(topicName, wrappedMessage.getCorrelationId(), wrappedMessage.getMessage(), failCount);
+            clientService.queueMessage(topicName, wrappedMessage.getMessage(), failCount);
             // Because we added a new message and swallowed the error then the current message will be silently dropped
         }
     }
