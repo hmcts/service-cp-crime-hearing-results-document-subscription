@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0)})
@@ -77,7 +78,8 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
                 .andExpect(status().isGatewayTimeout())
-                .andExpect(content().string("Material metadata not ready"));
+                .andExpect(jsonPath("$.error").value("gateway_timeout"))
+                .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
     @Test

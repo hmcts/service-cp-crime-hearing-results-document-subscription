@@ -11,7 +11,6 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,6 +41,7 @@ class SubscriptionGetControllerIntegrationTest extends IntegrationTestBase {
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Subscription not found"));
+                .andExpect(jsonPath("$.error").value("not_found"))
+                .andExpect(jsonPath("$.message").value("Subscription not found"));
     }
 }
