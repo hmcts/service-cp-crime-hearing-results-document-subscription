@@ -41,8 +41,7 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clientSubscriptionId").value(existing.getId().toString()))
-                .andExpect(jsonPath("$.eventTypes.[0]").value("CUSTODIAL_RESULT"))
-                .andExpect(jsonPath("$.eventTypes.[1]").value("PRISON_COURT_REGISTER_GENERATED"))
+                .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
         verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(existing.getId(), existing.getCreatedAt());
     }

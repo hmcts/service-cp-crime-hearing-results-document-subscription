@@ -16,9 +16,9 @@ Before running the tests, ensure you have the following installed and configured
 
 ### Required Software
 
-1. **Java 21** (or higher)
+1. **Java 25** (or higher)
    - Verify installation: `java -version`
-   - Should show version 21 or higher
+   - Should show version 25 or higher
 
 2. **Docker Desktop** (or Docker Engine)
    - Verify installation: `docker --version`

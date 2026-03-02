@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.gov.hmcts.cp.subscription.model.EntityEventType.CUSTODIAL_RESULT;
 import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
 
 class SubscriberMapperTest {
@@ -18,7 +17,7 @@ class SubscriberMapperTest {
     @Test
     void entity_should_map_to_subscriber() {
         UUID id = UUID.randomUUID();
-        List<EntityEventType> eventTypes = List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT);
+        List<EntityEventType> eventTypes = List.of(PRISON_COURT_REGISTER_GENERATED);
         ClientSubscriptionEntity clientSubscription = ClientSubscriptionEntity.builder()
                 .id(id)
                 .eventTypes(eventTypes)

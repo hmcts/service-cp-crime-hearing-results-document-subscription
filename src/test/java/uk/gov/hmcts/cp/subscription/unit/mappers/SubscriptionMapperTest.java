@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.gov.hmcts.cp.openapi.model.EventType.CUSTODIAL_RESULT;
 import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,10 +43,10 @@ class SubscriptionMapperTest {
             .build();
 
     @Test
-    void create_request_should_map_to_entity_with_sorted_types() {
+    void create_request_should_map_to_entity() {
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(notificationEndpoint)
-                .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED, CUSTODIAL_RESULT))
+                .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
                 .build();
 
         ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(request, createdAt);
@@ -55,26 +54,26 @@ class SubscriptionMapperTest {
         assertThat(entity.getId()).isNull();
         assertThat(entity.getClientId()).isNull();
         assertThat(entity.getNotificationEndpoint()).isEqualTo("https://example.com");
-        assertThat(entity.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT, PRISON_COURT_REGISTER_GENERATED]");
+        assertThat(entity.getEventTypes().toString()).isEqualTo("[PRISON_COURT_REGISTER_GENERATED]");
         assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
         assertThat(entity.getUpdatedAt()).isEqualTo(createdAt);
     }
 
     @Test
-    void update_request_should_map_to_entity_with_sorted_types() {
+    void update_request_should_map_to_entity() {
         NotificationEndpoint updatedEndpoint = NotificationEndpoint.builder()
                 .callbackUrl("https://updated.com")
                 .build();
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(updatedEndpoint)
-                .eventTypes(List.of(CUSTODIAL_RESULT))
+                .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
                 .build();
         ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, createdAt);
 
         assertThat(entity.getId()).isEqualTo(clientSubscriptionId);
         assertThat(entity.getClientId()).isEqualTo(testClientUuid);
         assertThat(entity.getNotificationEndpoint()).isEqualTo("https://updated.com");
-        assertThat(entity.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT]");
+        assertThat(entity.getEventTypes().toString()).isEqualTo("[PRISON_COURT_REGISTER_GENERATED]");
         assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
         assertThat(entity.getUpdatedAt()).isEqualTo(createdAt);
     }
@@ -85,14 +84,13 @@ class SubscriptionMapperTest {
 
         assertThat(subscription.getClientSubscriptionId()).isEqualTo(clientSubscriptionId);
         assertThat(subscription.getNotificationEndpoint()).isEqualTo(notificationEndpoint);
-        assertThat(subscription.getEventTypes().toString()).isEqualTo("[CUSTODIAL_RESULT, PRISON_COURT_REGISTER_GENERATED]");
+        assertThat(subscription.getEventTypes().toString()).isEqualTo("[PRISON_COURT_REGISTER_GENERATED]");
         assertThat(subscription.getCreatedAt()).isEqualTo(createdAt.toInstant());
         assertThat(subscription.getUpdatedAt()).isEqualTo(updatedAt.toInstant());
     }
 
     private List<EntityEventType> mutableLisOfEventTypes() {
         List<EntityEventType> mutableList = new ArrayList<>();
-        mutableList.add(EntityEventType.CUSTODIAL_RESULT);
         mutableList.add(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
         return mutableList;
     }

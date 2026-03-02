@@ -3,7 +3,6 @@
     "callbackUrl": "https://my-callback-url"
   },
   "eventTypes": [
-    "PRISON_COURT_REGISTER_GENERATED",
-    "CUSTODIAL_RESULT"
+    "PRISON_COURT_REGISTER_GENERATED"
   ]
 }

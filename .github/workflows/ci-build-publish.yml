@@ -10,6 +10,10 @@ on:
       HMCTS_ADO_PAT:
         required: true
     inputs:
+      environment:
+        required: true
+        type: string
+        default: dev
       is_release:
         required: false
         type: boolean
@@ -32,6 +36,8 @@ on:
 jobs:
   Artefact-Version:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
     outputs:
       artefact_version: ${{ inputs.is_release && steps.artefact.outputs.release_version || steps.artefact.outputs.draft_version }}
     steps:
@@ -51,6 +57,8 @@ jobs:
   Build:
     needs: [Artefact-Version]
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
     outputs:
       repo_name: ${{ steps.repo_vars.outputs.repo_name }}
       artefact_name: ${{ steps.repo_vars.outputs.artefact_name }}
@@ -62,7 +70,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
@@ -112,7 +120,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
@@ -147,7 +155,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
@@ -213,7 +221,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ needs.Artefact-Version.outputs.artefact_version }}
           build-args: |
-            BASE_IMAGE=eclipse-temurin:21
+            BASE_IMAGE=eclipse-temurin:25
             JAR_FILENAME=${{ needs.Build.outputs.artefact_name }}.jar
 
   API-Test-Main:
@@ -228,7 +236,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
@@ -302,6 +310,8 @@ jobs:
               "GROUP_ID": "uk.gov.hmcts.cp",
               "ARTIFACT_ID": "${{ env.REPO_NAME }}",
               "ARTIFACT_VERSION": "${{ needs.Artefact-Version.outputs.artefact_version }}",
-              "TARGET_REPOSITORY": "${{ github.repository }}"
+              "TARGET_REPOSITORY": "${{ github.repository }}",
+              "agentDemand": "ubuntu-j25",
+              "baseImage": "hmcts/apm-services:25-jre"
             }
 
