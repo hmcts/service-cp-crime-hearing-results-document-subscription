@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class SubscriptionControllerValidationTest extends IntegrationTestBase {
@@ -36,7 +36,8 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("JSON parse error: Cannot construct instance of `uk.gov.hmcts.cp.openapi.model.EventType`, problem: Unexpected value 'BAD'"));
+                .andExpect(jsonPath("$.error").value("invalid_request"))
+                .andExpect(jsonPath("$.message").value("JSON parse error: Cannot construct instance of `uk.gov.hmcts.cp.openapi.model.EventType`, problem: Unexpected value 'BAD'"));
     }
 
     @Test

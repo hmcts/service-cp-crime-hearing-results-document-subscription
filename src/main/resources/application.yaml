@@ -37,7 +37,7 @@ document-service:
   url: ${DOCUMENT_SERVICE_URL:http://localhost:8082}
 
 subscription:
-  oauth-enabled: ${SUBSCRIPTION_OAUTH_ENABLED:false}
+  oauth-enabled: ${SUBSCRIPTION_OAUTH_ENABLED:true}
 
 management:
   endpoints:

@@ -10,10 +10,8 @@ import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
@@ -61,7 +59,8 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
                         .content(body))
                 .andDo(print())
                 .andExpect(status().isConflict())
-                .andExpect(content().string(containsString("subscription already exist with " + existingId)));
+                .andExpect(jsonPath("$.error").value("invalid_request"))
+                .andExpect(jsonPath("$.message").value("subscription already exist with " + existingId));
     }
 
     private void assertThatEventTypesAreSortedInDatabase() {
