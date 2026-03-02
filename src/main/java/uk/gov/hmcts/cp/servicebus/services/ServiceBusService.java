@@ -9,10 +9,9 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
-import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 @Service
@@ -22,51 +21,51 @@ public class ServiceBusService {
 
     private final ServiceBusConfigService configService;
     private final JsonMapper jsonMapper;
-    private final NotificationMapper notificationMapper;
     private final ServiceBusRetryService retryService;
     private final CallbackClient callbackClient;
 
-    public void queueMessage(String topicName, String messageString, int failCount) {
-        ServiceBusMessageWrapper message = ServiceBusMessageWrapper.builder()
-                .failureCount(failCount)
-                .message(messageString)
-                .build();
-        ServiceBusSenderClient serviceBusSenderClient = configService
+    public void queueMessage(final String topicName, final String messageString, final int failureCount) {
+        final ServiceBusSenderClient serviceBusSenderClient = configService
                 .clientBuilder()
                 .sender()
                 .topicName(topicName)
                 .buildClient();
-        ServiceBusMessage serviceBusMessage = jsonMapper.fromJson(messageString, ServiceBusMessage.class);
-        serviceBusMessage.setScheduledEnqueueTime(retryService.getNextTryTime(failCount));
+        final ServiceBusMessageWrapper messageWrapper = ServiceBusMessageWrapper.builder()
+                .failureCount(failureCount)
+                .message(messageString)
+                .build();
+        final ServiceBusMessage serviceBusMessage = new ServiceBusMessage(jsonMapper.toJson(messageWrapper));
+        serviceBusMessage.setScheduledEnqueueTime(retryService.getNextTryTime(failureCount));
         serviceBusSenderClient.sendMessage(serviceBusMessage);
         serviceBusSenderClient.close();
-        log.info("Queued message to topic:{} with failCount:{}", topicName, failCount);
+        log.info("Queued message to topic:{} with failCount:{}", topicName, failureCount);
     }
 
     @SneakyThrows
-    public ServiceBusProcessorClient startMessageProcessor(String topicName, String subscriptionName) {
+    public ServiceBusProcessorClient startMessageProcessor(final String topicName, final String subscriptionName) {
         log.info("starting service bus processor {}/{}", topicName, subscriptionName);
-        ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorBuilder = configService
+        final ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorBuilder = configService
                 .clientBuilder()
                 .processor()
                 .topicName(topicName)
                 .subscriptionName(subscriptionName)
                 .processMessage(context -> handleMessage(topicName, subscriptionName, context))
                 .processError(context -> handleError(topicName, subscriptionName));
-        ServiceBusProcessorClient processorClient = processorBuilder.buildProcessorClient();
+        final ServiceBusProcessorClient processorClient = processorBuilder.buildProcessorClient();
         processorClient.start();
         return processorClient;
     }
 
-    public void handleMessage(String topicName, String subscriptionName, ServiceBusReceivedMessageContext context) {
-        ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(String.valueOf(context.getMessage().getBody()), ServiceBusMessageWrapper.class);
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
+    public void handleMessage(final String topicName, final String subscriptionName, final ServiceBusReceivedMessageContext context) {
+        final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(String.valueOf(context.getMessage().getBody()), ServiceBusMessageWrapper.class);
         log.info("Processing {}/{}", topicName, subscriptionName);
         try {
             // notificationMapper.mapToPayload()
             callbackClient.sendNotification("url-for-sub", null);
             // remoteClientService.receiveMessage(topicName, subscriptionName, queueMessage.getMessage());
         } catch (Exception exception) {
-            int failCount = queueMessage.getFailureCount() + 1;
+            final int failCount = queueMessage.getFailureCount() + 1;
             log.error("handleMessage failuerCount:{} with exception.", failCount, exception);
             if (failCount >= configService.getMaxTries()) {
                 log.error("handleMessage failed finally");
@@ -77,7 +76,7 @@ public class ServiceBusService {
         }
     }
 
-    public void handleError(String topicName, String subscriptionName) {
+    public void handleError(final String topicName, final String subscriptionName) {
         // We should only be called when failCount has exceeded maxTries and message go to DLQ
         log.error("handleError unexpected error on {}/{} moving to DLQ", topicName, subscriptionName);
     }

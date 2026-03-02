@@ -44,7 +44,6 @@ public class NotificationController implements NotificationApi {
                 pcrEventPayload.getMaterialId(),
                 pcrEventPayload.getEventType());
         // TODO should we get a separate correlationId ? Should we use a cross cutting approach ?
-        UUID correlationId = pcrEventPayload.getEventId();
         notificationManager.processPcrNotification(pcrEventPayload);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
