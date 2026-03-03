@@ -1,0 +1,28 @@
+<configuration>
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <mdc/>
+                <timestamp>
+                    <fieldName>timestamp</fieldName>
+                    <pattern>yyyy-MM-dd' 'HH:mm:ss.SSS</pattern>
+                </timestamp>
+                <loggerName/>
+                <threadName/>
+                <logLevel/>
+                <pattern>
+                    <pattern>{"message": "%message%n%xException{full}"}</pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="JSON"/>
+        <queueSize>5000</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+    </appender>
+    <root level="INFO">
+        <appender-ref ref="ASYNC_JSON"/>
+    </root>
+</configuration>

@@ -56,6 +56,8 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
             }
         } catch (ResponseStatusException ex) {
             response.sendError(ex.getStatusCode().value(), ex.getReason());
+        } catch (org.springframework.web.client.HttpClientErrorException ex) {
+            response.sendError(ex.getStatusCode().value(), ex.getStatusText());
         }
     }
 

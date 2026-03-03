@@ -29,37 +29,35 @@ public class JwtTokenParser {
         try {
             final String authHeader = nonNull(request) ? request.getHeader("Authorization") : null;
             if (isNull(authHeader) || authHeader.isBlank() || !authHeader.startsWith(BEARER_PREFIX)) {
-                log.error("Authorization header is not set or starting with {}", BEARER_PREFIX);
-                return null;
+                throw throwError("Authorization header is not set or does not start with " + BEARER_PREFIX);
             }
             final String token = authHeader.substring(BEARER_PREFIX.length()).trim();
             if (token.isEmpty()) {
-                log.error("Authorization token is not set");
-                return null;
+                throw throwError("Authorization token is not set");
             }
             final String[] chunks = token.split("\\.");
             if (chunks.length < MAX_NUMBER_OF_CHUNKS) {
-                log.error("Authorization period separated chunks is {} we expected {}", chunks.length, MAX_NUMBER_OF_CHUNKS);
-                return null;
+                throw throwError("Authorization token has " + chunks.length
+                        + " period-separated chunks, expected at least " + MAX_NUMBER_OF_CHUNKS);
             }
             final Base64.Decoder decoder = Base64.getUrlDecoder();
             final String payloadJson = new String(decoder.decode(chunks[1]), StandardCharsets.UTF_8);
             final UUID clientId = jsonMapper.getUUIDAtPath(payloadJson, AZP_JSON_POINTER);
             if (clientId != null) {
                 log.info("Authorization extracted client ID {} from JWT azp claim", clientId);
+                return clientId;
             }
-            return clientId;
+            throw throwError("Authorization azp claim missing or not a valid UUID");
+        } catch (HttpClientErrorException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("Authorization failed to extract client ID from JWT token - returning null. Exception: {}", e.getMessage());
-            return null;
+            throw throwError("Authorization failed to extract client ID from JWT token. Exception: " + e.getMessage());
         }
     }
 
-    // We should throw error rather than returning null
-    // Either ClientError or ResponseStatusException
     @SuppressWarnings("PMD.UnusedPrivateMethod")
-    private void throwError(final String errorMessage) {
+    private HttpClientErrorException throwError(final String errorMessage) {
         log.error("Authorization token error. {}", errorMessage);
-        throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, errorMessage);
+        return new HttpClientErrorException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
 }

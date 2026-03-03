@@ -9,8 +9,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
-import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.client.HttpClientErrorException;
 import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
@@ -70,7 +71,8 @@ class ClientIdResolutionFilterTest {
     @Test
     void no_client_id_in_token_should_return_401() throws Exception {
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
-        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(null);
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest))
+            .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Missing or invalid authorisation token"));
 
         filter.doFilter(httpRequest, httpResponse, filterChain);
 
