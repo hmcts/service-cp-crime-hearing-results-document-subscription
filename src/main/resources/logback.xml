@@ -16,13 +16,7 @@
             </providers>
         </encoder>
     </appender>
-    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="JSON"/>
-        <queueSize>5000</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <neverBlock>true</neverBlock>
-    </appender>
     <root level="INFO">
-        <appender-ref ref="ASYNC_JSON"/>
+        <appender-ref ref="JSON"/>
     </root>
 </configuration>

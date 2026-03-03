@@ -45,9 +45,3 @@ management:
       base-path: /actuator
       exposure:
         include: health, info, prometheus
-
-logging:
-  level:
-    root: INFO
-  # Use your JSON config (async) — make sure this file exists
-  config: classpath:logback.xml
