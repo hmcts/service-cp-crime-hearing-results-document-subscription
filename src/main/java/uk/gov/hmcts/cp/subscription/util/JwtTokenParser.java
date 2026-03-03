@@ -56,7 +56,9 @@ public class JwtTokenParser {
     }
 
     // We should throw error rather than returning null
-    private void throwError(String errorMessage) {
+    // Either ClientError or ResponseStatusException
+    @SuppressWarnings("PMD.UnusedPrivateMethod")
+    private void throwError(final String errorMessage) {
         log.error("Authorization token error. {}", errorMessage);
         throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, errorMessage);
     }
