@@ -23,7 +23,7 @@ import java.security.cert.X509Certificate;
  * c) Add this config to ignore SSL certs - Which we have gone with here
  */
 @Configuration
-public class IgnoreSSLCertificatesInTestConfig {
+public class IgnoreSSLCertificatesForWiremockTest {
 
     private static final X509TrustManager TRUST_ALL = new X509TrustManager() {
         @Override

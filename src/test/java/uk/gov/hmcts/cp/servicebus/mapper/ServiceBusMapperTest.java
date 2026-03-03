@@ -18,14 +18,4 @@ class ServiceBusMapperTest {
 
     @InjectMocks
     ServiceBusMapper serviceBusMapper;
-
-    @Test
-    void serialise_message_should_map_to_json_and_back_again() {
-
-        String messageJson = serviceBusMapper.mapToJson("{\"key\":\"maybe embedded json\"}", 2);
-
-        ServiceBusMessageWrapper messageAgain = serviceBusMapper.mapFromJson(messageJson);
-        assertThat(messageAgain.getFailureCount()).isEqualTo(2);
-        assertThat(messageAgain.getMessage()).isEqualTo("{\"key\":\"maybe embedded json\"}");
-    }
 }

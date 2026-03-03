@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
@@ -24,7 +25,7 @@ public class ServiceBusService {
     private final ServiceBusRetryService retryService;
     private final CallbackClient callbackClient;
 
-    public void queueMessage(final String topicName, final String messageString, final int failureCount) {
+    public void queueMessage(final String topicName, final String targetUrl, final String messageString, final int failureCount) {
         final ServiceBusSenderClient serviceBusSenderClient = configService
                 .clientBuilder()
                 .sender()
@@ -32,6 +33,7 @@ public class ServiceBusService {
                 .buildClient();
         final ServiceBusMessageWrapper messageWrapper = ServiceBusMessageWrapper.builder()
                 .failureCount(failureCount)
+                .targetUrl(targetUrl)
                 .message(messageString)
                 .build();
         final ServiceBusMessage serviceBusMessage = new ServiceBusMessage(jsonMapper.toJson(messageWrapper));
@@ -61,9 +63,9 @@ public class ServiceBusService {
         final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(String.valueOf(context.getMessage().getBody()), ServiceBusMessageWrapper.class);
         log.info("Processing {}/{}", topicName, subscriptionName);
         try {
-            // notificationMapper.mapToPayload()
-            callbackClient.sendNotification("url-for-sub", null);
-            // remoteClientService.receiveMessage(topicName, subscriptionName, queueMessage.getMessage());
+            log.info("handleMessage url:{} with message:{}", queueMessage.getTargetUrl(), queueMessage.getMessage());
+            final EventNotificationPayload callbackPayload = jsonMapper.fromJson(queueMessage.getMessage(), EventNotificationPayload.class);
+            callbackClient.sendNotification(queueMessage.getTargetUrl(), callbackPayload);
         } catch (Exception exception) {
             final int failCount = queueMessage.getFailureCount() + 1;
             log.error("handleMessage failuerCount:{} with exception.", failCount, exception);
@@ -71,7 +73,7 @@ public class ServiceBusService {
                 log.error("handleMessage failed finally");
                 throw exception;
             }
-            queueMessage(topicName, queueMessage.getMessage(), failCount);
+            queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failCount);
             // Because we added a new message and swallowed the error then the current message will be dropped
         }
     }

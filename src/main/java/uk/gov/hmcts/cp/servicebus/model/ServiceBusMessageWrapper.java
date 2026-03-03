@@ -11,5 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ServiceBusMessageWrapper {
     private int failureCount;
+    private String targetUrl;
     private String message;
 }

@@ -22,6 +22,7 @@ import java.net.URL;
 public class ServiceBusConfigService {
     public static final int ADMIN_CONNECTION_PORT = 5300;
     public static final String TOPIC_NAME = "amp-topics";
+
     private boolean enabled;
     private String adminConnectionString;
     private String connectionString;

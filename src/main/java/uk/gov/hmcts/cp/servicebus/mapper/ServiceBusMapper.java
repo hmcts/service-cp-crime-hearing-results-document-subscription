@@ -13,14 +13,7 @@ import java.time.OffsetDateTime;
 public class ServiceBusMapper {
     private final JsonMapper jsonMapper;
 
-    public String mapToJson(final String message, final int failureCount) {
-        final ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder()
-                .message(message)
-                .failureCount(failureCount)
-                .build();
-        return jsonMapper.toJson(wrapper);
-    }
-
+    // Drop this in favour of JsonMapper
     public ServiceBusMessageWrapper mapFromJson(final String json) {
         return jsonMapper.fromJson(json, ServiceBusMessageWrapper.class);
     }

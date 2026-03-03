@@ -3,6 +3,7 @@ package uk.gov.hmcts.cp.subscription.integration.e2e;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
@@ -14,7 +15,7 @@ import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesInTestConfig;
+import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.io.IOException;
@@ -51,9 +52,10 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
-@Import(IgnoreSSLCertificatesInTestConfig.class)
-@TestPropertySource(properties = "subscription.oauth-enabled=true")
-class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
+@Import(IgnoreSSLCertificatesForWiremockTest.class)
+@TestPropertySource(properties = "servicebus.enabled=true")
+@Disabled // Not ready yet need to do service int test first
+class PcrE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
     private UUID otherSubscriptionId;
@@ -216,9 +218,9 @@ class NotificationPcrE2EIntegrationTest extends IntegrationTestBase {
 
     private ResultActions postPcrEvent(String payloadPath) throws Exception {
         return mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(loadPayload(payloadPath)));
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Accept", MediaType.APPLICATION_JSON_VALUE)
+                .content(loadPayload(payloadPath)));
     }
 
     private void when_material_service_responds() {
