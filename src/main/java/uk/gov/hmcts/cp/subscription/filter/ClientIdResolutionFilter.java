@@ -7,18 +7,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
 import java.io.IOException;
 import java.util.UUID;
-
-import static java.util.Objects.isNull;
-import static org.springframework.util.ObjectUtils.isEmpty;
 
 @Component
 @Slf4j
@@ -42,6 +37,7 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
         return !request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX);
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     @Override
     protected void doFilterInternal(@Nonnull final HttpServletRequest request,
                                     @Nonnull final HttpServletResponse response,
@@ -54,28 +50,26 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
             } finally {
                 MDC.remove(MDC_CLIENT_ID);
             }
-        } catch (ResponseStatusException ex) {
-            response.sendError(ex.getStatusCode().value(), ex.getReason());
+        } catch (Exception ex) {
+            log.warn("Client ID resolution failed, returning 401", ex);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid authorisation token");
         }
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     private UUID resolveClientId(final HttpServletRequest request) {
-        if (config.isOauthEnabled()) {
-            log.info("validating clientId");
-            final UUID clientId = jwtTokenParser.extractClientIdFromToken(request);
-            if (isNull(clientId)) {
-                log.error("Subscription request rejected: no client ID in token");
-                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid authorisation token");
-            }
-            return clientId;
-        }
-        log.warn("WARNING clientId authentication is DISABLED");
-        final String headerValue = request.getHeader(CLIENT_ID_HEADER);
-        if (isEmpty(headerValue)) {
-            log.error("Subscription request rejected: empty client ID header");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Empty client ID header");
-        }
-        return UUID.fromString(headerValue);
+        log.info("validating clientId");
+        return config.isOauthEnabled() ?
+                getClientIdFromJwtToken(request) :
+                getClientIdFromHeader(request);
+    }
+
+    private UUID getClientIdFromJwtToken(final HttpServletRequest request) {
+        log.info("Extracting clientId from JwtToken");
+        return jwtTokenParser.extractClientIdFromToken(request);
+    }
+
+    private UUID getClientIdFromHeader(final HttpServletRequest request) {
+        log.warn("WARNING clientId authentication is DISABLED. Taking clientId from header");
+        return UUID.fromString(request.getHeader(CLIENT_ID_HEADER));
     }
 }

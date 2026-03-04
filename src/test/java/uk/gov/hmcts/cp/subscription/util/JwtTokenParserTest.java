@@ -12,6 +12,7 @@ import java.util.Base64;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +25,15 @@ class JwtTokenParserTest {
 
     private final JsonMapper jsonMapper = new JsonMapper();
     private final JwtTokenParser parser = new JwtTokenParser(jsonMapper);
+
+    @Test
+    void null_clientid_should_throw_invalid_uuid_error() {
+        String token = buildTestToken(null);
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+
+        Exception e = assertThrows(Exception.class, () -> parser.extractClientIdFromToken(request));
+        assertThat(e.getMessage()).isEqualTo("Invalid UUID string: null");
+    }
 
     @Test
     void jwt_token_with_azp_is_extracted() {
