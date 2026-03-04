@@ -115,4 +115,16 @@ class ClientIdResolutionFilterTest {
         filterOauthDisabled.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
         assertThat(captured.get()).isEqualTo(client2.toString());
     }
+
+    @Test
+    void unexpected_exception_in_filter_should_also_return_401() throws Exception {
+        when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest))
+            .thenThrow(new RuntimeException("unexpected failure"));
+
+        filter.doFilter(httpRequest, httpResponse, filterChain);
+
+        assertThat(httpResponse.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(filterChain, never()).doFilter(httpRequest, httpResponse);
+    }
 }
