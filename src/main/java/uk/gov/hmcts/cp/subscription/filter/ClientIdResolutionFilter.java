@@ -8,7 +8,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
@@ -49,12 +51,16 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
             } finally {
                 MDC.remove(MDC_CLIENT_ID);
             }
-        } catch (Exception ex) {
-            response.sendError(401, ex.getMessage());
+        } catch (ResponseStatusException ex) {
+            response.sendError(ex.getStatusCode().value(), ex.getReason() != null ? ex.getReason() : ex.getMessage());
+        } catch (HttpClientErrorException ex) {
+            response.sendError(ex.getStatusCode().value(), ex.getStatusText());
+        } catch (IllegalArgumentException ex) {
+            log.warn("Invalid client ID: {}", ex.getMessage());
+                response.sendError(401, "Missing or invalid client ID");
         }
     }
 
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     private UUID resolveClientId(final HttpServletRequest request) {
         log.info("validating clientId");
         return config.isOauthEnabled() ?
