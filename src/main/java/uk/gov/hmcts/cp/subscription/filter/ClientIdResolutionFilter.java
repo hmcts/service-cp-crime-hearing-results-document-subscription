@@ -8,9 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
@@ -39,6 +37,7 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
         return !request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX);
     }
 
+    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     @Override
     protected void doFilterInternal(@Nonnull final HttpServletRequest request,
                                     @Nonnull final HttpServletResponse response,
@@ -51,13 +50,9 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
             } finally {
                 MDC.remove(MDC_CLIENT_ID);
             }
-        } catch (ResponseStatusException ex) {
-            response.sendError(ex.getStatusCode().value(), ex.getReason() != null ? ex.getReason() : ex.getMessage());
-        } catch (HttpClientErrorException ex) {
-            response.sendError(ex.getStatusCode().value(), ex.getStatusText());
-        } catch (IllegalArgumentException ex) {
-            log.warn("Invalid client ID: {}", ex.getMessage());
-                response.sendError(401, "Missing or invalid client ID");
+        } catch (Exception ex) {
+            log.warn("Client ID resolution failed, returning 401", ex);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid authorisation token");
         }
     }
 
