@@ -1,7 +1,7 @@
 // TODO need to delete duplicate code
 plugins {
   id 'java'
-  id 'com.avast.gradle.docker-compose' version '0.17.20'
+  id 'com.avast.gradle.docker-compose' version '0.17.21'
   id 'io.spring.dependency-management' version '1.1.7'
 }
 
