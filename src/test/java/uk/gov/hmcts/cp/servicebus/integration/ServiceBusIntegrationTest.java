@@ -37,13 +37,6 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCa
 @Disabled // to do
 public class ServiceBusIntegrationTest extends ServiceBusIntegrationTestBase {
 
-    @Autowired
-    JsonMapper jsonMapper;
-    @Autowired
-    ServiceBusAdminService adminService;
-    @Autowired
-    ServiceBusService topicService;
-
     @InjectWireMock("callback-client")
     private WireMockServer callbackWireMockServer;
 
@@ -52,11 +45,11 @@ public class ServiceBusIntegrationTest extends ServiceBusIntegrationTestBase {
         await()
                 .atMost(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofSeconds(1))
-                .until(this::isServiceBusReady);
+                .until(testService::isServiceBusReady);
         adminService.createTopicAndSubscription(topicName, subscription1);
         adminService.createTopicAndSubscription(topicName, subscription2);
-        purgeMessages(topicName, subscription1);
-        purgeMessages(topicName, subscription2);
+        testService.purgeMessages(topicName, subscription1);
+        testService.purgeMessages(topicName, subscription2);
 
         topicService.startMessageProcessor(topicName, subscription1);
         topicService.startMessageProcessor(topicName, subscription2);

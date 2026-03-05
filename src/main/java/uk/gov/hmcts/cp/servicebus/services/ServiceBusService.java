@@ -68,7 +68,7 @@ public class ServiceBusService {
             callbackClient.sendNotification(queueMessage.getTargetUrl(), callbackPayload);
         } catch (Exception exception) {
             final int failCount = queueMessage.getFailureCount() + 1;
-            log.error("handleMessage failuerCount:{} with exception.", failCount, exception);
+            log.error("handleMessage failureCount:{} with exception.", failCount, exception);
             if (failCount >= configService.getMaxTries()) {
                 log.error("handleMessage failed finally");
                 throw exception;

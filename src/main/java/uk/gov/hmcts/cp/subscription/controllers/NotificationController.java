@@ -51,7 +51,6 @@ public class NotificationController implements InternalApi, NotificationApi {
                 pcrEventPayload.getEventId(),
                 pcrEventPayload.getMaterialId(),
                 pcrEventPayload.getEventType());
-        // TODO should we get a separate correlationId ? Should we use a cross cutting approach ?
         notificationManager.processPcrNotification(pcrEventPayload);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
