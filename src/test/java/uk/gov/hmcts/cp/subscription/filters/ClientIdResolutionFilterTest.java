@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.client.HttpClientErrorException;
 import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.managers;
+package uk.gov.hmcts.cp.notification.managers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,9 +8,9 @@ import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
+import uk.gov.hmcts.cp.notification.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
-import uk.gov.hmcts.cp.subscription.services.NotificationService;
+import uk.gov.hmcts.cp.notification.services.NotificationService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.services;
+package uk.gov.hmcts.cp.notification.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,11 +8,12 @@ import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
-import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
+import uk.gov.hmcts.cp.notification.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.model.Subscriber;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -43,7 +44,8 @@ public class CallbackDeliveryService {
                 serviceBusService.queueMessage(TOPIC_NAME, subscriber.getNotificationEndpoint(), payload, 0);
             } else {
                 callbackService.sendToSubscriber(subscriber.getNotificationEndpoint(), eventNotificationPayload);
-                log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), subscriber.getNotificationEndpoint(), eventNotificationPayload.getDocumentId());
+                log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(),
+                        subscriber.getNotificationEndpoint(), eventNotificationPayload.getDocumentId());
             }
         }
     }

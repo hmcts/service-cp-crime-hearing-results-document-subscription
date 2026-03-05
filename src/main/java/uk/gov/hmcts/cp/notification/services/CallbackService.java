@@ -1,13 +1,12 @@
-package uk.gov.hmcts.cp.subscription.services;
+package uk.gov.hmcts.cp.notification.services;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionTimeoutException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-
+import uk.gov.hmcts.cp.notification.clients.CallbackClient;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
 
 import java.time.Duration;

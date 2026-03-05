@@ -10,8 +10,8 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
-import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
+import uk.gov.hmcts.cp.notification.clients.CallbackClient;
+import uk.gov.hmcts.cp.notification.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 @Service

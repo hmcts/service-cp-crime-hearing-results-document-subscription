@@ -11,7 +11,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
+import uk.gov.hmcts.cp.notification.services.CallbackDeliveryService;
 
 import java.util.List;
 import java.util.UUID;

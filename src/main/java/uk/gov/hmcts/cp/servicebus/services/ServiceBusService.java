@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
-import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
+import uk.gov.hmcts.cp.notification.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 @Service

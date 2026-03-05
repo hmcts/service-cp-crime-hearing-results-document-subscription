@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.clients;
+package uk.gov.hmcts.cp.notification.clients;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

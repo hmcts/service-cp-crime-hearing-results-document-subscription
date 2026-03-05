@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.mappers;
+package uk.gov.hmcts.cp.notification.mappers;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;

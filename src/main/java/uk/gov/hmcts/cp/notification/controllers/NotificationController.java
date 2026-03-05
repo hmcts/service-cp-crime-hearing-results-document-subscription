@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.controllers;
+package uk.gov.hmcts.cp.notification.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
+import uk.gov.hmcts.cp.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.notification.managers.NotificationManager;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
-import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 
 import java.net.URLEncoder;

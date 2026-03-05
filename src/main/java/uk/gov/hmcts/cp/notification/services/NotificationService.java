@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.services;
+package uk.gov.hmcts.cp.notification.services;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ public class NotificationService {
 
     private final AppProperties appProperties;
     private final MaterialApi materialApi;
-    private final DocumentService documentService;
+    private final uk.gov.hmcts.cp.subscription.services.DocumentService documentService;
 
     public void processInboundEvent(final PcrEventPayload pcrEventPayload) {
         final MaterialMetadata materialMetadata = waitForMaterialMetadata(pcrEventPayload.getMaterialId());

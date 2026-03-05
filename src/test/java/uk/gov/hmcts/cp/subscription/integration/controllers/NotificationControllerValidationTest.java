@@ -10,7 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.subscription.controllers.GlobalExceptionHandler;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
+import uk.gov.hmcts.cp.notification.managers.NotificationManager;
 
 import java.util.UUID;
 

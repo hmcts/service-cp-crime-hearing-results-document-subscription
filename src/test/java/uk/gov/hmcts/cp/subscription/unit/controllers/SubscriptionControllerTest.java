@@ -12,7 +12,7 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.List;

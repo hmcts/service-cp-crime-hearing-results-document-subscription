@@ -6,8 +6,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
+import uk.gov.hmcts.cp.notification.services.CallbackService;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
+import uk.gov.hmcts.cp.notification.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
 
 import static org.mockito.Mockito.doThrow;

@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.Material;
-import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
+import uk.gov.hmcts.cp.notification.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;

@@ -12,7 +12,7 @@ import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
-import uk.gov.hmcts.cp.subscription.services.NotificationService;
+import uk.gov.hmcts.cp.notification.services.NotificationService;
 
 import java.util.UUID;
 

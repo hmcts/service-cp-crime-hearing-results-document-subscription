@@ -12,9 +12,9 @@ import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
-import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
-import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
+import uk.gov.hmcts.cp.notification.controllers.NotificationController;
+import uk.gov.hmcts.cp.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.notification.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 
 import java.util.UUID;
