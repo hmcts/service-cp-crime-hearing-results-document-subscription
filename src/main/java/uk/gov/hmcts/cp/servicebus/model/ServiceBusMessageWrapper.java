@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Builder
 @Getter
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceBusMessageWrapper {

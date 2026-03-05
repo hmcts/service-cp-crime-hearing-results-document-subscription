@@ -5,7 +5,6 @@ import com.azure.messaging.servicebus.ServiceBusClientBuilder;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,21 +13,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusProcessorServiceTest {
+    @Mock
+    JsonMapper jsonMapper = new JsonMapper();
     @Mock
     ServiceBusMapper serviceBusMapper;
     @Mock
@@ -53,49 +53,39 @@ class ServiceBusProcessorServiceTest {
     @Mock
     ServiceBusReceivedMessage serviceBusReceivedMessage;
 
-
     @Mock
     ServiceBusReceivedMessageContext context;
+    @Mock
+    ServiceBusMessageWrapper wrappedMessage;
 
-    @Test
-    @Disabled
-    void start_message_processor_should_start() {
-        // TODO FIXUP ?? Struggling to mock Consumer<ServiceBusReceivedMessageContext>
-        // .processorClientBuilder(topicName, subscriptionName) ... OK
-        when(configService.processorClientBuilder("topic1", "subscription1")).thenReturn(processorClientBuilder);
-        // .processMessage(context -> handleMessage(topicName, subscriptionName, context)) ... HOW MOCK THIS ??
-        // .processError(context -> handleError(topicName, subscriptionName)) ... AND THIS
-
-        ServiceBusProcessorClient returned = serviceBusProcessorService.startMessageProcessor("topic1", "subscription1");
-
-        verify(processorClient).start();
-        assertThat(returned).isEqualTo(processorClient);
-    }
+    private String callbackUrl = "http://callback";
 
     @Test
     void handle_message_should_pass_to_callback_client_with_success() {
-        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().message("wrapped-message").build();
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
-        when(serviceBusMapper.mapFromJson(anyString())).thenReturn(wrapper);
-        when(notificationMapper.mapFromJson("wrapped-message")).thenReturn(notificationPayload);
+        when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
+        when(wrappedMessage.getMessage()).thenReturn("message");
+        when(notificationMapper.mapFromJson("message")).thenReturn(notificationPayload);
+        when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
         serviceBusProcessorService.handleMessage("topic1", "subscription1", context);
 
-        verify(callbackClient).sendNotification("todo-url-for-sub", notificationPayload);
+        verify(callbackClient).sendNotification(callbackUrl, notificationPayload);
     }
 
     @Test
     void handle_message_should_requeue_if_callback_client_errors() {
-        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().message("wrapped-message").build();
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
-        when(serviceBusMapper.mapFromJson(anyString())).thenReturn(wrapper);
+        when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
+        when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
         when(notificationMapper.mapFromJson("wrapped-message")).thenReturn(notificationPayload);
+        when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(callbackClient)
-                .sendNotification("todo-url-for-sub", notificationPayload);
+                .sendNotification(callbackUrl, notificationPayload);
 
         when(configService.getMaxTries()).thenReturn(2);
 
@@ -106,14 +96,15 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void handle_message_should_error_if_callback_client_errors_finally() {
-        ServiceBusMessageWrapper wrapper = ServiceBusMessageWrapper.builder().message("wrapped-message").build();
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
-        when(serviceBusMapper.mapFromJson(anyString())).thenReturn(wrapper);
+        when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
+        when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
         when(notificationMapper.mapFromJson("wrapped-message")).thenReturn(notificationPayload);
+        when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(callbackClient)
-                .sendNotification("todo-url-for-sub", notificationPayload);
+                .sendNotification(callbackUrl, notificationPayload);
 
         when(configService.getMaxTries()).thenReturn(1);
 
