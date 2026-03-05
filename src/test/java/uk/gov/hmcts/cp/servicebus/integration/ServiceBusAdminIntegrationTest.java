@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
-import uk.gov.hmcts.cp.subscription.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
 import java.util.List;

@@ -5,14 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
-@Builder
 @Getter
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceBusMessageWrapper {
-    private UUID correlationId;
     private int failureCount;
+    private String targetUrl;
     private String message;
 }

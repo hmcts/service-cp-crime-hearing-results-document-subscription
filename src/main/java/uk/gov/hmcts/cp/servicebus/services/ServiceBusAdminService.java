@@ -8,7 +8,7 @@ import com.azure.messaging.servicebus.administration.models.TopicProperties;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.subscription.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 
 import java.time.Duration;
 import java.util.List;

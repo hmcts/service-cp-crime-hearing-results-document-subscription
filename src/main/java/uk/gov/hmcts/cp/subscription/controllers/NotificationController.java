@@ -1,12 +1,12 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.web.context.request.NativeWebRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.MDC;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -15,17 +15,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.slf4j.MDC;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
+import org.springframework.web.context.request.NativeWebRequest;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 
 import java.net.URLEncoder;
-import java.util.Optional;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -51,7 +51,7 @@ public class NotificationController implements InternalApi, NotificationApi {
                 pcrEventPayload.getEventId(),
                 pcrEventPayload.getMaterialId(),
                 pcrEventPayload.getEventType());
-
+        // TODO should we get a separate correlationId ? Should we use a cross cutting approach ?
         notificationManager.processPcrNotification(pcrEventPayload);
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }

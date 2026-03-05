@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
@@ -32,10 +33,13 @@ class CallbackDeliveryServiceTest {
     private SubscriberMapper subscriberMapper;
     @Mock
     private CallbackService callbackService;
+    @Mock
+    private ServiceBusConfigService serviceBusConfigService;
 
     @InjectMocks
     private CallbackDeliveryService callbackDeliveryService;
 
+    private final UUID correlationId = randomUUID();
     private final UUID documentId = randomUUID();
     private final String callbackUrl = "https://callback.example.com";
     private final ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().build();
