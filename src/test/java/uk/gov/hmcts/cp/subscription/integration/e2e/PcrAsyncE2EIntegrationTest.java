@@ -2,9 +2,11 @@ package uk.gov.hmcts.cp.subscription.integration.e2e;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -15,6 +17,10 @@ import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
+import uk.gov.hmcts.cp.servicebus.integration.ServiceBusTestService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
@@ -23,11 +29,12 @@ import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
+import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.Objects.nonNull;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -37,6 +44,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
@@ -53,14 +62,26 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
-@TestPropertySource(properties = "servicebus.enabled=true")
-@Disabled // Not ready yet need to do service int test first
-class PcrE2EIntegrationTest extends IntegrationTestBase {
+@TestPropertySource(properties = {
+        "servicebus.enabled=true",
+        "service-bus.retry-seconds=1,2,3"})
+@Slf4j
+class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
+
+    @Autowired
+    ServiceBusAdminService adminService;
+    @Autowired
+    ServiceBusService serviceBusService;
+    @Autowired
+    ServiceBusProcessorService processorService;
+    @Autowired
+    ServiceBusTestService testService;
 
     private UUID subscriptionId;
     private UUID otherSubscriptionId;
     private UUID lateSubscriptionId;
     private UUID callbackDocumentId;
+
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
@@ -83,6 +104,15 @@ class PcrE2EIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void setUp() {
+        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        testService.dropTopicIfExists(PCR_INBOUND_TOPIC, "subscription1");
+        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC, "subscription1");
+        processorService.startMessageProcessor(PCR_INBOUND_TOPIC, "subscription1");
+
+        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC, "subscription1");
+        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC, "subscription1");
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC, "subscription1");
+
         WireMock.reset();
         if (nonNull(callbackWireMock)) {
             callbackWireMock.resetAll();
@@ -91,7 +121,7 @@ class PcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void document_retrieval_success_should_return_pdf() throws Exception {
+    void happy_path_should_return_pdf() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
@@ -104,72 +134,17 @@ class PcrE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void material_not_ready_should_not_send_callback_and_return_504() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
-        given_i_have_a_callback_endpoint();
-        given_material_service_returns_document_not_found();
-
-        when_a_pcr_event_is_posted_with_timeout();
-        when_material_service_responds();
-
-        then_the_material_api_was_polled();
-        then_the_subscriber_does_not_receive_a_callback();
-    }
-
-    @Test
-    void callback_client_not_responding_should_return_504() throws Exception {
+    void callback_client_not_responding_should_try_3_times_in_7_seconds() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
 
-        when_a_pcr_event_is_posted_expect_callback_delivery_timeout();
-
-        then_callback_was_attempted();
-    }
-
-    @Test
-    void subscriber_lost_access_after_pcr_delivered_should_return_403() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
-        given_i_have_a_callback_endpoint();
-        given_material_service_returns_document_success();
-
         when_a_pcr_event_is_posted();
         when_material_service_responds();
-        then_the_subscriber_receives_a_callback();
 
-        when_subscriber_loses_access();
+        Thread.sleep(7000);
 
-        then_subscriber_cannot_retrieve_document();
-    }
-
-    @Test
-    void other_subscription_without_pcr_attempting_document_retrieval_should_return_403() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
-        given_i_have_a_callback_endpoint();
-        given_material_service_returns_document_success();
-        given_another_subscription_with_custodial_only();
-
-        when_a_pcr_event_is_posted();
-        when_material_service_responds();
-        then_the_subscriber_receives_a_callback();
-
-        then_other_subscription_cannot_retrieve_document();
-    }
-
-    @Test
-    void late_subscriber_with_pcr_should_retrieve_document_when_access_is_by_event_type() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
-        given_i_have_a_callback_endpoint();
-        given_material_service_returns_document_success();
-
-        when_a_pcr_event_is_posted();
-        when_material_service_responds();
-        then_the_subscriber_receives_a_callback();
-        then_the_subscriber_can_retrieve_the_document();
-
-        given_late_subscriber_with_pcr();
-
-        then_late_subscriber_can_retrieve_document();
+        then_callback_was_attempted_times(3);
     }
 
     private void given_i_am_a_subscriber_with_a_subscription() throws Exception {
@@ -201,8 +176,8 @@ class PcrE2EIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").value("Callback is not ready"));
     }
 
-    private void then_callback_was_attempted() {
-        callbackWireMock.verify(moreThanOrExactly(1), postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
+    private void then_callback_was_attempted_times(int numberOfTries) {
+        callbackWireMock.verify(exactly(numberOfTries), postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
     }
 
     private void when_a_pcr_event_is_posted() throws Exception {
@@ -234,7 +209,10 @@ class PcrE2EIntegrationTest extends IntegrationTestBase {
         verify(materialApi, atLeastOnce()).getMaterialMetadataByMaterialId(eq(MATERIAL_ID_TIMEOUT));
     }
 
+    @SneakyThrows
     private void then_the_subscriber_receives_a_callback() {
+        log.info("sleeping for 1 second in Test ... it would of course be better to wait for something signalling callback is done");
+        Thread.sleep(2000);
         callbackWireMock.verify(1, postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
         callbackDocumentId = getDocumentIdFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
     }

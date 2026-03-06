@@ -37,7 +37,6 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
         return !request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX);
     }
 
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     @Override
     protected void doFilterInternal(@Nonnull final HttpServletRequest request,
                                     @Nonnull final HttpServletResponse response,

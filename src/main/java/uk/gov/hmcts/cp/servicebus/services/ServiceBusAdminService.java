@@ -20,7 +20,7 @@ public class ServiceBusAdminService {
 
     private final ServiceBusConfigService configService;
 
-    @SuppressWarnings({"PMD.AvoidCatchingGenericException","PMD.OnlyOneReturn"})
+    @SuppressWarnings("PMD.OnlyOneReturn")
     public boolean isServiceBusReady() {
         try {
             final List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();

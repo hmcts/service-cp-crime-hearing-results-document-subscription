@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
-import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
 import java.util.List;
@@ -23,6 +23,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 public class ServiceBusAdminIntegrationTest {
 
     @Autowired
+    ServiceBusTestService testService;
+    @Autowired
     ServiceBusConfigService configService;
     @Autowired
     ServiceBusAdminService adminService;
@@ -34,7 +36,8 @@ public class ServiceBusAdminIntegrationTest {
     }
 
     @Test
-    void admin_console_should_create_new_topic_and_subscription_just_once() {
+    void admin_client_should_create_new_topic_and_subscription_and_delete() {
+        testService.dropTopicIfExists("topic.new", "subscription.new");
         adminService.createTopicAndSubscription("topic.new", "subscription.new");
         List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
         assertThat(topics.contains("topic.new"));
@@ -42,7 +45,6 @@ public class ServiceBusAdminIntegrationTest {
         assertThat(subscriptions.contains("subscription.new"));
 
         adminService.createTopicAndSubscription("topic.new", "subscription.new");
-        configService.adminClient().deleteSubscription("topic.new", "subscription.new");
-        configService.adminClient().deleteTopic("topic.new");
+        testService.dropTopicIfExists("topic.new", "subscription.new");
     }
 }

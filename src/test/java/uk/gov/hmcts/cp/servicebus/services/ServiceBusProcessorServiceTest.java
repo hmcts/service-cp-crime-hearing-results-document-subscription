@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusProcessorServiceTest {
@@ -67,10 +68,10 @@ class ServiceBusProcessorServiceTest {
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
         when(wrappedMessage.getMessage()).thenReturn("message");
-        when(notificationMapper.mapFromJson("message")).thenReturn(notificationPayload);
+        when(jsonMapper.fromJson("message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
-        serviceBusProcessorService.handleMessage("topic1", "subscription1", context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context);
 
         verify(callbackClient).sendNotification(callbackUrl, notificationPayload);
     }
@@ -82,16 +83,16 @@ class ServiceBusProcessorServiceTest {
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
         when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
-        when(notificationMapper.mapFromJson("wrapped-message")).thenReturn(notificationPayload);
+        when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(callbackClient)
                 .sendNotification(callbackUrl, notificationPayload);
 
         when(configService.getMaxTries()).thenReturn(2);
 
-        serviceBusProcessorService.handleMessage("topic1", "subscription1", context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context);
 
-        verify(serviceBusClientService).queueMessage("topic1", "wrapped-message", 1);
+        verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "wrapped-message", 1);
     }
 
     @Test
@@ -101,13 +102,12 @@ class ServiceBusProcessorServiceTest {
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
         when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
-        when(notificationMapper.mapFromJson("wrapped-message")).thenReturn(notificationPayload);
+        when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(callbackClient)
                 .sendNotification(callbackUrl, notificationPayload);
-
         when(configService.getMaxTries()).thenReturn(1);
 
-        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage("topic1", "subscription1", context));
+        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context));
     }
 }

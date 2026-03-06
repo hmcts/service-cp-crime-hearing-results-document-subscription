@@ -21,7 +21,8 @@ import java.net.URL;
 @Getter
 public class ServiceBusConfigService {
     public static final int ADMIN_CONNECTION_PORT = 5300;
-    public static final String TOPIC_NAME = "amp-topics";
+    public static final String PCR_INBOUND_TOPIC = "pcr-inbound";
+    public static final String PCR_OUTBOUND_TOPIC = "pcr-outbound";
 
     private boolean enabled;
     private String adminConnectionString;
