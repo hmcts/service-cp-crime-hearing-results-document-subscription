@@ -17,7 +17,7 @@ import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 import java.util.List;
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.TOPIC_NAME;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +40,7 @@ public class CallbackDeliveryService {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
             if (serviceBusConfig.isEnabled()) {
                 final String payload = jsonMapper.toJson(eventNotificationPayload);
-                serviceBusService.queueMessage(TOPIC_NAME, subscriber.getNotificationEndpoint(), payload, 0);
+                serviceBusService.queueMessage(PCR_OUTBOUND_TOPIC, subscriber.getNotificationEndpoint(), payload, 0);
             } else {
                 callbackService.sendToSubscriber(subscriber.getNotificationEndpoint(), eventNotificationPayload);
                 log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), subscriber.getNotificationEndpoint(), eventNotificationPayload.getDocumentId());

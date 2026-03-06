@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.servicebus.services;
 
+import com.azure.messaging.servicebus.ServiceBusErrorContext;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
 import lombok.AllArgsConstructor;
@@ -7,12 +8,15 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
+import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
-import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
+import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
+
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 
 @Service
 @AllArgsConstructor
@@ -20,9 +24,8 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 public class ServiceBusProcessorService {
 
     private final ServiceBusConfigService configService;
-    private final NotificationMapper notificationMapper;
-    private final ServiceBusMapper serviceBusMapper;
     private final CallbackClient callbackClient;
+    private final NotificationManager notificationManager;
     private final ServiceBusClientService clientService;
     private final JsonMapper jsonMapper;
 
@@ -32,34 +35,50 @@ public class ServiceBusProcessorService {
         final ServiceBusProcessorClient processorClient = configService
                 .processorClientBuilder(topicName, subscriptionName)
                 .processMessage(context -> handleMessage(topicName, subscriptionName, context))
-                .processError(context -> handleError(topicName, subscriptionName))
+                .processError(context -> handleError(topicName, subscriptionName, context))
                 .buildProcessorClient();
         processorClient.start();
         return processorClient;
     }
 
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
     public void handleMessage(final String topicName, final String subscriptionName, final ServiceBusReceivedMessageContext context) {
-        final String message = String.valueOf(context.getMessage().getBody());
-        final ServiceBusMessageWrapper wrappedMessage = jsonMapper.fromJson(message, ServiceBusMessageWrapper.class);
+        final String wrappedMessageString = String.valueOf(context.getMessage().getBody());
+        System.out.println("wrappedMessageString:"+wrappedMessageString);
+        final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusMessageWrapper.class);
         log.info("Processing {}/{}", topicName, subscriptionName);
         try {
-            final EventNotificationPayload payload = notificationMapper.mapFromJson(wrappedMessage.getMessage());
-            callbackClient.sendNotification(wrappedMessage.getTargetUrl(), payload);
+            // handleMessageType(topicName, wrappedMessage.getTargetUrl(), wrappedMessage.getMessage());
+            log.info("handleMessage url:{} with message:{}", queueMessage.getTargetUrl(), queueMessage.getMessage());
+            final EventNotificationPayload callbackPayload = jsonMapper.fromJson(queueMessage.getMessage(), EventNotificationPayload.class);
+            callbackClient.sendNotification(queueMessage.getTargetUrl(), callbackPayload);
         } catch (Exception exception) {
-            final int failCount = wrappedMessage.getFailureCount() + 1;
-            log.error("handleMessage failCount:{}/{} with exception.", failCount, configService.getMaxTries(), exception);
-            if (failCount >= configService.getMaxTries()) {
+            final int failureCount = queueMessage.getFailureCount() + 1;
+            log.error("handleMessage failureCount:{} of {} tries with exception.", failureCount, configService.getMaxTries(), exception);
+            if (failureCount >= configService.getMaxTries()) {
                 log.error("handleMessage failed finally");
                 throw exception;
             }
-            clientService.queueMessage(topicName, wrappedMessage.getMessage(), failCount);
-            // Because we added a new message and swallowed the error then the current message will be silently dropped
+            clientService.queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
+            // Because we added a new message and swallowed the error then the current message will be dropped
         }
     }
 
-    public void handleError(final String topicName, final String subscriptionName) {
+    private void handleMessageType(final String topicName, final String target, String message) {
+        log.info("handling {} message:{}", topicName, message);
+        switch (topicName) {
+            case PCR_OUTBOUND_TOPIC -> {
+                final EventNotificationPayload eventNotificationPayload = jsonMapper.fromJson(message, EventNotificationPayload.class);
+                callbackClient.sendNotification(target, eventNotificationPayload);
+            }
+            case PCR_INBOUND_TOPIC -> {
+                PcrEventPayload pcrEventPayload = jsonMapper.fromJson(message, PcrEventPayload.class);
+                notificationManager.processPcrNotification(pcrEventPayload);
+            }
+        }
+    }
+
+    public void handleError(final String topicName, final String subscriptionName, final ServiceBusErrorContext errorContext) {
         // We should only be called when failCount has exceeded maxTries and message go to DLQ
-        log.error("handleError unexpected error on {}/{} moving to DLQ", topicName, subscriptionName);
+        log.error("handleError unexpected error on {}/{} moving to DLQ", topicName, subscriptionName, errorContext.getException());
     }
 }

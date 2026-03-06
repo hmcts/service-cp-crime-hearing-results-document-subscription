@@ -42,44 +42,4 @@ public class ServiceBusService {
         serviceBusSenderClient.close();
         log.info("Queued message to topic:{} with failCount:{}", topicName, failureCount);
     }
-
-    @SneakyThrows
-    public ServiceBusProcessorClient startMessageProcessor(final String topicName, final String subscriptionName) {
-        log.info("starting service bus processor {}/{}", topicName, subscriptionName);
-        final ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorBuilder = configService
-                .clientBuilder()
-                .processor()
-                .topicName(topicName)
-                .subscriptionName(subscriptionName)
-                .processMessage(context -> handleMessage(topicName, subscriptionName, context))
-                .processError(context -> handleError(topicName, subscriptionName));
-        final ServiceBusProcessorClient processorClient = processorBuilder.buildProcessorClient();
-        processorClient.start();
-        return processorClient;
-    }
-
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    public void handleMessage(final String topicName, final String subscriptionName, final ServiceBusReceivedMessageContext context) {
-        final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(String.valueOf(context.getMessage().getBody()), ServiceBusMessageWrapper.class);
-        log.info("Processing {}/{}", topicName, subscriptionName);
-        try {
-            log.info("handleMessage url:{} with message:{}", queueMessage.getTargetUrl(), queueMessage.getMessage());
-            final EventNotificationPayload callbackPayload = jsonMapper.fromJson(queueMessage.getMessage(), EventNotificationPayload.class);
-            callbackClient.sendNotification(queueMessage.getTargetUrl(), callbackPayload);
-        } catch (Exception exception) {
-            final int failCount = queueMessage.getFailureCount() + 1;
-            log.error("handleMessage failureCount:{} with exception.", failCount, exception);
-            if (failCount >= configService.getMaxTries()) {
-                log.error("handleMessage failed finally");
-                throw exception;
-            }
-            queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failCount);
-            // Because we added a new message and swallowed the error then the current message will be dropped
-        }
-    }
-
-    public void handleError(final String topicName, final String subscriptionName) {
-        // We should only be called when failCount has exceeded maxTries and message go to DLQ
-        log.error("handleError unexpected error on {}/{} moving to DLQ", topicName, subscriptionName);
-    }
 }

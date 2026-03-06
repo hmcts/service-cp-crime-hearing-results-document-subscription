@@ -51,8 +51,8 @@ public class ServiceBusIntegrationTest extends ServiceBusIntegrationTestBase {
         testService.purgeMessages(topicName, subscription1);
         testService.purgeMessages(topicName, subscription2);
 
-        topicService.startMessageProcessor(topicName, subscription1);
-        topicService.startMessageProcessor(topicName, subscription2);
+        processorService.startMessageProcessor(topicName, subscription1);
+        processorService.startMessageProcessor(topicName, subscription2);
     }
 
     @SneakyThrows

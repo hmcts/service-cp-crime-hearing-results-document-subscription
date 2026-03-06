@@ -19,6 +19,7 @@ import org.wiremock.spring.InjectWireMock;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.servicebus.integration.ServiceBusTestService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
@@ -29,7 +30,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
-import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.Objects.nonNull;
@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.TOPIC_NAME;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
@@ -71,6 +71,8 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     ServiceBusAdminService adminService;
     @Autowired
     ServiceBusService serviceBusService;
+    @Autowired
+    ServiceBusProcessorService processorService;
     @Autowired
     ServiceBusTestService testService;
 
@@ -102,9 +104,9 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        testService.dropTopicIfExists(TOPIC_NAME, "subscription1");
-        adminService.createTopicAndSubscription(TOPIC_NAME, "subscription1");
-        serviceBusService.startMessageProcessor(TOPIC_NAME, "subscription1");
+        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC, "subscription1");
+        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC, "subscription1");
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC, "subscription1");
         WireMock.reset();
         if (nonNull(callbackWireMock)) {
             callbackWireMock.resetAll();
