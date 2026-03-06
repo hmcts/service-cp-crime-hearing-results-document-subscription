@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
-import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 @Slf4j
@@ -20,15 +20,11 @@ public class ServiceBusIntegrationTestBase {
     @Autowired
     JsonMapper jsonMapper;
     @Autowired
-    ServiceBusService topicService;
+    ServiceBusClientService clientService;
     @Autowired
     ServiceBusProcessorService processorService;
     @Autowired
     ServiceBusTestService testService;
 
-    String topicName = "topic.1";
     String subscription1 = "subscription.1";
-    String subscription2 = "subscription.2";
-    int maxDeliveryCount = 3;
-    String message = "My message";
 }

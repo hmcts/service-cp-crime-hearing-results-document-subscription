@@ -68,7 +68,7 @@ class NotificationManagerTest {
         notificationManager.processPcrNotification(payload);
 
         verify(notificationService).processInboundEvent(eq(payload));
-        verify(callbackDeliveryService).processPcrEvent(payload, documentId);
+        verify(callbackDeliveryService).submitOutboundPcrEvents(payload, documentId);
     }
 
     @Test
