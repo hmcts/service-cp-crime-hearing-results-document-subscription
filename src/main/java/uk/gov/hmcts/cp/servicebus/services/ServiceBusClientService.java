@@ -32,7 +32,7 @@ public class ServiceBusClientService {
                 .message(messageString)
                 .build();
         final ServiceBusMessage serviceBusMessage = new ServiceBusMessage(jsonMapper.toJson(messageWrapper));
-        OffsetDateTime nextTryTime = retryService.getNextTryTime(failureCount);
+        final OffsetDateTime nextTryTime = retryService.getNextTryTime(failureCount);
         serviceBusMessage.setScheduledEnqueueTime(nextTryTime);
         serviceBusSenderClient.sendMessage(serviceBusMessage);
         serviceBusSenderClient.close();

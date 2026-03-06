@@ -44,6 +44,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
@@ -104,9 +105,14 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        testService.dropTopicIfExists(PCR_INBOUND_TOPIC, "subscription1");
+        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC, "subscription1");
+        processorService.startMessageProcessor(PCR_INBOUND_TOPIC, "subscription1");
+
         testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC, "subscription1");
         adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC, "subscription1");
         processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC, "subscription1");
+
         WireMock.reset();
         if (nonNull(callbackWireMock)) {
             callbackWireMock.resetAll();
@@ -126,12 +132,6 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         then_the_subscriber_receives_a_callback();
         then_the_subscriber_can_retrieve_the_document();
     }
-
-
-    // We need to implement different tests now that we are queuing the inbound notification and the outbound
-    // notifications
-    // 1) We try material-service several times
-    // 2) We try outbound notification several times - DONE
 
     @Test
     void callback_client_not_responding_should_try_3_times_in_7_seconds() throws Exception {

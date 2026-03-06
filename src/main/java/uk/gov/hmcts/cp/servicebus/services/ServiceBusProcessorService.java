@@ -43,14 +43,10 @@ public class ServiceBusProcessorService {
 
     public void handleMessage(final String topicName, final String subscriptionName, final ServiceBusReceivedMessageContext context) {
         final String wrappedMessageString = String.valueOf(context.getMessage().getBody());
-        System.out.println("wrappedMessageString:"+wrappedMessageString);
         final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusMessageWrapper.class);
         log.info("Processing {}/{}", topicName, subscriptionName);
         try {
-            // handleMessageType(topicName, wrappedMessage.getTargetUrl(), wrappedMessage.getMessage());
-            log.info("handleMessage url:{} with message:{}", queueMessage.getTargetUrl(), queueMessage.getMessage());
-            final EventNotificationPayload callbackPayload = jsonMapper.fromJson(queueMessage.getMessage(), EventNotificationPayload.class);
-            callbackClient.sendNotification(queueMessage.getTargetUrl(), callbackPayload);
+            handleMessageType(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
             log.error("handleMessage failureCount:{} of {} tries with exception.", failureCount, configService.getMaxTries(), exception);
@@ -63,7 +59,7 @@ public class ServiceBusProcessorService {
         }
     }
 
-    private void handleMessageType(final String topicName, final String target, String message) {
+    private void handleMessageType(final String topicName, final String target, final String message) {
         log.info("handling {} message:{}", topicName, message);
         switch (topicName) {
             case PCR_OUTBOUND_TOPIC -> {
@@ -71,9 +67,10 @@ public class ServiceBusProcessorService {
                 callbackClient.sendNotification(target, eventNotificationPayload);
             }
             case PCR_INBOUND_TOPIC -> {
-                PcrEventPayload pcrEventPayload = jsonMapper.fromJson(message, PcrEventPayload.class);
+                final PcrEventPayload pcrEventPayload = jsonMapper.fromJson(message, PcrEventPayload.class);
                 notificationManager.processPcrNotification(pcrEventPayload);
             }
+            default -> throw new RuntimeException("Invalid topic name " + topicName);
         }
     }
 

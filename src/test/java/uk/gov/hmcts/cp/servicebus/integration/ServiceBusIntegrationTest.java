@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
@@ -14,11 +13,8 @@ import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
-import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
-import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -46,12 +42,12 @@ public class ServiceBusIntegrationTest extends ServiceBusIntegrationTestBase {
                 .atMost(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofSeconds(1))
                 .until(testService::isServiceBusReady);
+        testService.dropTopicIfExists(topicName, subscription1);
         adminService.createTopicAndSubscription(topicName, subscription1);
-        adminService.createTopicAndSubscription(topicName, subscription2);
-        testService.purgeMessages(topicName, subscription1);
-        testService.purgeMessages(topicName, subscription2);
-
         processorService.startMessageProcessor(topicName, subscription1);
+
+        testService.dropTopicIfExists(topicName, subscription2);
+        adminService.createTopicAndSubscription(topicName, subscription2);
         processorService.startMessageProcessor(topicName, subscription2);
     }
 

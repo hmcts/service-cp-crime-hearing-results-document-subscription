@@ -19,14 +19,19 @@ import org.springframework.web.context.request.NativeWebRequest;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
+
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 
 /**
  * Handles PCR notification events and document retrieval for subscribers.
@@ -37,7 +42,10 @@ import java.util.UUID;
 @Slf4j
 public class NotificationController implements InternalApi, NotificationApi {
 
+    private final ServiceBusConfigService serviceBusConfig;
+    private final ServiceBusClientService clientService;
     private final NotificationManager notificationManager;
+    private final JsonMapper jsonMapper;
     private final HttpServletRequest httpRequest;
 
     @Override
@@ -51,7 +59,12 @@ public class NotificationController implements InternalApi, NotificationApi {
                 pcrEventPayload.getEventId(),
                 pcrEventPayload.getMaterialId(),
                 pcrEventPayload.getEventType());
-        notificationManager.processPcrNotification(pcrEventPayload);
+        if (serviceBusConfig.isEnabled()) {
+            final String pcrEventjson = jsonMapper.toJson(pcrEventPayload);
+            clientService.queueMessage(PCR_INBOUND_TOPIC, null, pcrEventjson, 0);
+        } else {
+            notificationManager.processPcrNotification(pcrEventPayload);
+        }
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
