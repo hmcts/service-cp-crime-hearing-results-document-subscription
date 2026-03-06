@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
-import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
@@ -29,10 +29,10 @@ public class CallbackDeliveryService {
     private final NotificationMapper notificationMapper;
     private final JsonMapper jsonMapper;
     private final ServiceBusConfigService serviceBusConfig;
-    private final ServiceBusService serviceBusService;
+    private final ServiceBusClientService clientService;
     private final CallbackService callbackService;
 
-    public void processPcrEvent(final PcrEventPayload pcrEventPayload, final UUID documentId) {
+    public void submitOutboundPcrEvents(final PcrEventPayload pcrEventPayload, final UUID documentId) {
         final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
         final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType.name());
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, pcrEventPayload);
@@ -40,7 +40,7 @@ public class CallbackDeliveryService {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
             if (serviceBusConfig.isEnabled()) {
                 final String payload = jsonMapper.toJson(eventNotificationPayload);
-                serviceBusService.queueMessage(PCR_OUTBOUND_TOPIC, subscriber.getNotificationEndpoint(), payload, 0);
+                clientService.queueMessage(PCR_OUTBOUND_TOPIC, subscriber.getNotificationEndpoint(), payload, 0);
             } else {
                 callbackService.sendToSubscriber(subscriber.getNotificationEndpoint(), eventNotificationPayload);
                 log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), subscriber.getNotificationEndpoint(), eventNotificationPayload.getDocumentId());

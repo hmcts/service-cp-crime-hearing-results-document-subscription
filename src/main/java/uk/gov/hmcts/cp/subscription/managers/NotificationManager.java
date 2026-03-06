@@ -35,7 +35,7 @@ public class NotificationManager {
         final UUID materialId = pcrEventPayload.getMaterialId();
         final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
         final UUID documentId = documentService.getDocumentIdForMaterialId(materialId, eventType);
-        callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId);
+        callbackDeliveryService.submitOutboundPcrEvents(pcrEventPayload, documentId);
     }
 
     public DocumentContent getPcrDocumentContent(final UUID clientSubscriptionId, final UUID clientId, final UUID documentId) {

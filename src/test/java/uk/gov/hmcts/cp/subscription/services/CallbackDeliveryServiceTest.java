@@ -47,13 +47,13 @@ class CallbackDeliveryServiceTest {
     private final EventNotificationPayload eventNotificationPayload = EventNotificationPayload.builder().build();
 
     @Test
-    void processPcrEvent_shouldMapEventNotificationPayloadFieldsCorrectly() {
+    void submitOutboundPcrEvent_shouldMapEventsNotificationPayloadFieldsCorrectly() {
         PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(EventType.PRISON_COURT_REGISTER_GENERATED).build();
         when(subscriptionRepository.findByEventType(EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(List.of(subscriptionEntity));
         when(notificationMapper.mapToPayload(documentId, pcrEventPayload)).thenReturn(eventNotificationPayload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
 
-        callbackDeliveryService.processPcrEvent(pcrEventPayload, documentId);
+        callbackDeliveryService.submitOutboundPcrEvents(pcrEventPayload, documentId);
 
         verify(callbackService).sendToSubscriber(callbackUrl, eventNotificationPayload);
     }

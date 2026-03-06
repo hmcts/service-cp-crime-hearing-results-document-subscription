@@ -54,7 +54,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .content(pcrPayload))
                 .andExpect(status().isAccepted());
 
-        verify(callbackDeliveryService, times(1)).processPcrEvent(any(PcrEventPayload.class), any(UUID.class));
+        verify(callbackDeliveryService, times(1)).submitOutboundPcrEvents(any(PcrEventPayload.class), any(UUID.class));
     }
 
     @Test

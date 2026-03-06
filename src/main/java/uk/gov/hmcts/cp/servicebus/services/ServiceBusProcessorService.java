@@ -44,7 +44,7 @@ public class ServiceBusProcessorService {
     public void handleMessage(final String topicName, final String subscriptionName, final ServiceBusReceivedMessageContext context) {
         final String wrappedMessageString = String.valueOf(context.getMessage().getBody());
         final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusMessageWrapper.class);
-        log.info("Processing {}/{}", topicName, subscriptionName);
+        log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
         try {
             handleMessageType(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
@@ -60,18 +60,19 @@ public class ServiceBusProcessorService {
     }
 
     private void handleMessageType(final String topicName, final String target, final String message) {
-        log.info("handling {} message:{}", topicName, message);
+        log.info("handleMessageType {} message:{}", topicName, message);
         switch (topicName) {
-            case PCR_OUTBOUND_TOPIC -> {
-                final EventNotificationPayload eventNotificationPayload = jsonMapper.fromJson(message, EventNotificationPayload.class);
-                callbackClient.sendNotification(target, eventNotificationPayload);
-            }
             case PCR_INBOUND_TOPIC -> {
                 final PcrEventPayload pcrEventPayload = jsonMapper.fromJson(message, PcrEventPayload.class);
                 notificationManager.processPcrNotification(pcrEventPayload);
             }
+            case PCR_OUTBOUND_TOPIC -> {
+                final EventNotificationPayload eventNotificationPayload = jsonMapper.fromJson(message, EventNotificationPayload.class);
+                callbackClient.sendNotification(target, eventNotificationPayload);
+            }
             default -> throw new RuntimeException("Invalid topic name " + topicName);
         }
+        log.info("handleMessageType completed OK");
     }
 
     public void handleError(final String topicName, final String subscriptionName, final ServiceBusErrorContext errorContext) {
