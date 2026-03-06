@@ -46,7 +46,7 @@ services:
           - "sb-emulator"
 
   wiremock:
-    image: wiremock/wiremock:3.6.0
+    image: wiremock/wiremock:3.13.2
     container_name: wiremock
     ports:
       - "9999:8080"
