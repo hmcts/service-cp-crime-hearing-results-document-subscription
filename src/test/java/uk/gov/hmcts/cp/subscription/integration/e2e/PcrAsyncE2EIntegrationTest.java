@@ -20,7 +20,6 @@ import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.servicebus.integration.ServiceBusTestService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
-import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
@@ -64,14 +63,12 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
         "servicebus.enabled=true",
-        "service-bus.retry-seconds=1,2,3"})
+        "service-bus.retry-seconds=0,1,2,3"})
 @Slf4j
 class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @Autowired
     ServiceBusAdminService adminService;
-    @Autowired
-    ServiceBusService serviceBusService;
     @Autowired
     ServiceBusProcessorService processorService;
     @Autowired
@@ -105,13 +102,13 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        testService.dropTopicIfExists(PCR_INBOUND_TOPIC, "subscription1");
-        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC, "subscription1");
-        processorService.startMessageProcessor(PCR_INBOUND_TOPIC, "subscription1");
+        testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
+        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
 
-        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC, "subscription1");
-        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC, "subscription1");
-        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC, "subscription1");
+        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
+        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
 
         WireMock.reset();
         if (nonNull(callbackWireMock)) {
@@ -134,7 +131,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void callback_client_not_responding_should_try_3_times_in_7_seconds() throws Exception {
+    void callback_client_not_responding_should_try_3_times_in_4_seconds() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
@@ -142,7 +139,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         when_a_pcr_event_is_posted();
         when_material_service_responds();
 
-        Thread.sleep(7000);
+        Thread.sleep(4000);
 
         then_callback_was_attempted_times(3);
     }
@@ -161,19 +158,8 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         stubMaterialBinary(MATERIAL_ID);
     }
 
-    private void given_material_service_returns_document_not_found() {
-        stubMaterialMetadataNoContent(MATERIAL_ID_TIMEOUT);
-    }
-
     private void given_callback_endpoint_returns_server_error() {
         stubCallbackEndpointReturnsServerError(callbackWireMock, CALLBACK_URI);
-    }
-
-    private void when_a_pcr_event_is_posted_expect_callback_delivery_timeout() throws Exception {
-        postPcrEvent(PCR_EVENT_PAYLOAD_PATH)
-                .andExpect(status().isGatewayTimeout())
-                .andExpect(jsonPath("$.error").value("gateway_timeout"))
-                .andExpect(jsonPath("$.message").value("Callback is not ready"));
     }
 
     private void then_callback_was_attempted_times(int numberOfTries) {

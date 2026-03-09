@@ -45,7 +45,7 @@ public class ServiceBusConfigService {
         this.maxTries = maxTries;
     }
 
-    public ServiceBusClientBuilder clientBuilder() {
+    private ServiceBusClientBuilder clientBuilder() {
         return new ServiceBusClientBuilder().connectionString(connectionString);
     }
 

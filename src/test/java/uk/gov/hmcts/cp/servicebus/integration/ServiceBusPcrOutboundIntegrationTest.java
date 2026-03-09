@@ -40,9 +40,9 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
                 .atMost(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofSeconds(1))
                 .until(testService::isServiceBusReady);
-        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC, subscription1);
-        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC, subscription1);
-        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC, subscription1);
+        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
+        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
     }
 
     @SneakyThrows

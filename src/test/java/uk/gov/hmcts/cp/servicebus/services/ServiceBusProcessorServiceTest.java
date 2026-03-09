@@ -15,7 +15,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
-import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
+import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
@@ -57,7 +57,7 @@ class ServiceBusProcessorServiceTest {
     @Mock
     ServiceBusReceivedMessageContext context;
     @Mock
-    ServiceBusMessageWrapper wrappedMessage;
+    ServiceBusWrappedMessage wrappedMessage;
 
     private String callbackUrl = "http://callback";
 
@@ -66,12 +66,12 @@ class ServiceBusProcessorServiceTest {
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
-        when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
+        when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);
         when(wrappedMessage.getMessage()).thenReturn("message");
         when(jsonMapper.fromJson("message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context);
 
         verify(callbackClient).sendNotification(callbackUrl, notificationPayload);
     }
@@ -81,7 +81,7 @@ class ServiceBusProcessorServiceTest {
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
-        when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
+        when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);
         when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
         when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
@@ -90,7 +90,7 @@ class ServiceBusProcessorServiceTest {
 
         when(configService.getMaxTries()).thenReturn(2);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context);
 
         verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "wrapped-message", 1);
     }
@@ -100,7 +100,7 @@ class ServiceBusProcessorServiceTest {
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
-        when(jsonMapper.fromJson("binaryData", ServiceBusMessageWrapper.class)).thenReturn(wrappedMessage);
+        when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);
         when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
         when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
@@ -108,6 +108,6 @@ class ServiceBusProcessorServiceTest {
                 .sendNotification(callbackUrl, notificationPayload);
         when(configService.getMaxTries()).thenReturn(1);
 
-        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context));
+        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context));
     }
 }

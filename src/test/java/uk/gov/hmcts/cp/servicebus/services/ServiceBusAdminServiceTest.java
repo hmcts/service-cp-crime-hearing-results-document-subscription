@@ -69,12 +69,12 @@ class ServiceBusAdminServiceTest {
         when(serviceBusAdministrationClient.listTopics()).thenReturn(topics);
         when(serviceBusAdministrationClient.listSubscriptions("topic1")).thenReturn(subscriptions);
 
-        adminService.createTopicAndSubscription("topic1", "subscription1");
+        adminService.createTopicAndSubscription("topic1");
 
         verify(serviceBusAdministrationClient).createTopic(eq("topic1"), topicCaptor.capture());
         assertThat(topicCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
 
-        verify(serviceBusAdministrationClient).createSubscription(eq("topic1"), eq("subscription1"), subscriptionCaptor.capture());
+        verify(serviceBusAdministrationClient).createSubscription(eq("topic1"), eq("topic1"), subscriptionCaptor.capture());
         assertThat(subscriptionCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
         assertThat(subscriptionCaptor.getValue().getLockDuration()).isEqualTo(Duration.ofMinutes(1));
         assertThat(subscriptionCaptor.getValue().getMaxDeliveryCount()).isEqualTo(1);
@@ -88,11 +88,11 @@ class ServiceBusAdminServiceTest {
         when(topicProperties.getName()).thenReturn("topic1");
         when(serviceBusAdministrationClient.listSubscriptions("topic1")).thenReturn(subscriptions);
         when(subscriptions.stream()).thenReturn(Stream.of(subscriptionProperties));
-        when(subscriptionProperties.getSubscriptionName()).thenReturn("subscription1");
+        when(subscriptionProperties.getSubscriptionName()).thenReturn("topic1");
 
-        adminService.createTopicAndSubscription("topic1", "subscription1");
+        adminService.createTopicAndSubscription("topic1");
 
         verify(serviceBusAdministrationClient, never()).createTopic(eq("topic1"), topicCaptor.capture());
-        verify(serviceBusAdministrationClient, never()).createSubscription(eq("topic1"), eq("subscription1"), subscriptionCaptor.capture());
+        verify(serviceBusAdministrationClient, never()).createSubscription(eq("topic1"), eq("topic1"), subscriptionCaptor.capture());
     }
 }

@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class ServiceBusMapper {
 
-    public ServiceBusMessage mapToMessage(final String wrappedMessage, final OffsetDateTime nextTryTime) {
+    public ServiceBusMessage newMessage(final String wrappedMessage, final OffsetDateTime nextTryTime) {
         final ServiceBusMessage serviceBusMessage = new ServiceBusMessage(wrappedMessage);
         serviceBusMessage.setScheduledEnqueueTime(nextTryTime);
         return serviceBusMessage;

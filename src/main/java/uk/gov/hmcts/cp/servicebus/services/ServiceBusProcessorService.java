@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
-import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
+import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
@@ -30,20 +30,20 @@ public class ServiceBusProcessorService {
     private final JsonMapper jsonMapper;
 
     @SneakyThrows
-    public ServiceBusProcessorClient startMessageProcessor(final String topicName, final String subscriptionName) {
-        log.info("starting service bus processor {}/{}", topicName, subscriptionName);
+    public ServiceBusProcessorClient startMessageProcessor(final String topicName) {
+        log.info("starting service bus processor {}/{}", topicName, topicName);
         final ServiceBusProcessorClient processorClient = configService
-                .processorClientBuilder(topicName, subscriptionName)
-                .processMessage(context -> handleMessage(topicName, subscriptionName, context))
-                .processError(context -> handleError(topicName, subscriptionName, context))
+                .processorClientBuilder(topicName, topicName)
+                .processMessage(context -> handleMessage(topicName, context))
+                .processError(context -> handleError(topicName, context))
                 .buildProcessorClient();
         processorClient.start();
         return processorClient;
     }
 
-    public void handleMessage(final String topicName, final String subscriptionName, final ServiceBusReceivedMessageContext context) {
+    public void handleMessage(final String topicName, final ServiceBusReceivedMessageContext context) {
         final String wrappedMessageString = String.valueOf(context.getMessage().getBody());
-        final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusMessageWrapper.class);
+        final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
         log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
         try {
             handleMessageType(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
@@ -75,8 +75,8 @@ public class ServiceBusProcessorService {
         log.info("handleMessageType completed OK");
     }
 
-    public void handleError(final String topicName, final String subscriptionName, final ServiceBusErrorContext errorContext) {
+    public void handleError(final String topicName, final ServiceBusErrorContext errorContext) {
         // We should only be called when failCount has exceeded maxTries and message go to DLQ
-        log.error("handleError unexpected error on {}/{} moving to DLQ", topicName, subscriptionName, errorContext.getException());
+        log.error("handleError unexpected error on {} moving to DLQ", topicName, errorContext.getException());
     }
 }
