@@ -40,6 +40,7 @@ public class ServiceBusClientService {
         log.info("Queued message to topic:{} with failCount:{} nextTryTime:{}", topicName, failureCount, nextTryTime);
     }
 
+    @SuppressWarnings("PMD.OnlyOneReturn")
     private UUID resolveCorrelationId(final String topicName, final String messageString) {
             if (PCR_INBOUND_TOPIC.equals(topicName)) {
                 return jsonMapper.getUUIDAtPath(messageString, "/eventId");
