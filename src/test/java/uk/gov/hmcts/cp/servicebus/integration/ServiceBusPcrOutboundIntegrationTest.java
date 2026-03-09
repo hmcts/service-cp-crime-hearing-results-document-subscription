@@ -27,7 +27,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "service-bus.max-tries=2",
-        "service-bus.retry-seconds=1"
+        "service-bus.retry-msecs=0"
 })
 public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationTestBase {
 
@@ -61,7 +61,7 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
 
     @SneakyThrows
     @Test
-    void process_message_should_retry_n_times_then_send_to_DLQ() {
+    void process_message_should_retry_n_times_then_stop_because_sent_to_DLQ() {
         doThrow(new RuntimeException("Error")).when(callbackClient).sendNotification(eq("http://callback"), any(EventNotificationPayload.class));
         queueMessageForCallbackUrl("http://callback");
         Thread.sleep(4000);

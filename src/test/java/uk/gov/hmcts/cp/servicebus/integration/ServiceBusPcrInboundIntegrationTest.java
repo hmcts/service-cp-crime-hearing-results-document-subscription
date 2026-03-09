@@ -29,7 +29,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBO
 @TestPropertySource(properties = {
         "material-client.retry.timeoutMilliSecs=500",
         "service-bus.max-tries=2",
-        "service-bus.retry-seconds=1"
+        "service-bus.retry-msecs=0"
 })
 public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTestBase {
 

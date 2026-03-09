@@ -7,16 +7,11 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
-
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 
 @Service
 @AllArgsConstructor
@@ -24,10 +19,9 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
 public class ServiceBusProcessorService {
 
     private final ServiceBusConfigService configService;
-    private final CallbackClient callbackClient;
-    private final NotificationManager notificationManager;
     private final ServiceBusClientService clientService;
     private final JsonMapper jsonMapper;
+    private final ServiceBusHandlers serviceBusHandlers;
 
     @SneakyThrows
     public ServiceBusProcessorClient startMessageProcessor(final String topicName) {
@@ -46,7 +40,7 @@ public class ServiceBusProcessorService {
         final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
         log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
         try {
-            handleMessageType(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
+            serviceBusHandlers.handleMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
             log.error("handleMessage failureCount:{} of {} tries with exception.", failureCount, configService.getMaxTries(), exception);
@@ -57,22 +51,6 @@ public class ServiceBusProcessorService {
             clientService.queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
             // Because we added a new message and swallowed the error then the current message will be dropped
         }
-    }
-
-    private void handleMessageType(final String topicName, final String target, final String message) {
-        log.info("handleMessageType {} message:{}", topicName, message);
-        switch (topicName) {
-            case PCR_INBOUND_TOPIC -> {
-                final PcrEventPayload pcrEventPayload = jsonMapper.fromJson(message, PcrEventPayload.class);
-                notificationManager.processPcrNotification(pcrEventPayload);
-            }
-            case PCR_OUTBOUND_TOPIC -> {
-                final EventNotificationPayload eventNotificationPayload = jsonMapper.fromJson(message, EventNotificationPayload.class);
-                callbackClient.sendNotification(target, eventNotificationPayload);
-            }
-            default -> throw new RuntimeException("Invalid topic name " + topicName);
-        }
-        log.info("handleMessageType completed OK");
     }
 
     public void handleError(final String topicName, final ServiceBusErrorContext errorContext) {
