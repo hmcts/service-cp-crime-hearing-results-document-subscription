@@ -6,10 +6,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder(toBuilder = true)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServiceBusMessageWrapper {
+public class ServiceBusWrappedMessage {
     private int failureCount;
     private String targetUrl;
     private String message;

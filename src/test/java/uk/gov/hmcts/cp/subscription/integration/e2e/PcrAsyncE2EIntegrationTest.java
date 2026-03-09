@@ -63,7 +63,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
         "servicebus.enabled=true",
-        "service-bus.retry-seconds=1,2,3"})
+        "service-bus.retry-seconds=0,1,2,3"})
 @Slf4j
 class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
@@ -131,7 +131,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void callback_client_not_responding_should_try_3_times_in_7_seconds() throws Exception {
+    void callback_client_not_responding_should_try_3_times_in_4_seconds() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
@@ -139,7 +139,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         when_a_pcr_event_is_posted();
         when_material_service_responds();
 
-        Thread.sleep(7000);
+        Thread.sleep(4000);
 
         then_callback_was_attempted_times(3);
     }
@@ -158,19 +158,8 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         stubMaterialBinary(MATERIAL_ID);
     }
 
-    private void given_material_service_returns_document_not_found() {
-        stubMaterialMetadataNoContent(MATERIAL_ID_TIMEOUT);
-    }
-
     private void given_callback_endpoint_returns_server_error() {
         stubCallbackEndpointReturnsServerError(callbackWireMock, CALLBACK_URI);
-    }
-
-    private void when_a_pcr_event_is_posted_expect_callback_delivery_timeout() throws Exception {
-        postPcrEvent(PCR_EVENT_PAYLOAD_PATH)
-                .andExpect(status().isGatewayTimeout())
-                .andExpect(jsonPath("$.error").value("gateway_timeout"))
-                .andExpect(jsonPath("$.message").value("Callback is not ready"));
     }
 
     private void then_callback_was_attempted_times(int numberOfTries) {

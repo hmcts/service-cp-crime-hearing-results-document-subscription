@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
-import uk.gov.hmcts.cp.servicebus.model.ServiceBusMessageWrapper;
+import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
@@ -43,7 +43,7 @@ public class ServiceBusProcessorService {
 
     public void handleMessage(final String topicName, final ServiceBusReceivedMessageContext context) {
         final String wrappedMessageString = String.valueOf(context.getMessage().getBody());
-        final ServiceBusMessageWrapper queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusMessageWrapper.class);
+        final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
         log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
         try {
             handleMessageType(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
