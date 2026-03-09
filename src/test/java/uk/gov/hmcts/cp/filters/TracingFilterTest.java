@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +38,7 @@ class TracingFilterTest {
     }
 
     @Test
-    void shouldNotFilter_when_path_not_subscription_or_notifications() {
+    void shouldNotFilter_when_path_not_subscription() {
         when(request.getRequestURI()).thenReturn("/");
         assertThat(filter.shouldNotFilter(request)).isTrue();
 
@@ -54,9 +56,9 @@ class TracingFilterTest {
     }
 
     @Test
-    void shouldFilter_when_path_is_notifications() {
+    void shouldNotFilter_when_path_is_notifications() {
         when(request.getRequestURI()).thenReturn("/notifications");
-        assertThat(filter.shouldNotFilter(request)).isFalse();
+        assertThat(filter.shouldNotFilter(request)).isTrue();
     }
 
     @Test
@@ -72,11 +74,12 @@ class TracingFilterTest {
     }
 
     @Test
-    void doFilterInternal_does_nothing_when_header_absent() throws ServletException, IOException {
+    void doFilterInternal_generates_correlationId_when_header_absent() throws ServletException, IOException {
         when(request.getHeader(TracingFilter.CORRELATION_ID_HEADER)).thenReturn(null);
 
         filter.doFilterInternal(request, response, filterChain);
 
+        verify(response).setHeader(eq(TracingFilter.CORRELATION_ID_HEADER), anyString());
         verify(filterChain).doFilter(request, response);
     }
 }
