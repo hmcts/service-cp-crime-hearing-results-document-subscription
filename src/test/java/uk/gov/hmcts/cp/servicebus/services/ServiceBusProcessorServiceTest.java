@@ -71,7 +71,7 @@ class ServiceBusProcessorServiceTest {
         when(jsonMapper.fromJson("message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context);
 
         verify(callbackClient).sendNotification(callbackUrl, notificationPayload);
     }
@@ -90,7 +90,7 @@ class ServiceBusProcessorServiceTest {
 
         when(configService.getMaxTries()).thenReturn(2);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context);
 
         verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "wrapped-message", 1);
     }
@@ -108,6 +108,6 @@ class ServiceBusProcessorServiceTest {
                 .sendNotification(callbackUrl, notificationPayload);
         when(configService.getMaxTries()).thenReturn(1);
 
-        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, "subscription1", context));
+        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context));
     }
 }

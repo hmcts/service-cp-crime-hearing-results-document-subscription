@@ -32,7 +32,7 @@ public class ServiceBusAdminService {
         }
     }
 
-    public void createTopicAndSubscription(final String topicName, final String subscriptionName) {
+    public void createTopicAndSubscription(final String topicName) {
         final ServiceBusAdministrationClient adminClient = configService.adminClient();
         final List<String> topics = adminClient.listTopics().stream().map(TopicProperties::getName).toList();
         if (topics.contains(topicName)) {
@@ -45,15 +45,15 @@ public class ServiceBusAdminService {
         }
 
         final List<String> subscriptions = adminClient.listSubscriptions(topicName).stream().map(SubscriptionProperties::getSubscriptionName).toList();
-        if (subscriptions.contains(subscriptionName)) {
-            log.info("Subscription {}/{} already exists", topicName, subscriptionName);
+        if (subscriptions.contains(topicName)) {
+            log.info("Subscription {}/{} already exists", topicName, topicName);
         } else {
-            log.info("Creating subscription {}/{}", topicName, subscriptionName);
+            log.info("Creating subscription {}/{}", topicName, topicName);
             final CreateSubscriptionOptions options = new CreateSubscriptionOptions();
             options.setDefaultMessageTimeToLive(Duration.ofHours(1));
             options.setLockDuration(Duration.ofMinutes(1));
             options.setMaxDeliveryCount(1);
-            adminClient.createSubscription(topicName, subscriptionName, options);
+            adminClient.createSubscription(topicName, topicName, options);
         }
     }
 }

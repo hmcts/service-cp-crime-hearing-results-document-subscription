@@ -37,14 +37,15 @@ public class ServiceBusAdminIntegrationTest {
 
     @Test
     void admin_client_should_create_new_topic_and_subscription_and_delete() {
-        testService.dropTopicIfExists("topic.new", "subscription.new");
-        adminService.createTopicAndSubscription("topic.new", "subscription.new");
+        String queueName = "pcr-inbound";
+        testService.dropTopicIfExists(queueName);
+        adminService.createTopicAndSubscription(queueName);
         List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
-        assertThat(topics.contains("topic.new"));
-        List<String> subscriptions = configService.adminClient().listSubscriptions("topic.new").stream().map(SubscriptionProperties::getSubscriptionName).toList();
-        assertThat(subscriptions.contains("subscription.new"));
+        assertThat(topics.contains(queueName));
+        List<String> subscriptions = configService.adminClient().listSubscriptions(queueName).stream().map(SubscriptionProperties::getSubscriptionName).toList();
+        assertThat(subscriptions.contains(queueName));
 
-        adminService.createTopicAndSubscription("topic.new", "subscription.new");
-        testService.dropTopicIfExists("topic.new", "subscription.new");
+        adminService.createTopicAndSubscription(queueName);
+        testService.dropTopicIfExists(queueName);
     }
 }

@@ -20,7 +20,6 @@ import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.servicebus.integration.ServiceBusTestService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
-import uk.gov.hmcts.cp.servicebus.services.ServiceBusService;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
@@ -71,8 +70,6 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @Autowired
     ServiceBusAdminService adminService;
     @Autowired
-    ServiceBusService serviceBusService;
-    @Autowired
     ServiceBusProcessorService processorService;
     @Autowired
     ServiceBusTestService testService;
@@ -105,13 +102,13 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        testService.dropTopicIfExists(PCR_INBOUND_TOPIC, "subscription1");
-        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC, "subscription1");
-        processorService.startMessageProcessor(PCR_INBOUND_TOPIC, "subscription1");
+        testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
+        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
 
-        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC, "subscription1");
-        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC, "subscription1");
-        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC, "subscription1");
+        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
+        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
 
         WireMock.reset();
         if (nonNull(callbackWireMock)) {

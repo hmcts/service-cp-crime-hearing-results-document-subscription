@@ -26,9 +26,9 @@ public class ServiceBusTestService {
         }
     }
 
-    public void dropTopicIfExists(String topicName, String subscriptionName) {
+    public void dropTopicIfExists(String topicName) {
         List<String> subscriptions = configService.adminClient().listSubscriptions("topic.new").stream().map(SubscriptionProperties::getSubscriptionName).toList();
-        if (subscriptions.contains(subscriptionName)) {
+        for (String subscriptionName : subscriptions) {
             configService.adminClient().deleteSubscription(topicName, subscriptionName);
         }
         List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();

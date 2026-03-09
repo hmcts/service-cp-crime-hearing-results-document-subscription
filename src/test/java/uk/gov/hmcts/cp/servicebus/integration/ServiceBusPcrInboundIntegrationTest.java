@@ -44,9 +44,9 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
                 .atMost(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofSeconds(1))
                 .until(testService::isServiceBusReady);
-        testService.dropTopicIfExists(PCR_INBOUND_TOPIC, subscription1);
-        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC, subscription1);
-        processorService.startMessageProcessor(PCR_INBOUND_TOPIC, subscription1);
+        testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
+        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
     }
 
     @SneakyThrows
