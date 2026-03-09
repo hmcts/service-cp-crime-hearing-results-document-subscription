@@ -3,9 +3,7 @@ package uk.gov.hmcts.cp.subscription.integration.e2e;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -18,7 +16,6 @@ import org.wiremock.spring.InjectWireMock;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-import uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -39,6 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_HEADER;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
@@ -68,6 +66,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
     private static final String CALLBACK_URI_OTHER = "/callback/other";
     private static final String CALLBACK_URI_LATE = "/callback/late";
+    private static final String TEST_CORRELATION_ID = "test-trace-id-12345";
 
     private static final String CLIENT_ID_OTHER = "22222222-2222-3333-4444-555555555555";
     private static final String CLIENT_ID_LATE = "33333333-2222-3333-4444-555555555555";
@@ -221,6 +220,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         return mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
+                        .header(CORRELATION_ID_HEADER, TEST_CORRELATION_ID)
                         .content(loadPayload(payloadPath)));
     }
 
@@ -263,18 +263,22 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private void getDocumentAndExpectPdf(UUID subId, UUID docId) throws Exception {
         mockMvc.perform(get(DOCUMENT_URI, subId, docId)
-                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE)
+                        .header(CORRELATION_ID_HEADER, TEST_CORRELATION_ID))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")));
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
+                .andExpect(header().string(CORRELATION_ID_HEADER, TEST_CORRELATION_ID));
     }
 
     private void getDocumentAndExpectPdf(UUID subId, UUID docId, String clientId) throws Exception {
         mockMvc.perform(get(DOCUMENT_URI, subId, docId)
-                        .header("Authorization", bearerTokenWithAzp(clientId)))
+                        .header("Authorization", bearerTokenWithAzp(clientId))
+                        .header(CORRELATION_ID_HEADER, TEST_CORRELATION_ID))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")));
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
+                .andExpect(header().string(CORRELATION_ID_HEADER, TEST_CORRELATION_ID));
     }
 
     private void createSubscription() throws Exception {

@@ -14,9 +14,11 @@ import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusClientServiceTest {
@@ -45,13 +47,15 @@ class ServiceBusClientServiceTest {
 
     @Test
     void queue_message_should_pass_to_topic() {
-        when(configService.senderClient("topic1")).thenReturn(senderClient);
-        when(wrapperMapper.newWrapper(1, callbackUrl, "message")).thenReturn(wrappedMessage);
+        UUID correlationId = UUID.randomUUID();
+        when(configService.senderClient(PCR_INBOUND_TOPIC)).thenReturn(senderClient);
+        when(jsonMapper.getUUIDAtPath("message", "/eventId")).thenReturn(correlationId);
+        when(wrapperMapper.newWrapper(correlationId, 1, callbackUrl, "message")).thenReturn(wrappedMessage);
         when(jsonMapper.toJson(wrappedMessage)).thenReturn("wrapped-message");
         when(retryService.getNextTryTime(1)).thenReturn(nextTryTime);
         when(mapper.newMessage("wrapped-message", nextTryTime)).thenReturn(serviceBusMessage);
 
-        clientService.queueMessage("topic1", callbackUrl, "message", 1);
+        clientService.queueMessage(PCR_INBOUND_TOPIC, callbackUrl, "message", 1);
 
         verify(senderClient).sendMessage(serviceBusMessage);
         verify(senderClient).close();

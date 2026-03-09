@@ -16,7 +16,7 @@ import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;

@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.subscription.clients;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -12,11 +13,14 @@ import org.springframework.web.client.RestTemplate;
 import static org.springframework.http.HttpMethod.GET;
 
 @Service
-@AllArgsConstructor
 @Slf4j
 public class MaterialClient {
 
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+
+    public MaterialClient(@Qualifier("materialRestTemplate") final RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
         log.info("Getting material document from {}", url);
