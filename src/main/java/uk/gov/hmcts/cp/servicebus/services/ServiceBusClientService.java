@@ -29,8 +29,9 @@ public class ServiceBusClientService {
         final ServiceBusWrappedMessage wrappedMessage = wrapperMapper.newWrapper(failureCount, targetUrl, messageString);
         final OffsetDateTime nextTryTime = retryService.getNextTryTime(failureCount);
         final ServiceBusMessage serviceBusMessage = mapper.newMessage(jsonMapper.toJson(wrappedMessage), nextTryTime);
+        log.info("Sending message to topic {} ...", topicName);
         serviceBusSenderClient.sendMessage(serviceBusMessage);
         serviceBusSenderClient.close();
-        log.info("Queued message to topic:{} with failCount:{} nextTryTime:{}", topicName, failureCount, nextTryTime);
+        log.info("Sent message to topic:{} with failCount:{} nextTryTime:{}", topicName, failureCount, nextTryTime);
     }
 }

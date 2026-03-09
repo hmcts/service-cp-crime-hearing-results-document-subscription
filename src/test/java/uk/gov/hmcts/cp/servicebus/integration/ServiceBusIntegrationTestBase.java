@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.servicebus.integration;
 
+import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,5 +27,5 @@ public class ServiceBusIntegrationTestBase {
     @Autowired
     ServiceBusTestService testService;
 
-    String subscription1 = "subscription.1";
+    protected ServiceBusProcessorClient processorClient;
 }
