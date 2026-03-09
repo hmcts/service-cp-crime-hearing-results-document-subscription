@@ -45,9 +45,8 @@ class SubscriptionApiTest {
 
     @Test
     void round_trip_subscription_should_work_ok() throws InterruptedException {
-        // We would really like to make this Test idempotent by deleting any existing subscriptions
-        // Suppose we could catch the 409 and delete the subscription, but its painful.
-        // 409 Conflict: "{"error":"invalid_request","message":"subscription already exist with 215767e1-3da3-470e-b8aa-f5da1d79a064"}
+        // To maker this idempotent we catch the 409 use the subscriptionId in the response.
+        // i.e. From 409 Conflict: "{"error":"invalid_request","message":"subscription already exist with 215767e1-3da3-470e-b8aa-f5da1d79a064"}
         try {
             UUID subscriptionId = createSubscription();
             getSubscription(subscriptionId);
@@ -73,7 +72,8 @@ class SubscriptionApiTest {
                 .toEntity(String.class);
         assertThat(postResult.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         JsonNode jsonNode = new JsonMapper().toJsonNode(postResult.getBody());
-        return UUID.fromString(String.valueOf(jsonNode.get("clientSubscriptionId")));
+        String subscriptiuonIdString = String.valueOf(jsonNode.get("clientSubscriptionId")).replaceAll("\"", "");
+        return UUID.fromString(subscriptiuonIdString);
     }
 
     private void getSubscription(UUID subscriptionId) {
