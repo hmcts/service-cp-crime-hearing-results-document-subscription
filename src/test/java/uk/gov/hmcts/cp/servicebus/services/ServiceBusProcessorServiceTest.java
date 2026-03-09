@@ -16,8 +16,6 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
-import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,19 +33,12 @@ class ServiceBusProcessorServiceTest {
     @Mock
     ServiceBusConfigService configService;
     @Mock
-    NotificationMapper notificationMapper;
-    @Mock
-    CallbackClient callbackClient;
-    @Mock
     ServiceBusClientService serviceBusClientService;
+    @Mock
+    ServiceBusHandlers serviceBusHandlers;
 
     @InjectMocks
     ServiceBusProcessorService serviceBusProcessorService;
-
-    @Mock
-    ServiceBusProcessorClient processorClient;
-    @Mock
-    ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder;
 
     @Mock
     BinaryData binaryData;
@@ -63,21 +54,19 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void handle_message_should_pass_to_callback_client_with_success() {
-        EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);
         when(wrappedMessage.getMessage()).thenReturn("message");
-        when(jsonMapper.fromJson("message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
         serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context);
 
-        verify(callbackClient).sendNotification(callbackUrl, notificationPayload);
+        verify(serviceBusHandlers).handleMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "message");
     }
 
     @Test
-    void handle_message_should_requeue_if_callback_client_errors() {
+    void handle_message_should_requeue_if_handler_errors() {
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
@@ -85,8 +74,8 @@ class ServiceBusProcessorServiceTest {
         when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
         when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
-        doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(callbackClient)
-                .sendNotification(callbackUrl, notificationPayload);
+        doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
+                .handleMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "message");
 
         when(configService.getMaxTries()).thenReturn(2);
 
@@ -97,15 +86,13 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void handle_message_should_error_if_callback_client_errors_finally() {
-        EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);
-        when(wrappedMessage.getMessage()).thenReturn("wrapped-message");
-        when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
+        when(wrappedMessage.getMessage()).thenReturn("message");
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
-        doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(callbackClient)
-                .sendNotification(callbackUrl, notificationPayload);
+        doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
+                .handleMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "message");
         when(configService.getMaxTries()).thenReturn(1);
 
         assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context));

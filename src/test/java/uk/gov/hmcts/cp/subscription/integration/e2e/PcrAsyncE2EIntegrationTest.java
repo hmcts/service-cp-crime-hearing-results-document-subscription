@@ -25,7 +25,6 @@ import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
@@ -35,26 +34,21 @@ import static java.util.Objects.nonNull;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
-import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
 
 @EnableWireMock({
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
@@ -63,7 +57,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
         "servicebus.enabled=true",
-        "service-bus.retry-seconds=0,1,2,3"})
+        "service-bus.retry.msecs=0,500,1000,5000"})
 @Slf4j
 class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
@@ -75,20 +69,11 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     ServiceBusTestService testService;
 
     private UUID subscriptionId;
-    private UUID otherSubscriptionId;
-    private UUID lateSubscriptionId;
     private UUID callbackDocumentId;
 
-    private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
-    private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
-    private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
-    private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
-    private static final String CALLBACK_URI_OTHER = "/callback/other";
-    private static final String CALLBACK_URI_LATE = "/callback/late";
-
-    private static final String CLIENT_ID_OTHER = "22222222-2222-3333-4444-555555555555";
-    private static final String CLIENT_ID_LATE = "33333333-2222-3333-4444-555555555555";
-
+    private static final UUID materialId = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
+    private static final String documentUri = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
+    private static final String pcrEventPayloadPath = "stubs/requests/progression/pcr-request-prison-court-register.json";
 
     @InjectWireMock("callback-client")
     private WireMockServer callbackWireMock;
@@ -144,6 +129,12 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         then_callback_was_attempted_times(3);
     }
 
+    // TODO
+//    @Test
+//    void multiple_subscribers_should_all_get_callbacks() {
+//
+//    }
+
     private void given_i_am_a_subscriber_with_a_subscription() throws Exception {
         createSubscription();
     }
@@ -153,9 +144,9 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void given_material_service_returns_document_success() throws IOException {
-        stubMaterialMetadata(MATERIAL_ID);
-        stubMaterialContent(MATERIAL_ID);
-        stubMaterialBinary(MATERIAL_ID);
+        stubMaterialMetadata(materialId);
+        stubMaterialContent(materialId);
+        stubMaterialBinary(materialId);
     }
 
     private void given_callback_endpoint_returns_server_error() {
@@ -167,14 +158,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void when_a_pcr_event_is_posted() throws Exception {
-        postPcrEvent(PCR_EVENT_PAYLOAD_PATH).andExpect(status().isAccepted());
-    }
-
-    private void when_a_pcr_event_is_posted_with_timeout() throws Exception {
-        postPcrEvent(PCR_EVENT_TIMEOUT_PATH)
-                .andExpect(status().isGatewayTimeout())
-                .andExpect(jsonPath("$.error").value("gateway_timeout"))
-                .andExpect(jsonPath("$.message").value("Material metadata not ready"));
+        postPcrEvent(pcrEventPayloadPath).andExpect(status().isAccepted());
     }
 
     private ResultActions postPcrEvent(String payloadPath) throws Exception {
@@ -191,50 +175,21 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
                 .untilAsserted(() -> verify(materialApi, atLeastOnce()).getMaterialMetadataByMaterialId(any(UUID.class)));
     }
 
-    private void then_the_material_api_was_polled() {
-        verify(materialApi, atLeastOnce()).getMaterialMetadataByMaterialId(eq(MATERIAL_ID_TIMEOUT));
-    }
-
     @SneakyThrows
     private void then_the_subscriber_receives_a_callback() {
-        log.info("sleeping for 1 second in Test ... it would of course be better to wait for something signalling callback is done");
+        log.info("sleeping for 2 second in Test ... it would of course be better to wait for something signalling callback is done");
         Thread.sleep(2000);
         callbackWireMock.verify(1, postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
         callbackDocumentId = getDocumentIdFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
-    }
-
-    private void then_the_subscriber_does_not_receive_a_callback() {
-        callbackWireMock.verify(0, postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
     }
 
     private void then_the_subscriber_can_retrieve_the_document() throws Exception {
         getDocumentAndExpectPdf(subscriptionId, callbackDocumentId);
     }
 
-    private void when_subscriber_loses_access() throws Exception {
-        deleteSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, subscriptionId)
-                .andExpect(status().isNoContent());
-    }
-
-    private void then_subscriber_cannot_retrieve_document() throws Exception {
-        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, callbackDocumentId)
-                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("invalid_request"))
-                .andExpect(jsonPath("$.message").value("Access denied: subscription does not have access to this document"));
-    }
-
     private void getDocumentAndExpectPdf(UUID subId, UUID docId) throws Exception {
-        mockMvc.perform(get(DOCUMENT_URI, subId, docId)
+        mockMvc.perform(get(documentUri, subId, docId)
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")));
-    }
-
-    private void getDocumentAndExpectPdf(UUID subId, UUID docId, String clientId) throws Exception {
-        mockMvc.perform(get(DOCUMENT_URI, subId, docId)
-                        .header("Authorization", bearerTokenWithAzp(clientId)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")));
@@ -242,28 +197,5 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     private void createSubscription() throws Exception {
         subscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
-    }
-
-    private void given_another_subscription_with_custodial_only() {
-        // Directly insert a subscription with no event types to simulate a client
-        // that has no access to PCR documents, bypassing API validation.
-        otherSubscriptionId = insertSubscription(
-                UUID.fromString(CLIENT_ID_OTHER), List.of(), callbackBaseUrl + CALLBACK_URI_OTHER).getId();
-    }
-
-    private void given_late_subscriber_with_pcr() throws Exception {
-        lateSubscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_LATE, CLIENT_ID_LATE);
-    }
-
-    private void then_late_subscriber_can_retrieve_document() throws Exception {
-        getDocumentAndExpectPdf(lateSubscriptionId, callbackDocumentId, CLIENT_ID_LATE);
-    }
-
-    private void then_other_subscription_cannot_retrieve_document() throws Exception {
-        mockMvc.perform(get(DOCUMENT_URI, otherSubscriptionId, callbackDocumentId)
-                        .header("Authorization", bearerTokenWithAzp(CLIENT_ID_OTHER)))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.error").value("invalid_request"))
-                .andExpect(jsonPath("$.message").value("Access denied: subscription does not have access to this document"));
     }
 }

@@ -40,6 +40,7 @@ public class CallbackDeliveryService {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
             if (serviceBusConfig.isEnabled()) {
                 final String payload = jsonMapper.toJson(eventNotificationPayload);
+                // FOR EACH SUBSCRIBER
                 clientService.queueMessage(PCR_OUTBOUND_TOPIC, subscriber.getNotificationEndpoint(), payload, 0);
             } else {
                 callbackService.sendToSubscriber(subscriber.getNotificationEndpoint(), eventNotificationPayload);

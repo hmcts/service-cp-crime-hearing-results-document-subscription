@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.servicebus.config.RetryServiceConfig;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -17,15 +18,15 @@ public class ServiceBusRetryService {
     private RetryServiceConfig retryServiceConfig;
     private ClockService clockService;
 
-    public int getDelaySecs(final int failureCount) {
-        final List<Integer> retryConfig = retryServiceConfig.getRetryDelaySeconds();
+    public int getDelayMsecs(final int failureCount) {
+        final List<Integer> retryConfig = retryServiceConfig.getRetryDelayMsecs();
         final int retryIndex = failureCount < retryConfig.size() ? failureCount : retryConfig.size() - 1;
-        final int retryDelaySecs = retryConfig.get(retryIndex);
-        log.info("retry delay {} seconds", retryDelaySecs);
-        return retryDelaySecs;
+        final int retryDelayMsecs = retryConfig.get(retryIndex);
+        log.info("retry delay {} mSsecs", retryDelayMsecs);
+        return retryDelayMsecs;
     }
 
     public OffsetDateTime getNextTryTime(final int failureCount) {
-        return clockService.nowOffsetUTC().plusSeconds(getDelaySecs(failureCount));
+        return clockService.nowOffsetUTC().plus(Duration.ofMillis(getDelayMsecs(failureCount)));
     }
 }
