@@ -1,7 +1,7 @@
 ext {
   log4JVersion = "2.24.3"
   logbackVersion = "1.5.18"
-  lombokVersion = "1.18.42"
+  lombokVersion = ""
   mapstructVersion = "1.6.3"
 }
 
@@ -11,10 +11,10 @@ dependencies {
   implementation 'ch.qos.logback:logback-classic'
   implementation 'ch.qos.logback:logback-core'
 
-  compileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
-  annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
-  testCompileOnly group: 'org.projectlombok', name: 'lombok', version: lombokVersion
-  testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+  compileOnly 'org.projectlombok:lombok:1.18.42'
+  annotationProcessor 'org.projectlombok:lombok:1.18.42'
+  testCompileOnly 'org.projectlombok:lombok:1.18.42'
+  testAnnotationProcessor 'org.projectlombok:lombok:1.18.42'
 
   implementation "org.mapstruct:mapstruct:$mapstructVersion"
   annotationProcessor "org.mapstruct:mapstruct-processor:$mapstructVersion"

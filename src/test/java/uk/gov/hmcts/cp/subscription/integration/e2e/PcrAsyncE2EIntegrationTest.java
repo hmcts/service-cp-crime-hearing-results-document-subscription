@@ -57,7 +57,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
         "servicebus.enabled=true",
-        "service-bus.retry-seconds=0,1,2,3"})
+        "service-bus.retry.msecs=0,500,1000,5000"})
 @Slf4j
 class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
@@ -130,10 +130,10 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     // TODO
-    @Test
-    void multiple_subscribers_should_all_get_callbacks() {
-
-    }
+//    @Test
+//    void multiple_subscribers_should_all_get_callbacks() {
+//
+//    }
 
     private void given_i_am_a_subscriber_with_a_subscription() throws Exception {
         createSubscription();
