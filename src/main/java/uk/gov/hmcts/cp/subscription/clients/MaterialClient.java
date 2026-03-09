@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.clients;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
