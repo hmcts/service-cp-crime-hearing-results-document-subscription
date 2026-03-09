@@ -9,8 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
-import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 @Service
@@ -24,7 +22,7 @@ public class ServiceBusProcessorService {
     private final ServiceBusHandlers serviceBusHandlers;
 
     @SneakyThrows
-    public ServiceBusProcessorClient startMessageProcessor(final String topicName) {
+    public void startMessageProcessor(final String topicName) {
         log.info("starting service bus processor {}/{}", topicName, topicName);
         final ServiceBusProcessorClient processorClient = configService
                 .processorClientBuilder(topicName, topicName)
@@ -32,7 +30,6 @@ public class ServiceBusProcessorService {
                 .processError(context -> handleError(topicName, context))
                 .buildProcessorClient();
         processorClient.start();
-        return processorClient;
     }
 
     public void handleMessage(final String topicName, final ServiceBusReceivedMessageContext context) {
