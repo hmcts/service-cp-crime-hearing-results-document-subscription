@@ -11,6 +11,7 @@ import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
@@ -48,20 +49,8 @@ class ServiceBusHandlersTest {
         verify(callbackClient).sendNotification("https://callback", notificationPayload);
     }
 
-    //     public void handleMessage(final String topicName, final String target, final String message) {
-    //        switch (topicName) {
-    //            case PCR_INBOUND_TOPIC -> {
-    //                final PcrEventPayload pcrEventPayload = jsonMapper.fromJson(message, PcrEventPayload.class);
-    //                log.info("handleMessageType {} eventId:{}", topicName, pcrEventPayload.getEventId());
-    //                notificationManager.processPcrNotification(pcrEventPayload);
-    //            }
-    //            case PCR_OUTBOUND_TOPIC -> {
-    //                final EventNotificationPayload eventNotificationPayload = jsonMapper.fromJson(message, EventNotificationPayload.class);
-    //                log.info("handleMessageType {} documentId:{}", topicName, eventNotificationPayload.getDocumentId());
-    //                callbackClient.sendNotification(target, eventNotificationPayload);
-    //            }
-    //            default -> throw new RuntimeException("Invalid topic name " + topicName);
-    //        }
-    //        log.info("handleMessageType completed OK");
-    //    }
+    @Test
+    void unknown_topic_should_throw_error(){
+        assertThrows(RuntimeException.class, ()-> serviceBusHandlers.handleMessage("BAD-TOPIC", null, "callback-json"));
+    }
 }
