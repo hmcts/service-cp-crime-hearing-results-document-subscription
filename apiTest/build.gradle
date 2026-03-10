@@ -1,6 +1,6 @@
 plugins {
   id 'java'
-  id 'org.springframework.boot' version '4.0.3'
+  id 'com.avast.gradle.docker-compose' version '0.17.21'
   id 'io.spring.dependency-management' version '1.1.7'
 }
 
@@ -28,14 +28,59 @@ tasks.named('processResources') {
   enabled = false
 }
 
+dependencyManagement {
+  imports {
+    mavenBom "org.springframework.boot:spring-boot-dependencies:4.0.3"
+  }
+}
+
 tasks.named('test') {
   description = "Runs api tests against docker-compose stack"
   group = "Verification"
   useJUnitPlatform()
+
+  testLogging {
+    events "passed", "skipped", "failed"
+    exceptionFormat = 'full'
+    showStandardStreams = true
+  }
+
+  reports {
+    junitXml.required.set(true)
+    html.required.set(true)
+  }
 }
 
 tasks.named('build') {
   dependsOn tasks.named('test')
+}
+
+//dockerCompose {
+//  useComposeFiles = ['docker-compose.yml']
+//  startedServices = ['db', 'wiremock', 'app']
+//
+//  buildBeforeUp = true
+//  waitForTcpPorts = true
+//
+//  captureContainersOutput = true
+//  removeOrphans = true
+//  stopContainers = true
+//  removeContainers = true
+//
+//  useDockerComposeV2 = true
+//  dockerExecutable = 'docker'
+//}
+
+// Build the root project's bootJar before building Docker image
+tasks.register('buildRootBootJar', Exec) {
+  description = "Builds the root project's bootJar"
+  workingDir = projectDir.parent
+  executable = "./gradlew"
+  args = ['bootJar']
+}
+
+tasks.named('composeBuild') {
+  dependsOn tasks.named('buildRootBootJar')
 }
 
 dependencies {
