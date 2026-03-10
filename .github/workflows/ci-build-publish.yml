@@ -257,13 +257,14 @@ jobs:
         env:
           DOCKER_IMAGE: ghcr.io/${{ github.repository }}:${{ needs.Artefact-Version.outputs.artefact_version }}
         run: |
-          echo "Using DOCKER_IMAGE $DOCKER_IMAGE"
           cd apiTest
           # DOCKER_IMAGE is set via env, so docker-compose will use the image instead of building
           # Pull the image first to ensure it's available
+          echo "Pulling DOCKER_IMAGE $DOCKER_IMAGE"
           docker pull $DOCKER_IMAGE
           
           # Start containers using the published image
+          echo "Running docker compose up -d"
           docker compose up -d
           
           echo "Waiting for health endpoint..."
