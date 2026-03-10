@@ -7,12 +7,6 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d appdb" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
 
   # WARNING - See readme.md for running mssql on macbook with apple chip
   sqledge:
@@ -58,32 +52,16 @@ services:
       - "--verbose"
 
   app:
-    # If DOCKER_IMAGE environment variable is set, it will use that published image.
-    # When unset (local dev), Docker Compose falls back to building from the Dockerfile.
-    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: ${DOCKER_IMAGE}
     environment:
       SERVER_PORT: 8082
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
-      DATASOURCE_USERNAME: postgres
-      DATASOURCE_PASSWORD: postgres
-      SUBSCRIPTION_OAUTH_ENABLED: true
       MATERIAL_CLIENT_URL: http://wiremock:8080
     depends_on:
-      db:
-        condition: service_healthy
-      wiremock:
-        condition: service_healthy
+      - db
+      - wiremock
     ports:
       - "8082:8082"
-    healthcheck:
-      test: [ "CMD-SHELL", "bash -c 'cat /dev/null > /dev/tcp/localhost/8082' 2>/dev/null || exit 1" ]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 15s
 
 networks:
   sb-emulator:
