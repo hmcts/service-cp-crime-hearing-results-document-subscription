@@ -49,19 +49,13 @@ services:
     image: wiremock/wiremock:3.13.2
     container_name: wiremock
     ports:
-      - "9999:8080"
+      - "8090:8080"
     volumes:
       - ./src/test/resources/mappings:/home/wiremock/mappings
-      - ./src/test/resources/__files:/home/wiremock/files
+      - ./src/test/resources/files:/home/wiremock/__files
     command:
       - "--global-response-templating"
       - "--verbose"
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -sf http://localhost:8080/__admin/health || exit 1" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 5s
 
   app:
     # If DOCKER_IMAGE environment variable is set, it will use that published image.
