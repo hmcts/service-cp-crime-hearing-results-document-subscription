@@ -276,7 +276,9 @@ jobs:
           done
           
           # Run tests (containers already running via docker compose)
-          ../gradlew test
+          # Skip composeUp and composeDown since we manage containers manually
+          ../gradlew testClasses
+          ../gradlew --no-daemon test -x composeUp -x composeDown
           
           # Clean up containers manually
           docker compose down
