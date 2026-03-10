@@ -1,7 +1,8 @@
 # Simple shell script to run the api test
-# We call build-and-run-docker.sh to do its job
+# We call build-and-build-and-run-docker.sh to do its job
 # And then we call docker-compose up and wait for the app to be up
-./run-docker.sh
+echo "STARTED at $(date)"
+./build-and-run-docker.sh
 
 echo "Running docker compose up -d ... and waiting for 8082 /actuator/health"
 docker compose up -d
@@ -17,6 +18,8 @@ done
 echo "Running ./gradlew test"
 ./gradlew test
 docker compose down
+
+echo "ENDED at $(date)"
 
 
 
