@@ -1,28 +1,20 @@
 # Simple shell script to run the api test
-# If DOCKER_IMAGE is set then we use that. Which is what we expect in pipelines
-# We currently see app is built on pipelines
+# We call build-and-run-docker.sh to do its job
+# And then we call docker-compose up and wait for the app to be up
+./run-docker.sh
 
-# Build sprjng boot fat jarfile in build/libs
-# And then build dockerfile
-cd ..
-projectname=$(echo $PWD | sed 's/^.*\///')
-echo "Building projectname $projectname"
-./gradlew clean bootjar
-docker build -t $projectname .
-
-export DOCKER_IMAGE=$projectname
-
-cd apiTest
+echo "Running docker compose up -d ... and waiting for 8082 /actuator/health"
 docker compose up -d
 for i in {1..30}; do
-if curl -s http://localhost:8082/actuator/health > /dev/null; then
-  echo "App is up"
-  break
-fi
-echo "Waiting for app to be up ($i)..."
-sleep 2
+    if curl -s http://localhost:8082/actuator/health > /dev/null; then
+        echo "App is up"
+        break
+    fi
+    echo "Waiting for app to be up ($i)..."
+    sleep 2
 done
 
+echo "Running ./gradlew test"
 ./gradlew test
 docker compose down
 
