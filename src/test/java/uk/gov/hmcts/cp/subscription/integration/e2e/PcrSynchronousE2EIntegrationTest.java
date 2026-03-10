@@ -63,13 +63,13 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private UUID otherSubscriptionId;
     private UUID lateSubscriptionId;
     private UUID callbackDocumentId;
+    private static final String correlationId = "test-trace-id-12345";
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
     private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
     private static final String CALLBACK_URI_OTHER = "/callback/other";
     private static final String CALLBACK_URI_LATE = "/callback/late";
-    private static final String TEST_CORRELATION_ID = "test-trace-id-12345";
 
     private static final String CLIENT_ID_OTHER = "22222222-2222-3333-4444-555555555555";
     private static final String CLIENT_ID_LATE = "33333333-2222-3333-4444-555555555555";
@@ -223,7 +223,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         return mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .header(CORRELATION_ID_HEADER, TEST_CORRELATION_ID)
+                        .header(CORRELATION_ID_HEADER, correlationId)
                         .content(loadPayload(payloadPath)));
     }
 
@@ -267,21 +267,21 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private void getDocumentAndExpectPdf(UUID subId, UUID docId) throws Exception {
         mockMvc.perform(get(DOCUMENT_URI, subId, docId)
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
-                        .header(CORRELATION_ID_HEADER, TEST_CORRELATION_ID))
+                        .header(CORRELATION_ID_HEADER, correlationId))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
-                .andExpect(header().string(CORRELATION_ID_HEADER, TEST_CORRELATION_ID));
+                .andExpect(header().string(CORRELATION_ID_HEADER, correlationId));
     }
 
     private void getDocumentAndExpectPdf(UUID subId, UUID docId, String clientId) throws Exception {
         mockMvc.perform(get(DOCUMENT_URI, subId, docId)
                         .header("Authorization", bearerTokenWithAzp(clientId))
-                        .header(CORRELATION_ID_HEADER, TEST_CORRELATION_ID))
+                        .header(CORRELATION_ID_HEADER, correlationId))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
-                .andExpect(header().string(CORRELATION_ID_HEADER, TEST_CORRELATION_ID));
+                .andExpect(header().string(CORRELATION_ID_HEADER, correlationId));
     }
 
     private void createSubscription() throws Exception {
