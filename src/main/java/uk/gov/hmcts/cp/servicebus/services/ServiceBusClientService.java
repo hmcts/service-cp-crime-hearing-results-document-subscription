@@ -15,9 +15,6 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
-
 @Service
 @AllArgsConstructor
 @Slf4j
