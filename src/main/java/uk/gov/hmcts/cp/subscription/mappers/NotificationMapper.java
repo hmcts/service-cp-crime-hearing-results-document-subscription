@@ -4,8 +4,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendant;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.util.List;
@@ -16,8 +16,8 @@ import java.util.UUID;
 public class NotificationMapper {
     private final JsonMapper jsonMapper;
 
-    public EventNotificationPayload mapToPayload(final UUID documentId, final PcrEventPayload pcrEventPayload) {
-        final PcrEventPayloadDefendant defendant = pcrEventPayload.getDefendant();
+    public EventNotificationPayload mapToPayload(final UUID documentId, final EventPayload eventPayload) {
+        final EventPayloadDefendant defendant = eventPayload.getDefendant();
         final List<EventNotificationPayloadCasesInner> cases = defendant.getCases().stream()
                 .map(c -> EventNotificationPayloadCasesInner.builder().urn(c.getUrn()).build())
                 .toList();
@@ -28,7 +28,7 @@ public class NotificationMapper {
                 .defendantName(defendant.getName())
                 .defendantDateOfBirth(defendant.getDateOfBirth())
                 .documentId(documentId)
-                .documentGeneratedTimestamp(pcrEventPayload.getTimestamp())
+                .documentGeneratedTimestamp(eventPayload.getTimestamp())
                 .prisonEmailAddress(prisonEmailAddress)
                 .build();
     }

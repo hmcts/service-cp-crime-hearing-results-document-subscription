@@ -12,13 +12,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
@@ -54,16 +52,21 @@ public class NotificationController implements InternalApi, NotificationApi {
     }
 
     @Override
-    public ResponseEntity<Void> createNotificationPCR(@Valid @RequestBody final PcrEventPayload pcrEventPayload) {
-        log.info("PCR - Received PCR notification request from Progression Service - eventId: {}, materialId: {}, eventType: {}",
-                pcrEventPayload.getEventId(),
-                pcrEventPayload.getMaterialId(),
-                pcrEventPayload.getEventType());
+    public ResponseEntity<Void> createNotification(
+            @Valid @RequestBody final EventPayload eventPayload, @RequestHeader(value = "X-Correlation-Id", required = false) final UUID xCorrelationId) {
+        return handleNotification(eventPayload);
+    }
+
+    private ResponseEntity<Void> handleNotification(final EventPayload eventPayload) {
+        log.info("Received notification request from Progression/HearingNows Service - eventId: {}, materialId: {}, eventType: {}",
+                eventPayload.getEventId(),
+                eventPayload.getMaterialId(),
+                eventPayload.getEventType());
         if (serviceBusConfig.isEnabled()) {
-            final String pcrEventjson = jsonMapper.toJson(pcrEventPayload);
+            final String pcrEventjson = jsonMapper.toJson(eventPayload);
             clientService.queueMessage(PCR_INBOUND_TOPIC, null, pcrEventjson, 0);
         } else {
-            notificationManager.processPcrNotification(pcrEventPayload);
+            notificationManager.processPcrNotification(eventPayload);
         }
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
@@ -71,7 +74,8 @@ public class NotificationController implements InternalApi, NotificationApi {
     @Override
     public ResponseEntity<Resource> getDocument(
             @NotNull @PathVariable("clientSubscriptionId") final UUID clientSubscriptionId,
-            @NotNull @PathVariable("documentId") final UUID documentId) {
+            @NotNull @PathVariable("documentId") final UUID documentId,
+            @RequestHeader(value = "X-Correlation-Id", required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, clientId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());

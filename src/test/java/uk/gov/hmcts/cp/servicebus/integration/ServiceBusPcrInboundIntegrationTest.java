@@ -10,7 +10,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import org.slf4j.MDC;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
@@ -62,9 +62,9 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
     void inbound_notification_should_process_material_service() {
         MaterialMetadata materialMetadata = new MaterialMetadata();
         when(materialService.waitForMaterialMetadata(materialId)).thenReturn(materialMetadata);
-        PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(PRISON_COURT_REGISTER_GENERATED).materialId(materialId).build();
+        EventPayload eventPayload = EventPayload.builder().eventType(PRISON_COURT_REGISTER_GENERATED).materialId(materialId).build();
         MDC.put(MDC_CORRELATION_ID, UUID.randomUUID().toString());
-        clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(pcrEventPayload), 0);
+        clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(eventPayload), 0);
         MDC.clear();
 
         Thread.sleep(5000);
@@ -75,9 +75,9 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
     @Test
     void process_message_should_retry_n_times_then_send_to_DLQ() {
         when(materialService.waitForMaterialMetadata(materialId)).thenReturn(null);
-        PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(PRISON_COURT_REGISTER_GENERATED).materialId(materialId).build();
+        EventPayload eventPayload = EventPayload.builder().eventType(PRISON_COURT_REGISTER_GENERATED).materialId(materialId).build();
         MDC.put(MDC_CORRELATION_ID, UUID.randomUUID().toString());
-        clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(pcrEventPayload), 0);
+        clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(eventPayload), 0);
         MDC.clear();
 
         Thread.sleep(5000);

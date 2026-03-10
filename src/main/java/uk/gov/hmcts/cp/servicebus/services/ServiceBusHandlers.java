@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
@@ -24,9 +24,9 @@ public class ServiceBusHandlers {
     public void handleMessage(final String topicName, final String target, final String message) {
         switch (topicName) {
             case PCR_INBOUND_TOPIC -> {
-                final PcrEventPayload pcrEventPayload = jsonMapper.fromJson(message, PcrEventPayload.class);
-                log.info("handleMessageType {} eventId:{}", topicName, pcrEventPayload.getEventId());
-                notificationManager.processPcrNotification(pcrEventPayload);
+                final EventPayload eventPayload = jsonMapper.fromJson(message, EventPayload.class);
+                log.info("handleMessageType {} eventId:{}", topicName, eventPayload.getEventId());
+                notificationManager.processPcrNotification(eventPayload);
             }
             case PCR_OUTBOUND_TOPIC -> {
                 final EventNotificationPayload eventNotificationPayload = jsonMapper.fromJson(message, EventNotificationPayload.class);

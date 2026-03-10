@@ -167,7 +167,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private ResultActions postPcrEvent(String payloadPath) throws Exception {
-        return mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
+        return mockMvc.perform(post(NOTIFICATIONS_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                 .content(loadPayload(payloadPath)));

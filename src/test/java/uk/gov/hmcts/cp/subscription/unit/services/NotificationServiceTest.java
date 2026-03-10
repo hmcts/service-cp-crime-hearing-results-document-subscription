@@ -7,8 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventType;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
@@ -41,7 +41,7 @@ class NotificationServiceTest {
     @Test
     void shouldSaveDocumentMappingWithEventTypeWhenMetadataPresent() {
         UUID materialId = randomUUID();
-        PcrEventPayload payload = PcrEventPayload.builder()
+        EventPayload payload = EventPayload.builder()
                 .materialId(materialId)
                 .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
                 .build();

@@ -7,10 +7,10 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendant;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendantCasesInner;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayloadDefendantCustodyEstablishmentDetails;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
+import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCasesInner;
+import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCustodyEstablishmentDetails;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.time.Instant;
@@ -31,11 +31,11 @@ class NotificationMapperTest {
     UUID defendentId = UUID.fromString("f791c82b-dd68-468f-9066-a31008f8f229");
     UUID documentId = UUID.fromString("24f36bc0-ecf7-4fa2-985a-afada1cdee98");
     Instant now = Instant.now();
-    PcrEventPayloadDefendantCasesInner caseOne = PcrEventPayloadDefendantCasesInner.builder().urn("http://localhost").build();
-    PcrEventPayloadDefendantCustodyEstablishmentDetails custodyEstablishment = PcrEventPayloadDefendantCustodyEstablishmentDetails.builder()
+    EventPayloadDefendantCasesInner caseOne = EventPayloadDefendantCasesInner.builder().urn("http://localhost").build();
+    EventPayloadDefendantCustodyEstablishmentDetails custodyEstablishment = EventPayloadDefendantCustodyEstablishmentDetails.builder()
             .emailAddress("prison@example.com")
             .build();
-    PcrEventPayloadDefendant defendant = PcrEventPayloadDefendant.builder()
+    EventPayloadDefendant defendant = EventPayloadDefendant.builder()
             .cases(List.of(caseOne))
             .masterDefendantId(defendentId)
             .name("John Doe")
@@ -45,12 +45,12 @@ class NotificationMapperTest {
 
     @Test
     void mapper_should_return_populated_object() {
-        PcrEventPayload pcrEventPayload = PcrEventPayload.builder()
+        EventPayload eventPayload = EventPayload.builder()
                 .defendant(defendant)
                 .timestamp(now)
                 .build();
 
-        EventNotificationPayload response = notificationMapper.mapToPayload(documentId, pcrEventPayload);
+        EventNotificationPayload response = notificationMapper.mapToPayload(documentId, eventPayload);
 
         assertThat(response.getCases()).hasSize(1);
         assertThat(response.getCases().get(0).getUrn()).isEqualTo("http://localhost");
@@ -86,11 +86,11 @@ class NotificationMapperTest {
 
     @Test
     void mapper_should_convert_payload_to_json_and_back_again() {
-        PcrEventPayload pcrEventPayload = PcrEventPayload.builder()
+        EventPayload eventPayload = EventPayload.builder()
                 .defendant(defendant)
                 .timestamp(now)
                 .build();
-        EventNotificationPayload payload = notificationMapper.mapToPayload(documentId, pcrEventPayload);
+        EventNotificationPayload payload = notificationMapper.mapToPayload(documentId, eventPayload);
 
         String json = notificationMapper.mapToJson(payload);
         EventNotificationPayload payloadAgain = notificationMapper.mapFromJson(json);
