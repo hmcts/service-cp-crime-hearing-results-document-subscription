@@ -10,6 +10,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import org.slf4j.MDC;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
@@ -20,6 +21,7 @@ import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
 import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 
@@ -55,7 +57,9 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
         MaterialMetadata materialMetadata = new MaterialMetadata();
         when(materialService.waitForMaterialMetadata(materialId)).thenReturn(materialMetadata);
         PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(PRISON_COURT_REGISTER_GENERATED).materialId(materialId).build();
+        MDC.put(MDC_CORRELATION_ID, UUID.randomUUID().toString());
         clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(pcrEventPayload), 0);
+        MDC.clear();
 
         Thread.sleep(5000);
         verify(materialService, times(2)).waitForMaterialMetadata(materialId);
@@ -66,7 +70,9 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
     void process_message_should_retry_n_times_then_send_to_DLQ() {
         when(materialService.waitForMaterialMetadata(materialId)).thenReturn(null);
         PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(PRISON_COURT_REGISTER_GENERATED).materialId(materialId).build();
+        MDC.put(MDC_CORRELATION_ID, UUID.randomUUID().toString());
         clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(pcrEventPayload), 0);
+        MDC.clear();
 
         Thread.sleep(5000);
         verify(materialService, times(2)).waitForMaterialMetadata(materialId);

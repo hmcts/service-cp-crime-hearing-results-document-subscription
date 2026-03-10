@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -13,6 +14,7 @@ import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
@@ -70,6 +72,8 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
 
     private void queueMessageForCallbackUrl(String callbackUrl) {
         EventNotificationPayload payload = EventNotificationPayload.builder().build();
+        MDC.put("correlationId", UUID.randomUUID().toString());
         clientService.queueMessage(PCR_OUTBOUND_TOPIC, callbackUrl, jsonMapper.toJson(payload), 0);
+        MDC.clear();
     }
 }

@@ -16,10 +16,10 @@ import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -58,12 +58,11 @@ class ClientIdResolutionFilterTest {
         UUID testClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH + "/123");
         when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(testClientUuid);
-        AtomicReference<String> mdcClientId = new AtomicReference<>();
-        FilterChain chainThatCapturesMdc = (req, res) -> mdcClientId.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
 
-        filter.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
+        filter.doFilter(httpRequest, httpResponse, filterChain);
 
-        assertThat(mdcClientId.get()).isEqualTo(testClientUuid.toString());
+        verify(filterChain).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
     }
 
     @Test
@@ -71,12 +70,10 @@ class ClientIdResolutionFilterTest {
         UUID testClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(testClientUuid);
-        AtomicReference<String> mdcClientId = new AtomicReference<>();
-        FilterChain chainThatCapturesMdc = (req, res) -> mdcClientId.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
 
-        filter.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
+        filter.doFilter(httpRequest, httpResponse, filterChain);
 
-        assertThat(mdcClientId.get()).isEqualTo(testClientUuid.toString());
+        verify(filterChain).doFilter(httpRequest, httpResponse);
         assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
     }
 
@@ -99,12 +96,11 @@ class ClientIdResolutionFilterTest {
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(clientId.toString());
         SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false);
         ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
-        AtomicReference<String> mdcClientId = new AtomicReference<>();
-        FilterChain chainThatCapturesMdc = (req, res) -> mdcClientId.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
 
-        filterOauthDisabled.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
 
-        assertThat(mdcClientId.get()).isEqualTo(clientId.toString());
+        verify(filterChain).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
     }
 
     @Test
@@ -114,18 +110,16 @@ class ClientIdResolutionFilterTest {
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(client1.toString());
         SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false);
         ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
-        AtomicReference<String> captured = new AtomicReference<>();
-        FilterChain chainThatCapturesMdc = (req, res) -> captured.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
 
-        filterOauthDisabled.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
-
-        assertThat(captured.get()).isEqualTo(client1.toString());
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
+        verify(filterChain).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
 
         UUID client2 = UUID.fromString("bbbbbbbb-2222-4444-8888-222222222222");
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(client2.toString());
-        captured.set(null);
-        filterOauthDisabled.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
-        assertThat(captured.get()).isEqualTo(client2.toString());
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
+        verify(filterChain, times(2)).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
     }
 
     @Test

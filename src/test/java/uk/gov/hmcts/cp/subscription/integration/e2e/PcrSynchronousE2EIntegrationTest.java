@@ -53,7 +53,10 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
-@TestPropertySource(properties = "subscription.oauth-enabled=true")
+@TestPropertySource(properties = {
+        "subscription.oauth-enabled=true",
+        "service-bus.enabled=false"
+})
 class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;

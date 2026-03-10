@@ -20,9 +20,9 @@ class ServiceBusWrapperMapperTest {
     void mapper_should_create_new_object() {
         UUID correlationId = UUID.randomUUID();
         ServiceBusWrappedMessage response = wrapperMapper.newWrapper(correlationId, 1, "https://callback", "wrapped-message");
+        assertThat(response.getCorrelationId()).isEqualTo(correlationId);
         assertThat(response.getFailureCount()).isEqualTo(1);
         assertThat(response.getTargetUrl()).isEqualTo("https://callback");
         assertThat(response.getMessage()).isEqualTo("wrapped-message");
-        assertThat(response.getCorrelationId()).isEqualTo(correlationId);
     }
 }

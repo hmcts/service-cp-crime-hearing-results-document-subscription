@@ -12,7 +12,7 @@ import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
-import static java.util.Objects.nonNull;
+import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
 
 @Service
 @AllArgsConstructor
@@ -40,9 +40,7 @@ public class ServiceBusProcessorService {
         final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
         log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
         try {
-            if (nonNull(queueMessage.getCorrelationId())) {
-                MDC.put("correlationId", queueMessage.getCorrelationId().toString());
-            }
+            MDC.put(MDC_CORRELATION_ID, queueMessage.getCorrelationId().toString());
             serviceBusHandlers.handleMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
@@ -54,7 +52,7 @@ public class ServiceBusProcessorService {
             clientService.queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
             // Because we added a new message and swallowed the error then the current message will be dropped
         } finally {
-            MDC.remove("correlationId");
+            MDC.remove(MDC_CORRELATION_ID);
         }
     }
 
