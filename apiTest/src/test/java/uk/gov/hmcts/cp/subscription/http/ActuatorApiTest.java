@@ -18,6 +18,6 @@ class ActuatorApiTest {
                 .retrieve()
                 .toEntity(String.class);
         assertThat(res.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(res.getBody()).contains("\"status\":\"NOTUP\"");
+        assertThat(res.getBody()).contains("\"status\":\"UP\"");
     }
 }
