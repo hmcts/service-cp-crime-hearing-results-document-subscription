@@ -12,7 +12,10 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
@@ -54,7 +57,8 @@ public class NotificationController implements InternalApi, NotificationApi {
 
     @Override
     public ResponseEntity<Void> createNotification(
-            @Valid @RequestBody final EventPayload eventPayload, @RequestHeader(value = "X-Correlation-Id", required = false) final UUID xCorrelationId) {
+            @Valid @RequestBody final EventPayload eventPayload,
+            @RequestHeader(value = "X-Correlation-Id", required = false) final UUID xCorrelationId) {
         return handleNotification(eventPayload);
     }
 
