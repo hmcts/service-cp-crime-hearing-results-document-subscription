@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.servicebus.integration;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,7 +49,12 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
                 .until(testService::isServiceBusReady);
         testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
         adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
-        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
+        processorClient = processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
+    }
+
+    @AfterEach
+    void afterEach(){
+        processorClient.stop();
     }
 
     @SneakyThrows

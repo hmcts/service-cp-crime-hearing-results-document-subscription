@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.servicebus.integration;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
@@ -44,12 +45,19 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
                 .until(testService::isServiceBusReady);
         testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
         adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
-        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
+        processorClient = processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
+    }
+
+    @AfterEach
+    void afterEach() {
+        processorClient.stop();
     }
 
     @SneakyThrows
     @Test
-    void sent_messages_should_process_and_send_to_client() {
+    void multiple_messages_should_process_and_send_to_client() {
+        // We would like to run multiple processors but we need to run multiple apps to do that
+        // See api-test for this
         for (int n = 0; n < 10; n++) {
             String callbackUrl = String.format("http://callback%d", n);
             queueMessageForCallbackUrl(callbackUrl);

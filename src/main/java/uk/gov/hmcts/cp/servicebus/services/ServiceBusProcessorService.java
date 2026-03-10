@@ -25,7 +25,7 @@ public class ServiceBusProcessorService {
     private final ServiceBusHandlers serviceBusHandlers;
 
     @SneakyThrows
-    public void startMessageProcessor(final String topicName) {
+    public ServiceBusProcessorClient startMessageProcessor(final String topicName) {
         log.info("starting service bus processor {}/{}", topicName, topicName);
         final ServiceBusProcessorClient processorClient = configService
                 .processorClientBuilder(topicName, topicName)
@@ -33,6 +33,7 @@ public class ServiceBusProcessorService {
                 .processError(context -> handleError(topicName, context))
                 .buildProcessorClient();
         processorClient.start();
+        return processorClient;
     }
 
     public void handleMessage(final String topicName, final ServiceBusReceivedMessageContext context) {
