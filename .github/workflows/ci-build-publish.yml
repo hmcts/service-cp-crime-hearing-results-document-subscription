@@ -133,7 +133,7 @@ jobs:
       - name: Run API Tests
         run: |
           cd apiTest
-          ./run-apitest.sh
+          ./build-and-run-apitest.sh
 
       - name: Upload test reports
         if: always()
