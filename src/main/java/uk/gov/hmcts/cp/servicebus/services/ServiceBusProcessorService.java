@@ -6,10 +6,13 @@ import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
+
+import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
 
 @Service
 @AllArgsConstructor
@@ -33,10 +36,11 @@ public class ServiceBusProcessorService {
     }
 
     public void handleMessage(final String topicName, final ServiceBusReceivedMessageContext context) {
-        final String wrappedMessageString = String.valueOf(context.getMessage().getBody());
+        final String wrappedMessageString = context.getMessage().getBody().toString();
         final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
         log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
         try {
+            MDC.put(MDC_CORRELATION_ID, queueMessage.getCorrelationId().toString());
             serviceBusHandlers.handleMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
@@ -47,6 +51,8 @@ public class ServiceBusProcessorService {
             }
             clientService.queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
             // Because we added a new message and swallowed the error then the current message will be dropped
+        } finally {
+            MDC.remove(MDC_CORRELATION_ID);
         }
     }
 

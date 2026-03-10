@@ -7,7 +7,7 @@ import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
@@ -25,8 +25,7 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     public ResponseEntity<ClientSubscription> createClientSubscription(final ClientSubscriptionRequest request) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
-        log.info("createClientSubscription callbackUrl:{} clientId:{}",
-                Encode.forJava(request.getNotificationEndpoint().getCallbackUrl()), clientId);
+        log.info("createClientSubscription callbackUrl:{} clientId:{}", Encode.forJava(request.getNotificationEndpoint().getCallbackUrl()), clientId);
         final ClientSubscription response = subscriptionService.saveSubscription(request, clientId);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);

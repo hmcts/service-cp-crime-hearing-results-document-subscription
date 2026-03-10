@@ -16,7 +16,7 @@ import static org.springframework.http.HttpMethod.GET;
 @Slf4j
 public class MaterialClient {
 
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
         log.info("Getting material document from {}", url);

@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.servicebus.services;
 
 import com.azure.messaging.servicebus.ServiceBusMessage;
 import com.azure.messaging.servicebus.ServiceBusSenderClient;
+import org.slf4j.MDC;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,9 @@ import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
+
+import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
 
 @Service
 @AllArgsConstructor
@@ -26,7 +30,8 @@ public class ServiceBusClientService {
 
     public void queueMessage(final String topicName, final String targetUrl, final String messageString, final int failureCount) {
         final ServiceBusSenderClient serviceBusSenderClient = configService.senderClient(topicName);
-        final ServiceBusWrappedMessage wrappedMessage = wrapperMapper.newWrapper(failureCount, targetUrl, messageString);
+        final UUID correlationId = UUID.fromString(MDC.get(MDC_CORRELATION_ID));
+        final ServiceBusWrappedMessage wrappedMessage = wrapperMapper.newWrapper(correlationId, failureCount, targetUrl, messageString);
         final OffsetDateTime nextTryTime = retryService.getNextTryTime(failureCount);
         final ServiceBusMessage serviceBusMessage = mapper.newMessage(jsonMapper.toJson(wrappedMessage), nextTryTime);
         serviceBusSenderClient.sendMessage(serviceBusMessage);

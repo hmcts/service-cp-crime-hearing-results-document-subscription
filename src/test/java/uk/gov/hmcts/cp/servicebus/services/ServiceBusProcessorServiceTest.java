@@ -18,6 +18,8 @@ import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -54,6 +56,7 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void handle_message_should_pass_to_callback_client_with_success() {
+        when(wrappedMessage.getCorrelationId()).thenReturn(UUID.randomUUID());
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);
@@ -68,6 +71,7 @@ class ServiceBusProcessorServiceTest {
     @Test
     void handle_message_should_requeue_if_handler_errors() {
         EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
+        when(wrappedMessage.getCorrelationId()).thenReturn(UUID.randomUUID());
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);
@@ -86,6 +90,7 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void handle_message_should_error_if_callback_client_errors_finally() {
+        when(wrappedMessage.getCorrelationId()).thenReturn(UUID.randomUUID());
         when(context.getMessage()).thenReturn(serviceBusReceivedMessage);
         when(serviceBusReceivedMessage.getBody()).thenReturn(binaryData);
         when(jsonMapper.fromJson("binaryData", ServiceBusWrappedMessage.class)).thenReturn(wrappedMessage);

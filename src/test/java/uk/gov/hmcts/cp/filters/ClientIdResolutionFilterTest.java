@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.subscription.filters;
+package uk.gov.hmcts.cp.filters;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,14 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.client.HttpClientErrorException;
 import uk.gov.hmcts.cp.subscription.config.SubscriptionClientConfig;
-import uk.gov.hmcts.cp.subscription.filter.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.util.JwtTokenParser;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,13 +29,13 @@ class ClientIdResolutionFilterTest {
     private static final String CLIENT_SUBSCRIPTIONS_PATH = "/client-subscriptions";
 
     @Mock
-    HttpServletRequest httpRequest;
-    MockHttpServletResponse httpResponse = new MockHttpServletResponse();
+    private HttpServletRequest httpRequest;
     @Mock
-    FilterChain filterChain;
+    private FilterChain filterChain;
     @Mock
-    JwtTokenParser jwtTokenParser;
+    private JwtTokenParser jwtTokenParser;
 
+    private MockHttpServletResponse httpResponse;
     private ClientIdResolutionFilter filter;
 
     @BeforeEach
@@ -55,16 +54,26 @@ class ClientIdResolutionFilterTest {
     }
 
     @Test
+    void path_client_subscriptions_with_id_should_be_filtered() throws Exception {
+        UUID testClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
+        when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH + "/123");
+        when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(testClientUuid);
+
+        filter.doFilter(httpRequest, httpResponse, filterChain);
+
+        verify(filterChain).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
+    }
+
+    @Test
     void valid_bearer_with_azp_should_put_client_id_in_mdc_and_continue() throws Exception {
         UUID testClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
         when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
         when(jwtTokenParser.extractClientIdFromToken(httpRequest)).thenReturn(testClientUuid);
-        AtomicReference<String> mdcClientId = new AtomicReference<>();
-        FilterChain chainThatCapturesMdc = (req, res) -> mdcClientId.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
 
-        filter.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
+        filter.doFilter(httpRequest, httpResponse, filterChain);
 
-        assertThat(mdcClientId.get()).isEqualTo(testClientUuid.toString());
+        verify(filterChain).doFilter(httpRequest, httpResponse);
         assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
     }
 
@@ -87,12 +96,11 @@ class ClientIdResolutionFilterTest {
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(clientId.toString());
         SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false);
         ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
-        AtomicReference<String> mdcClientId = new AtomicReference<>();
-        FilterChain chainThatCapturesMdc = (req, res) -> mdcClientId.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
 
-        filterOauthDisabled.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
 
-        assertThat(mdcClientId.get()).isEqualTo(clientId.toString());
+        verify(filterChain).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
     }
 
     @Test
@@ -102,18 +110,42 @@ class ClientIdResolutionFilterTest {
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(client1.toString());
         SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false);
         ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
-        AtomicReference<String> captured = new AtomicReference<>();
-        FilterChain chainThatCapturesMdc = (req, res) -> captured.set(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
 
-        filterOauthDisabled.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
-
-        assertThat(captured.get()).isEqualTo(client1.toString());
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
+        verify(filterChain).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
 
         UUID client2 = UUID.fromString("bbbbbbbb-2222-4444-8888-222222222222");
         when(httpRequest.getHeader("X-Client-Id")).thenReturn(client2.toString());
-        captured.set(null);
-        filterOauthDisabled.doFilter(httpRequest, httpResponse, chainThatCapturesMdc);
-        assertThat(captured.get()).isEqualTo(client2.toString());
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
+        verify(filterChain, times(2)).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
+    }
+
+    @Test
+    void oauth_disabled_with_null_header_should_return_401() throws Exception {
+        when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
+        when(httpRequest.getHeader("X-Client-Id")).thenReturn(null);
+        SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false);
+        ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
+
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
+
+        assertThat(httpResponse.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(filterChain, never()).doFilter(httpRequest, httpResponse);
+    }
+
+    @Test
+    void oauth_disabled_with_invalid_uuid_header_should_return_401() throws Exception {
+        when(httpRequest.getRequestURI()).thenReturn(CLIENT_SUBSCRIPTIONS_PATH);
+        when(httpRequest.getHeader("X-Client-Id")).thenReturn("not-a-valid-uuid");
+        SubscriptionClientConfig configOauthDisabled = new SubscriptionClientConfig(false);
+        ClientIdResolutionFilter filterOauthDisabled = new ClientIdResolutionFilter(jwtTokenParser, configOauthDisabled);
+
+        filterOauthDisabled.doFilter(httpRequest, httpResponse, filterChain);
+
+        assertThat(httpResponse.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
+        verify(filterChain, never()).doFilter(httpRequest, httpResponse);
     }
 
     @Test
