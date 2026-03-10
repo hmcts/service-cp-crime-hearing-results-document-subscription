@@ -47,18 +47,21 @@ class TracingFilterTest {
     }
 
     @Test
-    void shouldFilter_when_path_is_client_subscriptions() {
-        when(request.getRequestURI()).thenReturn("/client-subscriptions");
-        assertThat(filter.shouldNotFilter(request)).isFalse();
+    void shouldNotFilter_when_path_is_notifications() {
+        when(request.getRequestURI()).thenReturn("/notifications");
+        assertThat(filter.shouldNotFilter(request)).isTrue();
+    }
 
-        when(request.getRequestURI()).thenReturn("/client-subscriptions/123/documents/456");
+    @Test
+    void shouldFilter_when_path_is_client_subscriptions_root() {
+        when(request.getRequestURI()).thenReturn("/client-subscriptions");
         assertThat(filter.shouldNotFilter(request)).isFalse();
     }
 
     @Test
-    void shouldNotFilter_when_path_is_notifications() {
-        when(request.getRequestURI()).thenReturn("/notifications");
-        assertThat(filter.shouldNotFilter(request)).isTrue();
+    void shouldFilter_when_path_is_client_subscriptions_documents() {
+        when(request.getRequestURI()).thenReturn("/client-subscriptions/123/documents/456");
+        assertThat(filter.shouldNotFilter(request)).isFalse();
     }
 
     @Test
