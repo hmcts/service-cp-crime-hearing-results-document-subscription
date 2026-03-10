@@ -25,8 +25,9 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     public ResponseEntity<ClientSubscription> createClientSubscription(final ClientSubscriptionRequest request) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
-        log.info("createClientSubscription callbackUrl:{} clientId:{}",
-                Encode.forJava(request.getNotificationEndpoint().getCallbackUrl()), clientId);
+        // log.info("createClientSubscription callbackUrl:{} clientId:{}",
+        //         Encode.forJava(request.getNotificationEndpoint().getCallbackUrl()), clientId);
+        log.info("createClientSubscription callbackUrl:{} clientId:{}", request.getNotificationEndpoint().getCallbackUrl(), clientId);
         final ClientSubscription response = subscriptionService.saveSubscription(request, clientId);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
