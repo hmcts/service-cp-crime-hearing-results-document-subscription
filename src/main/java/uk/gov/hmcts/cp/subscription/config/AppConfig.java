@@ -26,11 +26,6 @@ public class AppConfig {
     }
 
     @Bean
-    public RestTemplate materialRestTemplate() {
-        return new RestTemplate();
-    }
-
-    @Bean
     public ClockService clockService() {
         return new ClockService(Clock.systemDefaultZone());
     }

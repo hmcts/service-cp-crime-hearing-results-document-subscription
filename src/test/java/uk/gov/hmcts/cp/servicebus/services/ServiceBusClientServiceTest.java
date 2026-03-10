@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.MDC;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusWrapperMapper;
@@ -48,8 +49,8 @@ class ServiceBusClientServiceTest {
     @Test
     void queue_message_should_pass_to_topic() {
         UUID correlationId = UUID.randomUUID();
+        MDC.put("correlationId", correlationId.toString());
         when(configService.senderClient(PCR_INBOUND_TOPIC)).thenReturn(senderClient);
-        when(jsonMapper.getUUIDAtPath("message", "/eventId")).thenReturn(correlationId);
         when(wrapperMapper.newWrapper(correlationId, 1, callbackUrl, "message")).thenReturn(wrappedMessage);
         when(jsonMapper.toJson(wrappedMessage)).thenReturn("wrapped-message");
         when(retryService.getNextTryTime(1)).thenReturn(nextTryTime);
@@ -59,5 +60,6 @@ class ServiceBusClientServiceTest {
 
         verify(senderClient).sendMessage(serviceBusMessage);
         verify(senderClient).close();
+        MDC.remove("correlationId");
     }
 }

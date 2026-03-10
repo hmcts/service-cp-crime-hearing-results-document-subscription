@@ -23,12 +23,9 @@ public class TracingFilter extends OncePerRequestFilter {
     public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
     public static final String MDC_CORRELATION_ID = "correlationId";
 
-    private static final String CLIENT_SUBSCRIPTIONS_PREFIX = "/client-subscriptions";
-
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
-        final String uri = request.getRequestURI();
-        return !uri.startsWith(CLIENT_SUBSCRIPTIONS_PREFIX);
+        return false;
     }
 
     @Override
