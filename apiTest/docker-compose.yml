@@ -53,6 +53,8 @@ services:
 
   app:
     image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
+    build:
+      context: ..
     environment:
       SERVER_PORT: 8082
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
