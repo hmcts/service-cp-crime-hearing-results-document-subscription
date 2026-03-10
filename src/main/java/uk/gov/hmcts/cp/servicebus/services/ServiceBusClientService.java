@@ -15,6 +15,8 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
+
 @Service
 @AllArgsConstructor
 @Slf4j
@@ -28,8 +30,7 @@ public class ServiceBusClientService {
 
     public void queueMessage(final String topicName, final String targetUrl, final String messageString, final int failureCount) {
         final ServiceBusSenderClient serviceBusSenderClient = configService.senderClient(topicName);
-        final String correlationIdStr = MDC.get("correlationId");
-        final UUID correlationId = correlationIdStr != null ? UUID.fromString(correlationIdStr) : null;
+        final UUID correlationId = UUID.fromString(MDC.get(MDC_CORRELATION_ID));
         final ServiceBusWrappedMessage wrappedMessage = wrapperMapper.newWrapper(correlationId, failureCount, targetUrl, messageString);
         final OffsetDateTime nextTryTime = retryService.getNextTryTime(failureCount);
         final ServiceBusMessage serviceBusMessage = mapper.newMessage(jsonMapper.toJson(wrappedMessage), nextTryTime);
