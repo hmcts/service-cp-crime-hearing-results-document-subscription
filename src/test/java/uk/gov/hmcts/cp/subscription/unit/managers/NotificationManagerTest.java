@@ -8,8 +8,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventType;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
@@ -50,7 +50,7 @@ class NotificationManagerTest {
     UUID documentId = UUID.randomUUID();
     UUID subscriptionId = UUID.randomUUID();
     UUID clientId = UUID.fromString("11111111-2222-3333-4444-555555555555");
-    PcrEventPayload payload = PcrEventPayload.builder()
+    EventPayload payload = EventPayload.builder()
             .materialId(materialId)
             .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
             .build();

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
@@ -32,10 +32,10 @@ public class CallbackDeliveryService {
     private final ServiceBusClientService clientService;
     private final CallbackService callbackService;
 
-    public void submitOutboundPcrEvents(final PcrEventPayload pcrEventPayload, final UUID documentId) {
-        final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
+    public void submitOutboundPcrEvents(final EventPayload eventPayload, final UUID documentId) {
+        final EntityEventType eventType = EntityEventType.valueOf(eventPayload.getEventType().name());
         final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType.name());
-        final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, pcrEventPayload);
+        final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
             if (serviceBusConfig.isEnabled()) {

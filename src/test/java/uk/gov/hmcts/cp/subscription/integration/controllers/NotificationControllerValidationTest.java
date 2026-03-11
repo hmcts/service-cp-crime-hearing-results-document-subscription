@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(GlobalExceptionHandler.class)
 class NotificationControllerValidationTest extends IntegrationTestBase {
 
-    private static final String NOTIFICATION_PCR_URI = "/notifications/pcr";
+    private static final String NOTIFICATION_URI = "/notifications";
     private static final String PCR_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
     private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
     private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
@@ -45,7 +45,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     void bad_content_type_should_return_415() throws Exception {
         String pcrPayload = loadPayload(PCR_REQUEST_VALID);
 
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(pcrPayload))
                 .andDo(print())
@@ -56,7 +56,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     void invalid_payload_missing_materialid_should_return_400() throws Exception {
         String pcrPayload = loadPayload(PCR_REQUEST_MISSING_MATERIAL);
 
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(pcrPayload))
                 .andDo(print())
@@ -67,7 +67,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     void invalid_payload_missing_eventid_should_return_400() throws Exception {
         String pcrPayload = loadPayload(PCR_REQUEST_MISSING_EVENT);
 
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(pcrPayload))
                 .andDo(print())
@@ -78,7 +78,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     void malformed_payload_should_return_400() throws Exception {
         String malformedJson = "{ \"eventId\": \"invalid-uuid\", \"materialId\": }";
 
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(malformedJson))
                 .andDo(print())
@@ -87,7 +87,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
 
     @Test
     void empty_payload_missing_eventid_should_return_400() throws Exception {
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andDo(print())
@@ -96,7 +96,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
 
     @Test
     void missing_body_should_return_400() throws Exception {
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
@@ -153,7 +153,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
         doThrow(new ResponseStatusException(HttpStatus.BAD_GATEWAY, "CallbackUrl delivery failed"))
                 .when(notificationManager).processPcrNotification(any());
 
-        mockMvc.perform(post(NOTIFICATION_PCR_URI)
+        mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(pcrPayload))
                 .andDo(print())

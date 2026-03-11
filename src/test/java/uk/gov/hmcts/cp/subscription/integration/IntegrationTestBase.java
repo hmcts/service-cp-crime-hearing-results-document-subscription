@@ -36,7 +36,7 @@ import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENE
 public abstract class IntegrationTestBase {
 
     protected static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
-    protected static final String NOTIFICATIONS_PCR_URI = "/notifications/pcr";
+    protected static final String NOTIFICATIONS_URI = "/notifications";
     protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
     protected static final String CALLBACK_URI = "/callback/notify";
     protected static final UUID TEST_CLIENT_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");

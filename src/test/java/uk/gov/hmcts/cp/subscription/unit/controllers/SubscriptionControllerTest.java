@@ -55,7 +55,7 @@ class SubscriptionControllerTest {
     void create_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
         when(subscriptionService.saveSubscription(createRequest, TEST_CLIENT_UUID)).thenReturn(response);
-        var result = subscriptionController.createClientSubscription(createRequest);
+        var result = subscriptionController.createClientSubscription(createRequest, null);
         assertThat(result.getStatusCode().value()).isEqualTo(201);
         assertThat(result.getBody()).isEqualTo(response);
     }
@@ -64,7 +64,7 @@ class SubscriptionControllerTest {
     void update_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
         when(subscriptionService.updateSubscription(subscriptionId, updateRequest, TEST_CLIENT_UUID)).thenReturn(response);
-        var result = subscriptionController.updateClientSubscription(subscriptionId, updateRequest);
+        var result = subscriptionController.updateClientSubscription(subscriptionId, updateRequest, null);
         verify(subscriptionService).updateSubscription(subscriptionId, updateRequest, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
@@ -74,7 +74,7 @@ class SubscriptionControllerTest {
     void get_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
         when(subscriptionService.getSubscription(subscriptionId, TEST_CLIENT_UUID)).thenReturn(response);
-        var result = subscriptionController.getClientSubscription(subscriptionId);
+        var result = subscriptionController.getClientSubscription(subscriptionId, null);
         verify(subscriptionService).getSubscription(subscriptionId, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
@@ -82,7 +82,7 @@ class SubscriptionControllerTest {
 
     @Test
     void delete_controller_should_call_service() {
-        var result = subscriptionController.deleteClientSubscription(subscriptionId);
+        var result = subscriptionController.deleteClientSubscription(subscriptionId, null);
         verify(subscriptionService).deleteSubscription(subscriptionId, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(204);
     }

@@ -12,7 +12,7 @@ import org.slf4j.MDC;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
@@ -48,7 +48,7 @@ class NotificationControllerTest {
     UUID documentId = UUID.randomUUID();
     UUID subscriptionId = UUID.randomUUID();
     UUID resolvedClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
-    PcrEventPayload payload = PcrEventPayload.builder().build();
+    EventPayload payload = EventPayload.builder().build();
 
     @BeforeEach
     void setMdcClientId() {
@@ -63,7 +63,7 @@ class NotificationControllerTest {
     @SneakyThrows
     @Test
     void valid_pcr_payload_should_process_notification() {
-        ResponseEntity<Void> response = notificationController.createNotificationPCR(payload);
+        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
         verify(notificationManager).processPcrNotification(eq(payload));
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
@@ -72,7 +72,7 @@ class NotificationControllerTest {
     void valid_pcr_payload_should_send_to_servicebus() {
         when(configService.isEnabled()).thenReturn(true);
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
-        ResponseEntity<Void> response = notificationController.createNotificationPCR(payload);
+        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
         verify(clientService).queueMessage(PCR_INBOUND_TOPIC, null, "payload-json", 0);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
@@ -87,7 +87,7 @@ class NotificationControllerTest {
                 .build();
         when(notificationManager.getPcrDocumentContent(eq(subscriptionId), eq(resolvedClientUuid), eq(documentId))).thenReturn(content);
 
-        ResponseEntity<Resource> response = notificationController.getDocument(subscriptionId, documentId);
+        ResponseEntity<Resource> response = notificationController.getDocument(subscriptionId, documentId, null);
 
         assertThat(response.getStatusCode()).isEqualTo(org.springframework.http.HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();

@@ -33,6 +33,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -63,7 +64,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private UUID otherSubscriptionId;
     private UUID lateSubscriptionId;
     private UUID callbackDocumentId;
-    private static final String correlationId = "test-trace-id-12345";
+    private static final String correlationId = String.valueOf(UUID.randomUUID());
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
@@ -214,13 +215,14 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private void when_a_pcr_event_is_posted_with_timeout() throws Exception {
         postPcrEvent(PCR_EVENT_TIMEOUT_PATH)
+                .andDo(print())
                 .andExpect(status().isGatewayTimeout())
                 .andExpect(jsonPath("$.error").value("gateway_timeout"))
                 .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
     private ResultActions postPcrEvent(String payloadPath) throws Exception {
-        return mockMvc.perform(post(NOTIFICATIONS_PCR_URI)
+        return mockMvc.perform(post(NOTIFICATIONS_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .header(CORRELATION_ID_HEADER, correlationId)

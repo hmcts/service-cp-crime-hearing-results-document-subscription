@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 @Service
@@ -15,9 +15,9 @@ public class NotificationService {
     private final MaterialService materialService;
     private final DocumentService documentService;
 
-    public void processInboundEvent(final PcrEventPayload pcrEventPayload) {
-        final MaterialMetadata materialMetadata = materialService.waitForMaterialMetadata(pcrEventPayload.getMaterialId());
-        final EntityEventType eventType = EntityEventType.valueOf(pcrEventPayload.getEventType().name());
+    public void processInboundEvent(final EventPayload eventPayload) {
+        final MaterialMetadata materialMetadata = materialService.waitForMaterialMetadata(eventPayload.getMaterialId());
+        final EntityEventType eventType = EntityEventType.valueOf(eventPayload.getEventType().name());
         documentService.saveDocumentMapping(materialMetadata.getMaterialId(), eventType);
     }
 }

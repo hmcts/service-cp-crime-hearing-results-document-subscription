@@ -33,7 +33,7 @@ apply {
 }
 
 dependencies {
-  implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-case-event-subscription:1.1.0')
+  implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-case-event-subscription:1.1.3')
 
   // This is proving to be a real puzzle. This is actually included in the api published pom
   // ( though with scope of "runtime" )

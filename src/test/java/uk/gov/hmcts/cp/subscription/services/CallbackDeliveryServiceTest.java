@@ -6,8 +6,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventType;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
@@ -48,12 +48,12 @@ class CallbackDeliveryServiceTest {
 
     @Test
     void submitOutboundPcrEvent_shouldMapEventsNotificationPayloadFieldsCorrectly() {
-        PcrEventPayload pcrEventPayload = PcrEventPayload.builder().eventType(EventType.PRISON_COURT_REGISTER_GENERATED).build();
+        EventPayload eventPayload = EventPayload.builder().eventType(EventType.PRISON_COURT_REGISTER_GENERATED).build();
         when(subscriptionRepository.findByEventType(EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(List.of(subscriptionEntity));
-        when(notificationMapper.mapToPayload(documentId, pcrEventPayload)).thenReturn(eventNotificationPayload);
+        when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(eventNotificationPayload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
 
-        callbackDeliveryService.submitOutboundPcrEvents(pcrEventPayload, documentId);
+        callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
 
         verify(callbackService).sendToSubscriber(callbackUrl, eventNotificationPayload);
     }

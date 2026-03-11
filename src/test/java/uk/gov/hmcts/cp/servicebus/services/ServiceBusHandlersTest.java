@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.openapi.model.PcrEventPayload;
+import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
@@ -31,12 +31,12 @@ class ServiceBusHandlersTest {
 
     @Test
     void inbound_pcr_should_handle_ok() {
-        PcrEventPayload pcrEventPayload = PcrEventPayload.builder().build();
-        when(jsonMapper.fromJson("pcr-json", PcrEventPayload.class)).thenReturn(pcrEventPayload);
+        EventPayload eventPayload = EventPayload.builder().build();
+        when(jsonMapper.fromJson("pcr-json", EventPayload.class)).thenReturn(eventPayload);
 
         serviceBusHandlers.handleMessage(PCR_INBOUND_TOPIC, null, "pcr-json");
 
-        verify(notificationManager).processPcrNotification(pcrEventPayload);
+        verify(notificationManager).processPcrNotification(eventPayload);
     }
 
     @Test
