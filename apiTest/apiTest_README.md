@@ -5,10 +5,11 @@ The tests make HTTP calls to verify the API endpoints are working correctly.
 
 ## Overview
 
-The `apiTest` module is a standalone Gradle project that:
-- Runs api tests against the application running in Docker containers
-- Automatically manages Docker containers (starts before tests, stops after)
-- Generates HTML and XML test reports
+The `apiTest` is a shell script that will:
+- Build spring boot jarfile
+- Build docker image
+- Spin up the docker compose stack with required docker images
+- Run apiTest gradle test
 
 ## Prerequisites
 
@@ -39,23 +40,8 @@ Before running the tests, ensure you have the following installed and configured
 # Navigate to the apiTest directory
 cd apiTest
 
-# Run all tests
-../gradlew test
-
-# Run tests with more verbose output
-../gradlew test --info
-
-# Run tests with debug output
-../gradlew test --debug
-```
-
-### From the apiTest Directory
-
-```bash
-# If you're already in the apiTest directory, you can use either:
-./gradlew test        # Uses apiTest's own Gradle wrapper
-# or
-../gradlew test       # Uses root project's Gradle wrapper
+# Build and run api tests
+./build-and-run-apitest.sh
 ```
 
 ### What Happens When You Run Tests
@@ -66,18 +52,9 @@ cd apiTest
    - PostgreSQL database (port 5432)
    - Application server (port 8082)
    - WireMock server (port 9999)
+   - Service Bus
 4. **Runs tests** - Executes all test classes
 5. **Stops and removes containers** - Cleanup after tests complete
-
-### Running Specific Tests
-
-```bash
-# Run a specific test class
-../gradlew test --tests "RootApiTest"
-
-# Run a specific test method
-../gradlew test --tests "RootApiTest.root_endpoint_should_be_ok"
-```
 
 ## Test Reports
 
@@ -93,40 +70,7 @@ The HTML report includes:
 - Stack traces for failed tests
 - Package and class-level summaries
 
-### JUnit XML Reports
-
-**Location:** `apiTest/build/test-results/test/`
-
-These XML reports are useful for CI/CD integration.
-
 ## Troubleshooting
-
-### Issue: "Could not start Gradle Test Executor 1: Failed to load JUnit Platform"
-
-**Solution:** This should be resolved with the current configuration. If you see this error:
-1. Clean the build: `../gradlew clean`
-2. Rebuild: `../gradlew build`
-
-### Issue: "no main manifest attribute, in /app/apiTest-0.0.999.jar"
-
-**Solution:** This means the Docker build context is wrong. Ensure:
-1. The `docker-compose.yml` has `context: ..` (builds from root directory)
-2. The root project's `bootJar` is built before Docker build
-3. Run: `../gradlew buildRootBootJar` manually if needed
-
-### Issue: Container exits with code 1
-
-**Check application logs:**
-```bash
-# View app container logs
-docker logs apitest-app-1
-
-# Or using docker-compose
-docker-compose -f docker-compose.yml logs app
-
-# View all container logs
-docker-compose -f docker-compose.yml logs
-```
 
 **Common causes:**
 - Application configuration errors
@@ -164,10 +108,4 @@ Tests use the following default configuration:
 - Database: PostgreSQL on port 5432
 - WireMock: Port 9999
 
-### Customizing Test Execution
-
-You can override the application URL:
-```bash
-../gradlew test -Dapp.baseUrl=http://localhost:8080
-```
 
