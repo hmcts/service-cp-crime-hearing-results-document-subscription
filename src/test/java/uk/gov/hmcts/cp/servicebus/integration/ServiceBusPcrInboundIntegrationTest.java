@@ -5,13 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import org.slf4j.MDC;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
@@ -46,15 +46,16 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
         await()
                 .atMost(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofSeconds(1))
-                .until(testService::isServiceBusReady);
+                .until(adminService::isServiceBusReady);
+        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
         testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
         adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
-        processorClient = processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
     }
 
     @AfterEach
-    void afterEach(){
-        processorClient.stop();
+    void afterEach() {
+        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
     }
 
     @SneakyThrows

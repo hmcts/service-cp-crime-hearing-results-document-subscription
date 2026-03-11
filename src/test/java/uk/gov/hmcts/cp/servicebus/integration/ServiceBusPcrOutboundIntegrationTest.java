@@ -42,15 +42,17 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
         await()
                 .atMost(Duration.ofSeconds(60))
                 .pollInterval(Duration.ofSeconds(1))
-                .until(testService::isServiceBusReady);
+                .until(adminService::isServiceBusReady);
+        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
         testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
+
         adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
-        processorClient = processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
     }
 
     @AfterEach
     void afterEach() {
-        processorClient.stop();
+        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
     }
 
     @SneakyThrows

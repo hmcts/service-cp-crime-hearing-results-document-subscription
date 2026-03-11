@@ -45,10 +45,6 @@ public class ServiceBusConfigService {
         this.maxTries = maxTries;
     }
 
-    private ServiceBusClientBuilder clientBuilder() {
-        return new ServiceBusClientBuilder().connectionString(connectionString);
-    }
-
     public ServiceBusAdministrationClient adminClient() {
         final HttpClient adminHttpClient = new NettyAsyncHttpClientBuilder()
                 .port(ADMIN_CONNECTION_PORT)
@@ -78,11 +74,14 @@ public class ServiceBusConfigService {
                 .buildClient();
     }
 
-
     public ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder(final String topicName, final String subscriptionName) {
         return clientBuilder()
                 .processor()
                 .topicName(topicName)
                 .subscriptionName(subscriptionName);
+    }
+
+    private ServiceBusClientBuilder clientBuilder() {
+        return new ServiceBusClientBuilder().connectionString(connectionString);
     }
 }

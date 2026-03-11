@@ -3,6 +3,7 @@ package uk.gov.hmcts.cp.servicebus.services;
 import com.azure.messaging.servicebus.ServiceBusErrorContext;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
+import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -12,20 +13,60 @@ import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.awaitility.Awaitility.await;
 import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class ServiceBusProcessorService {
 
+    private static final int MAX_WAIT_SECONDS = 120;
+    private static final int POLL_SECONDS = 10;
+
+    private final ServiceBusAdminService adminService;
     private final ServiceBusConfigService configService;
     private final ServiceBusClientService clientService;
     private final JsonMapper jsonMapper;
     private final ServiceBusHandlers serviceBusHandlers;
 
+    private Map<String, ServiceBusProcessorClient> processorClients = new HashMap<>();
+
     @SneakyThrows
-    public ServiceBusProcessorClient startMessageProcessor(final String topicName) {
+    @PostConstruct
+    public void initialiseServiceBus() {
+        if (configService.isEnabled()) {
+            await()
+                    .atMost(Duration.ofSeconds(MAX_WAIT_SECONDS))
+                    .pollInterval(Duration.ofSeconds(POLL_SECONDS))
+                    .until(adminService::isServiceBusReady);
+            log.info("createServiceBusQueues creating service bus queues");
+            adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
+            startMessageProcessor(PCR_INBOUND_TOPIC);
+            adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
+            startMessageProcessor(PCR_OUTBOUND_TOPIC);
+        }
+    }
+
+    public void stopMessageProcessor(final String topicName) {
+        final ServiceBusProcessorClient processorClient = processorClients.get(topicName);
+        if (processorClient != null && processorClient.isRunning()) {
+            log.info("Service Bus Processor {} is being stopped", topicName);
+            processorClient.stop();
+            processorClients.remove(topicName);
+        } else {
+            log.info("Service Bus Processor {} is not running {}", topicName);
+        }
+    }
+
+    @SneakyThrows
+    public void startMessageProcessor(final String topicName) {
         log.info("starting service bus processor {}/{}", topicName, topicName);
         final ServiceBusProcessorClient processorClient = configService
                 .processorClientBuilder(topicName, topicName)
@@ -33,7 +74,7 @@ public class ServiceBusProcessorService {
                 .processError(context -> handleError(topicName, context))
                 .buildProcessorClient();
         processorClient.start();
-        return processorClient;
+        processorClients.put(topicName, processorClient);
     }
 
     public void handleMessage(final String topicName, final ServiceBusReceivedMessageContext context) {

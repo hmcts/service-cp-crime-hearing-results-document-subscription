@@ -16,16 +16,6 @@ public class ServiceBusTestService {
     @Autowired
     ServiceBusConfigService configService;
 
-    public boolean isServiceBusReady() {
-        try {
-            configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
-            return true;
-        } catch (Exception e) {
-            log.info("waiting for servicebus to start");
-            return false;
-        }
-    }
-
     public void dropTopicIfExists(String topicName) {
         List<String> subscriptions = configService.adminClient().listSubscriptions("topic.new").stream().map(SubscriptionProperties::getSubscriptionName).toList();
         for (String subscriptionName : subscriptions) {

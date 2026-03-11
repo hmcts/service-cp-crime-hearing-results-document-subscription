@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.integration.e2e;
 
-import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
@@ -27,8 +26,6 @@ import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
@@ -88,18 +85,18 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @MockitoSpyBean
     private MaterialApi materialApi;
 
-    List<ServiceBusProcessorClient> processorClients = new ArrayList<>();
-
     @BeforeEach
     void setUp() {
         assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
         testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
         adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
-        processorClients.add(processorService.startMessageProcessor(PCR_INBOUND_TOPIC));
+        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
 
+        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
         testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
         adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
-        processorClients.add(processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC));
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
 
         WireMock.reset();
         if (nonNull(callbackWireMock)) {
@@ -110,7 +107,8 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @AfterEach
     void afterEach() {
-        processorClients.forEach(ServiceBusProcessorClient::stop);
+        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
+        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
     }
 
     @Test

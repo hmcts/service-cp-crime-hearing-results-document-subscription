@@ -12,15 +12,11 @@ services:
   sqledge:
     image: "mcr.microsoft.com/azure-sql-edge:latest"
     platform: linux/amd64
-    networks:
-      sb-emulator:
-        aliases:
-          - "sqledge"
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Str0ngPassword!"
 
-  servicebus-emulator:
+  servicebus:
     image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
     volumes:
       - "./service-bus-config.json:/ServiceBus_Emulator/ConfigFiles/Config.json"
@@ -32,12 +28,9 @@ services:
       MSSQL_SA_PASSWORD: "Str0ngPassword!"
       ACCEPT_EULA: "Y"
       SQL_WAIT_INTERVAL: 60
+    # servicebus emulator waits 60 seconds for sqledge to start up
     depends_on:
       - sqledge
-    networks:
-      sb-emulator:
-        aliases:
-          - "sb-emulator"
 
   wiremock:
     image: wiremock/wiremock:3.13.2
@@ -51,7 +44,7 @@ services:
       - "--global-response-templating"
       - "--verbose"
 
-  app:
+  app1:
     image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
     build:
       context: ..
@@ -59,12 +52,31 @@ services:
       SERVER_PORT: 8082
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
       MATERIAL_CLIENT_URL: http://wiremock:8080
+      SERVICE_BUS_ENABLED: true
+      SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
     depends_on:
       - db
       - wiremock
+      - servicebus
     ports:
       - "8082:8082"
 
-networks:
-  sb-emulator:
+  app2:
+    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
+    build:
+      context: ..
+    environment:
+      SERVER_PORT: 8083
+      DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
+      MATERIAL_CLIENT_URL: http://wiremock:8080
+      SERVICE_BUS_ENABLED: false
+      SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+    depends_on:
+      - db
+      - wiremock
+      - servicebus
+    ports:
+      - "8083:8083"
 

@@ -1,5 +1,5 @@
 # Simple shell script to run the api test
-# We call build-and-build-and-run-docker.sh to do its job
+# We call build-docker.sh to do its job
 # And then we call docker-compose up and wait for the app to be up
 set -ex
 cd ..
@@ -8,7 +8,7 @@ cd apiTest
 
 echo "STARTED project ${projectname} at $(date)"
 
-./build-and-run-docker.sh
+./build-docker.sh
 
 echo "Running docker compose up -d ... and waiting for 8082 /actuator/health"
 export DOCKER_IMAGE=$projectname
