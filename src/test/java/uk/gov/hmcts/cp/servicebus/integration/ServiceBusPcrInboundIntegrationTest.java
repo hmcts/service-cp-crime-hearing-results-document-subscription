@@ -9,16 +9,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.slf4j.MDC;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import org.slf4j.MDC;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
-import java.time.Duration;
 import java.util.UUID;
 
-import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -43,10 +42,8 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
 
     @BeforeEach
     void setUp() {
-        await()
-                .atMost(Duration.ofSeconds(60))
-                .pollInterval(Duration.ofSeconds(1))
-                .until(testService::isServiceBusReady);
+        assumeTrue(testService.isServiceBusReady(),
+                "ServiceBus is not running. Run gradlew composeUp / composeDown");
         testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
         adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
         processorClient = processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
@@ -54,7 +51,9 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
 
     @AfterEach
     void afterEach(){
-        processorClient.stop();
+        if (processorClient != null) {
+            processorClient.stop();
+        }
     }
 
     @SneakyThrows
