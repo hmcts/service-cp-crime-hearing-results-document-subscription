@@ -1,6 +1,8 @@
 package uk.gov.hmcts.cp.hmac.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.support.VaultResponse;
@@ -17,6 +19,7 @@ public class HmacKeyStoreService {
     public static final String SLASH = "/";
 
     private final HmacKeyService hmacKeyService;
+    @Nullable
     private final VaultTemplate vaultTemplate;
     private final boolean vaultEnabled;
     private final String vaultPathPrefix;
@@ -25,13 +28,17 @@ public class HmacKeyStoreService {
 
     public HmacKeyStoreService(
             final HmacKeyService hmacKeyService,
-            final VaultTemplate vaultTemplate,
+            @Autowired(required = false) @Nullable final VaultTemplate vaultTemplate,
             @Value("${hmac.vault-enabled:false}") final boolean vaultEnabled,
             @Value("${hmac.vault-path:secret/hmac}") final String vaultPathPrefix) {
         this.hmacKeyService = hmacKeyService;
         this.vaultTemplate = vaultTemplate;
         this.vaultEnabled = vaultEnabled;
         this.vaultPathPrefix = vaultPathPrefix;
+        if (vaultEnabled && vaultTemplate == null) {
+            throw new IllegalStateException("hmac.vault-enabled is true but VaultTemplate is not available. "
+                    + "Set HMAC_VAULT_ENABLED=false or ensure Spring Cloud Vault is configured.");
+        }
     }
 
     public HmacKeyService.KeyPair generateAndStore(final UUID subscriptionId) {
@@ -58,6 +65,9 @@ public class HmacKeyStoreService {
     }
 
     private void writeToVault(final UUID subscriptionId, final HmacKeyService.KeyPair keyPair) {
+        if (vaultTemplate == null) {
+            return;
+        }
         final String path = vaultPathPrefix + SLASH + subscriptionId;
         final Map<String, Object> data = Map.of(
                 KEY_ID, keyPair.keyId(),
@@ -67,6 +77,9 @@ public class HmacKeyStoreService {
     }
 
     private HmacKeyService.KeyPair readFromVault(final UUID subscriptionId) {
+        if (vaultTemplate == null) {
+            throw new IllegalStateException("No HMAC key for subscription " + subscriptionId);
+        }
         final String path = vaultPathPrefix + SLASH + subscriptionId;
         final VaultResponse response = vaultTemplate.read(path);
         if (response == null || response.getData() == null) {

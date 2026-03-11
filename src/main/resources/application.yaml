@@ -16,6 +16,7 @@ spring:
     baseline-on-migrate: true
   cloud:
     vault:
+      enabled: ${HMAC_VAULT_ENABLED:false}
       uri: ${HMAC_VAULT_URI:http://localhost:8200}
       token: ${HMAC_VAULT_TOKEN:root}
       scheme: http
