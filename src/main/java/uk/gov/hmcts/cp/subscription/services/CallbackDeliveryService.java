@@ -36,6 +36,7 @@ public class CallbackDeliveryService {
         final EntityEventType eventType = EntityEventType.valueOf(eventPayload.getEventType().name());
         final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType.name());
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);
+        log.info("sending {} outbound notifications", entities.size());
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
             if (serviceBusConfig.isEnabled()) {

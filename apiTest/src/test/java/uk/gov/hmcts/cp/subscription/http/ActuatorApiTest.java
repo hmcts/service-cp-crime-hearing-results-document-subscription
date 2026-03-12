@@ -9,11 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ActuatorApiTest {
 
     private final String baseUrl = System.getProperty("app.baseUrl", "http://localhost:8082");
-    private final RestClient http = RestClient.create();
+    private final RestClient restClient = RestClient.create();
 
     @Test
     void health_endpoint_should_be_up() {
-        final var res = http.get()
+        final var res = restClient.get()
                 .uri(baseUrl + "/actuator/health")
                 .retrieve()
                 .toEntity(String.class);
