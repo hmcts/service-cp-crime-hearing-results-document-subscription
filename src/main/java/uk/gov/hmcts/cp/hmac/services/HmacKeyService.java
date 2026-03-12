@@ -1,7 +1,7 @@
 package uk.gov.hmcts.cp.hmac.services;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -13,24 +13,18 @@ public class HmacKeyService {
     private static final int SECRET_BYTES_LENGTH = 32;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    private final boolean vaultEnabled;
-    private final String configuredKeyId;
-    private final String configuredSecret;
+    private final HmacServiceConfig config;
 
-    public HmacKeyService(
-            @Value("${hmac.vault-enabled:false}") final boolean vaultEnabled,
-            @Value("${hmac.key-id:}") final String configuredKeyId,
-            @Value("${hmac.secret:}") final String configuredSecret) {
-        this.vaultEnabled = vaultEnabled;
-        this.configuredKeyId = configuredKeyId;
-        this.configuredSecret = configuredSecret;
+    public HmacKeyService(final HmacServiceConfig config) {
+        this.config = config;
     }
 
     @SuppressWarnings("PMD.OnlyOneReturn")
     public KeyPair generateKey() {
-        if (vaultEnabled && configuredKeyId != null && !configuredKeyId.isEmpty()
-                && configuredSecret != null && !configuredSecret.isEmpty()) {
-            return new KeyPair(configuredKeyId, configuredSecret);
+        if (config.isVaultEnabled()
+                && config.getKeyId() != null && !config.getKeyId().isEmpty()
+                && config.getSecret() != null && !config.getSecret().isEmpty()) {
+            return new KeyPair(config.getKeyId(), config.getSecret());
         }
 
         final String keyId = "kid_" + UUID.randomUUID();

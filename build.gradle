@@ -43,5 +43,4 @@ dependencies {
   implementation 'org.awaitility:awaitility:4.3.0'
 
   implementation('com.azure:azure-messaging-servicebus:7.17.17')
-  implementation('org.springframework.cloud:spring-cloud-starter-vault-config')
 }
