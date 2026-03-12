@@ -16,6 +16,12 @@ tasks.named('test') {
   description = "Runs api tests against docker-compose stack"
   group = "Verification"
   useJUnitPlatform()
+
+  testLogging {
+    events "passed", "skipped", "failed"
+    exceptionFormat = 'full'
+    showStandardStreams = true
+  }
 }
 
 dependencies {
