@@ -51,7 +51,7 @@ class DocumentServiceTest {
 
     @Test
     void save_document_should_save_entity() {
-        when(documentMapper.mapToEntity(clockService, materialId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(documentMappingEntity);
+        when(documentMapper.mapToNewEntity(clockService, materialId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(documentMappingEntity);
         when(documentMappingRepository.save(documentMappingEntity)).thenReturn(documentMappingEntity);
         documentService.saveDocumentMapping(materialId, PRISON_COURT_REGISTER_GENERATED);
         verify(documentMappingRepository).save(documentMappingEntity);

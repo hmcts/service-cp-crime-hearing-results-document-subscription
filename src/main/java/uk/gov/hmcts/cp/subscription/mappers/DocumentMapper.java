@@ -12,10 +12,10 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface DocumentMapper {
 
-    @Mapping(target = "documentId", ignore = true)
+    @Mapping(target = "documentId", expression = "java(java.util.UUID.randomUUID())")
     @Mapping(source = "materialId", target = "materialId")
     @Mapping(source = "eventType", target = "eventType")
     @Mapping(target = "createdAt", expression = "java(clockService.nowOffsetUTC())")
-    DocumentMappingEntity mapToEntity(@Context ClockService clockService, UUID materialId, EntityEventType eventType);
+    DocumentMappingEntity mapToNewEntity(@Context ClockService clockService, UUID materialId, EntityEventType eventType);
 }
 

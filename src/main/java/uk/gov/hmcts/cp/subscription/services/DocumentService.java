@@ -32,10 +32,10 @@ public class DocumentService {
 
     @Transactional
     public UUID saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
-        final DocumentMappingEntity entity = documentMapper.mapToEntity(clockService, materialId, eventType);
-        DocumentMappingEntity saved = documentMappingRepository.save(entity);
-        log.info("saveDocumentMapping materialId:{} to documentId:{}", materialId, saved.getDocumentId());
-        return saved.getDocumentId();
+        final DocumentMappingEntity entity = documentMapper.mapToNewEntity(clockService, materialId, eventType);
+        log.info("saving DocumentMapping materialId:{} to documentId:{}", materialId, entity.getDocumentId());
+        documentMappingRepository.save(entity);
+        return entity.getDocumentId();
     }
 
     @Transactional
