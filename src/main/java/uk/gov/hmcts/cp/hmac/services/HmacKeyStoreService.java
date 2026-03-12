@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.hmac.services;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -7,15 +8,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Service
+@AllArgsConstructor
 public class HmacKeyStoreService implements HmacKeyStore {
 
     private final HmacKeyService hmacKeyService;
 
     private final ConcurrentMap<UUID, HmacKeyService.KeyPair> cache = new ConcurrentHashMap<>();
-
-    public HmacKeyStoreService(final HmacKeyService hmacKeyService) {
-        this.hmacKeyService = hmacKeyService;
-    }
 
     @Override
     public HmacKeyService.KeyPair generateAndStore(final UUID subscriptionId) {
