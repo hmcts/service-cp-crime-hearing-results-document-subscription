@@ -39,6 +39,11 @@ document-service:
 subscription:
   oauth-enabled: ${SUBSCRIPTION_OAUTH_ENABLED:true}
 
+hmac:
+  vault-enabled: ${HMAC_VAULT_ENABLED:false}
+  key-id: ${HMAC_KEY_ID:}
+  secret: ${HMAC_SECRET:}
+
 management:
   endpoints:
     web:
