@@ -6,6 +6,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
@@ -23,5 +24,14 @@ public class HmacSigningService {
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new IllegalStateException("Failed to compute HMAC signature", e);
         }
+    }
+
+    public boolean isSignatureValid(final String secret,
+                                    final String message,
+                                    final String signature) {
+        final String expectedSignature = sign(secret, message);
+        final byte[] expectedBytes = expectedSignature.getBytes(StandardCharsets.UTF_8);
+        final byte[] providedBytes = signature.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(expectedBytes, providedBytes);
     }
 }

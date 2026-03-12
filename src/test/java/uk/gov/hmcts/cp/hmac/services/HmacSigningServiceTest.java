@@ -32,5 +32,25 @@ class HmacSigningServiceTest {
         assertThat(withDifferentMessage).isNotEqualTo(base);
         assertThat(withDifferentSecret).isNotEqualTo(base);
     }
+
+    @Test
+    void isSignatureValid_shouldReturnTrueForMatchingSignature() {
+        String secret = "test-secret";
+        String message = "payload";
+
+        String signature = signingService.sign(secret, message);
+
+        assertThat(signingService.isSignatureValid(secret, message, signature)).isTrue();
+    }
+
+    @Test
+    void isSignatureValid_shouldReturnFalseWhenSecretOrMessageDiffers() {
+        String secret = "test-secret";
+        String message = "payload";
+        String signature = signingService.sign(secret, message);
+
+        assertThat(signingService.isSignatureValid("other-secret", message, signature)).isFalse();
+        assertThat(signingService.isSignatureValid(secret, "other-payload", signature)).isFalse();
+    }
 }
 
