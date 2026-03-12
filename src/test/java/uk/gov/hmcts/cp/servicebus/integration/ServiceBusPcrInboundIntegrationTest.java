@@ -10,7 +10,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.slf4j.MDC;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
@@ -43,7 +42,7 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
 
     @BeforeEach
     void setUp() {
-        assumeTrue(testService.isServiceBusReady(),
+        assumeTrue(adminService.isServiceBusReady(),
                 "ServiceBus is not running. Run gradlew composeUp / composeDown");
         processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
         testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
