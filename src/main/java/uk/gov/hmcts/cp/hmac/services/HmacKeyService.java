@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.hmac.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 
 import java.security.SecureRandom;
@@ -20,8 +21,8 @@ public class HmacKeyService {
     @SuppressWarnings("PMD.OnlyOneReturn")
     public KeyPair generateKey() {
         if (config.isVaultEnabled()
-                && config.getKeyId() != null && !config.getKeyId().isEmpty()
-                && config.getSecret() != null && !config.getSecret().isEmpty()) {
+                && !ObjectUtils.isEmpty(config.getKeyId())
+                && !ObjectUtils.isEmpty(config.getSecret())) {
             return new KeyPair(config.getKeyId(), config.getSecret());
         }
 
