@@ -7,6 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyStore;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -38,6 +40,8 @@ class SubscriptionServiceTest {
     SubscriptionRepository subscriptionRepository;
     @Mock
     SubscriptionMapper mapper;
+    @Mock
+    HmacKeyStore hmacKeyStore;
     @InjectMocks
     SubscriptionService subscriptionService;
 
@@ -69,6 +73,8 @@ class SubscriptionServiceTest {
         when(clockService.nowOffsetUTC()).thenReturn(now);
         when(mapper.mapCreateRequestToEntity(createRequest, now)).thenReturn(requestEntity);
         when(subscriptionRepository.save(any(ClientSubscriptionEntity.class))).thenReturn(savedEntity);
+        when(hmacKeyStore.generateAndStore(subscriptionId))
+                .thenReturn(new HmacKeyService.KeyPair("kid-1", "secret-1"));
         when(mapper.mapEntityToResponse(savedEntity)).thenReturn(response);
 
         ClientSubscription result = subscriptionService.saveSubscription(createRequest, clientId);

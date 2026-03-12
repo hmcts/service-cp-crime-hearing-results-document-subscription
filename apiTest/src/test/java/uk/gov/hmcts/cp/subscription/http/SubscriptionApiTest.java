@@ -72,8 +72,10 @@ class SubscriptionApiTest {
                 .toEntity(String.class);
         assertThat(postResult.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         JsonNode jsonNode = new JsonMapper().toJsonNode(postResult.getBody());
-        String subscriptiuonIdString = String.valueOf(jsonNode.get("clientSubscriptionId")).replaceAll("\"", "");
-        return UUID.fromString(subscriptiuonIdString);
+        assertThat(jsonNode.get("keyId")).isNotNull();
+        assertThat(jsonNode.get("secret")).isNotNull();
+        String subscriptionIdString = String.valueOf(jsonNode.get("clientSubscriptionId")).replaceAll("\"", "");
+        return UUID.fromString(subscriptionIdString);
     }
 
     private void getSubscription(UUID subscriptionId) {

@@ -30,11 +30,13 @@ class SubscriptionSaveControllerIntegrationTest extends IntegrationTestBase {
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
-                .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.clientSubscriptionId").exists())
+                .andExpect(jsonPath("$.keyId").isNotEmpty())
+                .andExpect(jsonPath("$.secret").isNotEmpty())
                 .andExpect(jsonPath("$.eventTypes.[0]").value(PRISON_COURT_REGISTER_GENERATED.name()))
                 .andExpect(jsonPath("$.createdAt").exists());
         assertThatEventTypesAreSortedInDatabase();
