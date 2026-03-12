@@ -15,13 +15,12 @@ export DOCKER_IMAGE=$projectname
 
 docker compose up -d
 for i in {1..30}; do
-  status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8082/actuator/health)
-  if [ "$status" = "200" ]; then
-    echo "App is up"
-    break
-  fi
-  echo "Waiting for app to be up ($i)... (status=$status)"
-  sleep 2
+    if curl -s http://localhost:8082/actuator/health > /dev/null; then
+        echo "App is up"
+        break
+    fi
+    echo "Waiting for app to be up ($i)..."
+    sleep 2
 done
 
 echo "Running ./gradlew test"
