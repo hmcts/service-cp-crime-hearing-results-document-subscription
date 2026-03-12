@@ -10,7 +10,3 @@ echo "Building docker $projectname"
 docker build -t $projectname .
 
 export DOCKER_IMAGE=$projectname
-
-
-
-
