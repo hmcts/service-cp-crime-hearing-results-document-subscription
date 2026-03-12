@@ -25,7 +25,6 @@ import java.util.UUID;
 public class DocumentMappingEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID documentId;
     private UUID materialId;
     @Enumerated(EnumType.STRING)

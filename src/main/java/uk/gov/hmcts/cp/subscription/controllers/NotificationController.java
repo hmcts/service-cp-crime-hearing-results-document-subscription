@@ -58,11 +58,8 @@ public class NotificationController implements InternalApi, NotificationApi {
     @Override
     public ResponseEntity<Void> createNotification(
             @Valid @RequestBody final EventPayload eventPayload,
+            // note the X-Correlation-Id is handled by TracingFilter but we need to declare it because its in the spec
             @RequestHeader(value = "X-Correlation-Id", required = false) final UUID xCorrelationId) {
-        return handleNotification(eventPayload);
-    }
-
-    private ResponseEntity<Void> handleNotification(final EventPayload eventPayload) {
         log.info("Received notification request from Progression/HearingNows Service - eventId: {}, materialId: {}, eventType: {}",
                 eventPayload.getEventId(),
                 eventPayload.getMaterialId(),
