@@ -33,12 +33,14 @@ public class DocumentService {
     @Transactional
     public UUID saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
         final DocumentMappingEntity entity = documentMapper.mapToEntity(clockService, materialId, eventType);
-        return documentMappingRepository.save(entity).getDocumentId();
+        DocumentMappingEntity saved = documentMappingRepository.save(entity);
+        log.info("saveDocumentMapping materialId:{} to documentId:{}", materialId, saved.getDocumentId());
+        return saved.getDocumentId();
     }
 
     @Transactional
-    public UUID getDocumentIdForMaterialId(final UUID materialId, final EntityEventType eventType) {
-        return documentMappingRepository.findByMaterialIdAndEventType(materialId, eventType).get().getDocumentId();
+    public UUID getDocumentIdForMaterialId(final UUID materialId) {
+        return documentMappingRepository.findByMaterialId(materialId).get().getDocumentId();
     }
 
     @Transactional

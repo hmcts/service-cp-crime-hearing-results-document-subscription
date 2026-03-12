@@ -29,12 +29,12 @@ class SubscriptionApiTest {
     private String bearerToken = JwtHelper.bearerTokenWithAzp(testClientId);
 
     private String baseUrl = System.getProperty("app.baseUrl", "http://localhost:8082");
-    private RestClient http = RestClient.create();
+    private RestClient restClient = RestClient.create();
 
     @BeforeEach
     void beforeEach() {
         try {
-            http.get()
+            restClient.get()
                     .uri(baseUrl + "/actuator/health")
                     .retrieve();
         } catch (Exception e) {
@@ -63,7 +63,7 @@ class SubscriptionApiTest {
     private UUID createSubscription() {
         final String postUrl = baseUrl + "/client-subscriptions";
         final String body = "{\"notificationEndpoint\":{\"callbackUrl\":\"https://my-callback-url\"},\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\"]}";
-        ResponseEntity<String> postResult = http.post()
+        ResponseEntity<String> postResult = restClient.post()
                 .uri(postUrl)
                 .header(AUTHORIZATION, bearerToken)
                 .contentType(MediaType.APPLICATION_JSON)

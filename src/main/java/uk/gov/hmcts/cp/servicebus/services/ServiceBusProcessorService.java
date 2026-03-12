@@ -38,19 +38,22 @@ public class ServiceBusProcessorService {
 
     private Map<String, ServiceBusProcessorClient> processorClients = new HashMap<>();
 
-    @SneakyThrows
     @PostConstruct
     public void initialiseServiceBus() {
         if (configService.isEnabled()) {
-            await()
-                    .atMost(Duration.ofSeconds(MAX_WAIT_SECONDS))
-                    .pollInterval(Duration.ofSeconds(POLL_SECONDS))
-                    .until(adminService::isServiceBusReady);
-            log.info("createServiceBusQueues creating service bus queues");
-            adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
-            startMessageProcessor(PCR_INBOUND_TOPIC);
-            adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
-            startMessageProcessor(PCR_OUTBOUND_TOPIC);
+            try {
+                await()
+                        .atMost(Duration.ofSeconds(MAX_WAIT_SECONDS))
+                        .pollInterval(Duration.ofSeconds(POLL_SECONDS))
+                        .until(adminService::isServiceBusReady);
+                log.info("createServiceBusQueues creating service bus queues");
+                adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
+                startMessageProcessor(PCR_INBOUND_TOPIC);
+                adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
+                startMessageProcessor(PCR_OUTBOUND_TOPIC);
+            } catch (Exception e) {
+                log.error("Failed to initialise serviceBus. {}", e.getMessage());
+            }
         }
     }
 
@@ -61,7 +64,7 @@ public class ServiceBusProcessorService {
             processorClient.stop();
             processorClients.remove(topicName);
         } else {
-            log.info("Service Bus Processor {} is not running {}", topicName);
+            log.info("Service Bus Processor {} is not running", topicName);
         }
     }
 

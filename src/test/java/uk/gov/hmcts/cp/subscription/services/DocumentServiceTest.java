@@ -59,8 +59,8 @@ class DocumentServiceTest {
 
     @Test
     void get_document_id_should_return_id() {
-        when(documentMappingRepository.findByMaterialIdAndEventType(materialId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(Optional.of(documentMappingEntity));
-        UUID response = documentService.getDocumentIdForMaterialId(materialId, PRISON_COURT_REGISTER_GENERATED);
+        when(documentMappingRepository.findByMaterialId(materialId)).thenReturn(Optional.of(documentMappingEntity));
+        UUID response = documentService.getDocumentIdForMaterialId(materialId);
         assertThat(response).isEqualTo(documentId);
     }
 

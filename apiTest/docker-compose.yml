@@ -55,6 +55,7 @@ services:
       SERVICE_BUS_ENABLED: true
       SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_MAX_TRIES: 4
     depends_on:
       - db
       - wiremock
@@ -70,9 +71,10 @@ services:
       SERVER_PORT: 8083
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
       MATERIAL_CLIENT_URL: http://wiremock:8080
-      SERVICE_BUS_ENABLED: false
+      SERVICE_BUS_ENABLED: true
       SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_MAX_TRIES: 4
     depends_on:
       - db
       - wiremock

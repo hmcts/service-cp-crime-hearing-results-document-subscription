@@ -20,15 +20,13 @@ class ServiceBusQueueTest {
     private static final String AUTHORIZATION = "Authorization";
 
     private String testClientId = "11111111-2222-3333-4444-555555555555";
-    private String bearerToken = JwtHelper.bearerTokenWithAzp(testClientId);
-
     private String baseUrl = System.getProperty("app.baseUrl", "http://localhost:8082");
-    private RestClient http = RestClient.create();
+    private RestClient restClient = RestClient.create();
 
     @BeforeEach
     void beforeEach() {
         try {
-            http.get()
+            restClient.get()
                     .uri(baseUrl + "/actuator/health")
                     .retrieve();
         } catch (Exception e) {
@@ -36,24 +34,41 @@ class ServiceBusQueueTest {
         }
     }
 
-
     @Test
-    void round_trip_subscription_should_work_ok() throws InterruptedException {
-        postNotification();
-    }
-
-    private void postNotification() {
+    void post_notification() {
         final String postUrl = baseUrl + "/notifications";
-        final String body = "{\"notificationEndpoint\":{\"callbackUrl\":\"https://my-callback-url\"},\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\"]}";
-        ResponseEntity<String> postResult = http.post()
+        ResponseEntity<String> postResponse = restClient.post()
                 .uri(postUrl)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(body)
+                .body(notificationBody())
                 .retrieve()
                 .toEntity(String.class);
-        assertThat(postResult.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-//        JsonNode jsonNode = new JsonMapper().toJsonNode(postResult.getBody());
-//        String subscriptiuonIdString = String.valueOf(jsonNode.get("clientSubscriptionId")).replaceAll("\"", "");
-//        return UUID.fromString(subscriptiuonIdString);
+        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        log.info("postResponse:{}", postResponse.getBody());
+    }
+
+    private String notificationBody() {
+        return "{\n" +
+                "  \"eventId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n" +
+                "  \"materialId\": \"123e4567-e89b-12d3-a456-426614174000\",\n" +
+                "  \"eventType\": \"PRISON_COURT_REGISTER_GENERATED\",\n" +
+                "  \"timestamp\": \"2024-01-15T10:30:00Z\",\n" +
+                "  \"defendant\": {\n" +
+                "    \"masterDefendantId\": \"8b8f1c3a-9a41-4f0f-b8a0-1c23d9e8a111\",\n" +
+                "    \"name\": \"John Doe\",\n" +
+                "    \"dateOfBirth\": \"1990-05-15\",\n" +
+                "    \"custodyEstablishmentDetails\": {\n" +
+                "      \"emailAddress\": \"prison@moj.gov.uk\"\n" +
+                "    },\n" +
+                "    \"cases\": [\n" +
+                "      {\n" +
+                "        \"urn\": \"CT98KRYCAP\"\n" +
+                "      },\n" +
+                "      {\n" +
+                "        \"urn\": \"AB75123123\"\n" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "}";
     }
 }
