@@ -258,7 +258,7 @@ jobs:
           DOCKER_IMAGE: ghcr.io/${{ github.repository }}:${{ needs.Artefact-Version.outputs.artefact_version }}
         run: |
           cd apiTest
-          ./run-apitest.sh
+          ./build-and-run-apitest.sh
 
       - name: Upload test reports
         if: always()
