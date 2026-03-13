@@ -36,6 +36,16 @@ class SubscriptionGetControllerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void get_subscription_should_not_expose_hmac_secret() throws Exception {
+        ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
+        mockMvc.perform(get("/client-subscriptions/{id}", entity.getId())
+                        .header("Authorization", AUTHORIZATION_HEADER_VALUE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.secret").doesNotExist())
+                .andExpect(jsonPath("$.keyId").doesNotExist());
+    }
+
+    @Test
     void get_no_subscription_should_return_404() throws Exception {
         mockMvc.perform(get("/client-subscriptions/{id}", subscriptionId)
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))

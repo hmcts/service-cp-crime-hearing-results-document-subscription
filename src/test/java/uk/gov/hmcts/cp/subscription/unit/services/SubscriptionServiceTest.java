@@ -80,6 +80,8 @@ class SubscriptionServiceTest {
         ClientSubscription result = subscriptionService.saveSubscription(createRequest, clientId);
 
         assertThat(result).isEqualTo(response);
+        assertThat(result.getKeyId()).isEqualTo("kid-1");
+        assertThat(result.getSecret()).isEqualTo("secret-1");
     }
 
     @Test

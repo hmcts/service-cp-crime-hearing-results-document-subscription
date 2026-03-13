@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyStore;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyStoreService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
@@ -40,9 +39,14 @@ public class SubscriptionService {
         entity = subscriptionRepository.save(entity);
 
         final ClientSubscription response = mapper.mapEntityToResponse(entity);
-        final HmacKeyService.KeyPair keyPair = hmacKeyStore.generateAndStore(entity.getId());
-        response.setKeyId(keyPair.keyId());
-        response.setSecret(keyPair.secret());
+        try {
+            final HmacKeyService.KeyPair keyPair = hmacKeyStore.generateAndStore(entity.getId());
+            response.setKeyId(keyPair.keyId());
+            response.setSecret(keyPair.secret());
+        } catch (Exception e) {
+            log.error("Failed to generate HMAC key for subscription {}: {}", entity.getId(), e.getMessage());
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to generate HMAC key for subscription");
+        }
         return response;
     }
 
