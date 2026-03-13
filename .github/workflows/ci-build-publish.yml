@@ -9,9 +9,15 @@ on:
         required: true
       HMCTS_ADO_PAT:
         required: true
-      CP_VP_AKS_DEPLOY_KEY:
+      DEPLOYMENT_APP_ID:
         required: true
-        description: "SSH deploy key with write access to hmcts/cp-vp-aks-deploy"
+        description: "GitHub App ID for deployment"
+      DEPLOYMENT_APP_PRIVATE_KEY:
+        required: true
+        description: "GitHub App private key for deployment"
+      DEPLOYMENT_APP_INSTALLATION_ID:
+        required: true
+        description: "GitHub App installation ID for deployment"
     inputs:
       environment:
         required: true
@@ -348,5 +354,7 @@ jobs:
       image_tag: ${{ needs.Artefact-Version.outputs.artefact_version }}
       environment: ${{ inputs.deploy_environment }}
     secrets:
-      deploy_key: ${{ secrets.CP_VP_AKS_DEPLOY_KEY }}
+      app_id: ${{ secrets.DEPLOYMENT_APP_ID }}
+      app_private_key: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
+      app_installation_id: ${{ secrets.DEPLOYMENT_APP_INSTALLATION_ID }}
 
