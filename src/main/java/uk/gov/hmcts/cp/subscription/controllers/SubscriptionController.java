@@ -75,7 +75,7 @@ public class SubscriptionController implements SubscriptionApi {
 
     @Override
     public ResponseEntity<EventTypeResponse> getEventTypes() {
-        EventTypeResponse eventTypes = eventTypeService.getAllEventTypes();
+        final EventTypeResponse eventTypes = eventTypeService.getAllEventTypes();
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(eventTypes);

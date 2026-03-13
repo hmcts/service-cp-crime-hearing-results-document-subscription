@@ -19,7 +19,7 @@ public class EventTypeService {
     private final EventTypeMapper eventTypeMapper;
 
     public EventTypeResponse getAllEventTypes() {
-        List<EventTypeEntity> eventTypeEntityList = eventTypeRepository.findAll();
+        final List<EventTypeEntity> eventTypeEntityList = eventTypeRepository.findAll();
         return eventTypeMapper.mapToEventTypes(eventTypeEntityList);
     }
 }

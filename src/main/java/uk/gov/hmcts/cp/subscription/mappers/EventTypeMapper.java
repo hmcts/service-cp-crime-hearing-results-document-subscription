@@ -12,7 +12,7 @@ public interface EventTypeMapper {
 
     List<EventTypePayload> map(List<EventTypeEntity> eventTypeEntities);
 
-    default EventTypeResponse mapToEventTypes(List<EventTypeEntity> eventTypeEntities) {
+    default EventTypeResponse mapToEventTypes(final List<EventTypeEntity> eventTypeEntities) {
         return EventTypeResponse.builder()
                 .events(map(eventTypeEntities))
                 .build();
