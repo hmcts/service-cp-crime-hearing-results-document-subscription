@@ -15,7 +15,7 @@ export DOCKER_IMAGE=$projectname
 
 docker compose up -d
 for i in {1..30}; do
-status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8082/actuator/health)
+  status=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8082/actuator/health 2>/dev/null) || status="000"
   if [ "$status" = "200" ]; then
     echo "App is up"
     break
