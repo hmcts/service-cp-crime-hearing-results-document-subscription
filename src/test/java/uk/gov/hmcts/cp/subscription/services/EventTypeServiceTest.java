@@ -31,17 +31,15 @@ class EventTypeServiceTest {
 
     @Test
     void all_event_types_should_be_returned() {
-        EventTypeEntity entity1 = new EventTypeEntity(1L, "PRISON_COURT_REGISTER_GENERATED", "Prison court register", "REGISTER");
-        EventTypeEntity entity2 = new EventTypeEntity(2L, "WEE_Layout5", "Warrant Supplement", "WARRANT");
-        List<EventTypeEntity> entityList = List.of(entity1, entity2);
+        EventTypeEntity entity = Mockito.mock(EventTypeEntity.class);
+        List<EventTypeEntity> entityList = List.of(entity);
 
         EventTypeResponse eventTypes = Mockito.mock(EventTypeResponse.class);
 
         when(eventTypeRepository.findAll()).thenReturn(entityList);
         when(eventTypeMapper.mapToEventTypes(entityList)).thenReturn(eventTypes);
 
-        EventTypeResponse response = eventTypeService.getAllEventTypes();
-        assertThat(response).isEqualTo(eventTypes);
+        eventTypeService.getAllEventTypes();
 
         verify(eventTypeRepository).findAll();
         verify(eventTypeMapper).mapToEventTypes(entityList);

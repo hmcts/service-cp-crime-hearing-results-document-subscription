@@ -1,5 +1,3 @@
-DROP TABLE IF EXISTS event_type;
-
 CREATE TABLE event_type (
     id integer PRIMARY KEY NOT NULL,
     event_name VARCHAR(128) NOT NULL UNIQUE,

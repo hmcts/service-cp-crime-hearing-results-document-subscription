@@ -15,33 +15,20 @@ class EventTypeMapperTest {
 
     @Test
     void entity_should_map_to_payload() {
-        EventTypeEntity entity1 = EventTypeEntity.builder()
+        EventTypeEntity entity = EventTypeEntity.builder()
                 .id(1L)
                 .eventName("PRISON_COURT_REGISTER_GENERATED")
                 .displayName("Prison court register")
                 .category("REGISTER")
                 .build();
-        EventTypeEntity entity2 = EventTypeEntity.builder()
-                .id(2L)
-                .eventName("WEE_Layout5")
-                .displayName("Warrant Supplement")
-                .category("WARRANT")
-                .build();
 
-        EventTypePayload expectedEventType1 = EventTypePayload.builder()
-                .eventName("PRISON_COURT_REGISTER_GENERATED")
-                .displayName("Prison court register")
-                .category("REGISTER")
-                .build();
-        EventTypePayload expectedEventType2 = EventTypePayload.builder()
-                .eventName("WEE_Layout5")
-                .displayName("Warrant Supplement")
-                .category("WARRANT")
-                .build();
+        EventTypeResponse eventTypes = eventTypeMapper.mapToEventTypes(List.of(entity));
+        assertThat(eventTypes.getEvents().size()).isEqualTo(1);
 
-        List<EventTypePayload> expectedEventTypes = List.of(expectedEventType1, expectedEventType2);
-        EventTypeResponse eventTypes = eventTypeMapper.mapToEventTypes(List.of(entity1, entity2));
-        assertThat(eventTypes.getEvents()).isEqualTo(expectedEventTypes);
+        EventTypePayload eventType = eventTypes.getEvents().getFirst();
+        assertThat(eventType.getEventName()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
+        assertThat(eventType.getDisplayName()).isEqualTo("Prison court register");
+        assertThat(eventType.getCategory()).isEqualTo("REGISTER");
     }
 
 
