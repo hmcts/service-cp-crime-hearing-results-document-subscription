@@ -31,14 +31,6 @@ services:
     # servicebus emulator waits 60 seconds for sqledge to start up
     depends_on:
       - sqledge
-    # start_period covers SQL_WAIT_INTERVAL(60s) + sqledge init time; check port 5300 (management API)
-    # which only opens once the emulator has finished SQL initialisation
-    healthcheck:
-      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/5300' 2>/dev/null && echo ok || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 90s
 
   wiremock:
     image: wiremock/wiremock:3.13.2
@@ -65,21 +57,20 @@ services:
       SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       SERVICE_BUS_MAX_TRIES: 4
     depends_on:
-      db:
-        condition: service_started
-      wiremock:
-        condition: service_started
-      servicebus:
-        condition: service_healthy
+      - db
+      - wiremock
+      - servicebus
     ports:
       - "8082:8082"
-    # app startup is blocked in @PostConstruct until servicebus is ready (up to 120s); allow 3 min
+    # The app @PostConstruct polls service bus for up to 120s before the HTTP server starts.
+    # start_period gives the app time to finish initialising before health failures count.
+    # Once actuator/health returns 200, service bus is confirmed ready.
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8082/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 18
-      start_period: 30s
+      start_period: 60s
 
   app2:
     image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
@@ -94,12 +85,9 @@ services:
       SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       SERVICE_BUS_MAX_TRIES: 4
     depends_on:
-      db:
-        condition: service_started
-      wiremock:
-        condition: service_started
-      servicebus:
-        condition: service_healthy
+      - db
+      - wiremock
+      - servicebus
     ports:
       - "8083:8083"
     healthcheck:
@@ -107,4 +95,4 @@ services:
       interval: 10s
       timeout: 5s
       retries: 18
-      start_period: 30s
+      start_period: 60s
