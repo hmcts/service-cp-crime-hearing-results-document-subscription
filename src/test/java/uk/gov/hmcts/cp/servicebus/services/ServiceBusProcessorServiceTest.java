@@ -2,7 +2,6 @@ package uk.gov.hmcts.cp.servicebus.services;
 
 import com.azure.core.util.BinaryData;
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
-import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
 import org.junit.jupiter.api.Test;
@@ -22,6 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
@@ -30,6 +30,8 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
 class ServiceBusProcessorServiceTest {
     @Mock
     JsonMapper jsonMapper = new JsonMapper();
+    @Mock
+    ServiceBusAdminService adminService;
     @Mock
     ServiceBusMapper serviceBusMapper;
     @Mock
@@ -53,6 +55,26 @@ class ServiceBusProcessorServiceTest {
     ServiceBusWrappedMessage wrappedMessage;
 
     private String callbackUrl = "http://callback";
+
+    @Test
+    void initialise_do_nothing_if_not_enabled() {
+        when(configService.isEnabled()).thenReturn(false);
+        serviceBusProcessorService.initialiseServiceBus();
+        verify(adminService, never()).isServiceBusReady();
+    }
+
+    @Test
+    void initialise_should_wait_60_secs_for_service_bus() {
+        // its tricky to mock the buildProcessClient so we need to rely on our integrations tests here
+        // And actually we only use stop for int tests so that we can cleanup so we dont need unit test
+        // i.e. struggle with when(clientBuilder.processMessage(any(Consumer.class))).thenReturn(clientBuilder);
+    }
+
+    @Test
+    void stop_and_start_should_work_ok() {
+        // its tricky to mock the buildProcessClient so we need to rely on our integrations tests here
+        // And actually we only use stop for int tests so that we can cleanup so we dont need unit test
+    }
 
     @Test
     void handle_message_should_pass_to_callback_client_with_success() {

@@ -35,19 +35,4 @@ class DocumentMappingRepositoryTest extends IntegrationTestBase {
         assertThat(found.get().getEventType()).isEqualTo(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
         assertThat(found.get().getCreatedAt()).isNotNull();
     }
-
-    @Transactional
-    @Test
-    void findByMaterialIdAndEventType_should_save_and_return_document() {
-        EntityEventType eventType = EntityEventType.PRISON_COURT_REGISTER_GENERATED;
-        DocumentMappingEntity saved = insertDocument(MATERIAL_ID, eventType);
-
-        Optional<DocumentMappingEntity> found = documentMappingRepository.findByMaterialIdAndEventType(MATERIAL_ID, eventType);
-
-        assertThat(found).isPresent();
-        assertThat(found.get().getDocumentId()).isEqualTo(saved.getDocumentId());
-        assertThat(found.get().getMaterialId()).isEqualTo(MATERIAL_ID);
-        assertThat(found.get().getEventType()).isEqualTo(eventType);
-        assertThat(found.get().getCreatedAt()).isNotNull();
-    }
 }

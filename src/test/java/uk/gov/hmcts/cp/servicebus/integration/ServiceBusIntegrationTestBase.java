@@ -4,7 +4,6 @@ import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
@@ -15,17 +14,13 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 public class ServiceBusIntegrationTestBase {
 
     @Autowired
-    ServiceBusConfigService configService;
+    protected ServiceBusAdminService adminService;
     @Autowired
-    ServiceBusAdminService adminService;
+    protected JsonMapper jsonMapper;
     @Autowired
-    JsonMapper jsonMapper;
+    protected ServiceBusClientService clientService;
     @Autowired
-    ServiceBusClientService clientService;
+    protected ServiceBusProcessorService processorService;
     @Autowired
-    ServiceBusProcessorService processorService;
-    @Autowired
-    ServiceBusTestService testService;
-
-    protected ServiceBusProcessorClient processorClient;
+    protected ServiceBusTestService testService;
 }

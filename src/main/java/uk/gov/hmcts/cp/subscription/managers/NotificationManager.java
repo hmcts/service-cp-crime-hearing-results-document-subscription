@@ -30,11 +30,7 @@ public class NotificationManager {
     private final CallbackDeliveryService callbackDeliveryService;
 
     public void processPcrNotification(final EventPayload eventPayload) {
-        notificationService.processInboundEvent(eventPayload);
-
-        final UUID materialId = eventPayload.getMaterialId();
-        final EntityEventType eventType = EntityEventType.valueOf(eventPayload.getEventType().name());
-        final UUID documentId = documentService.getDocumentIdForMaterialId(materialId, eventType);
+        final UUID documentId = notificationService.processInboundEvent(eventPayload);
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
     }
 

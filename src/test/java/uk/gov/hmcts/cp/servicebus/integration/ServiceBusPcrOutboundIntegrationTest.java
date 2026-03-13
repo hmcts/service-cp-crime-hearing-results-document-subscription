@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.servicebus.integration;
 
-import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -15,12 +14,8 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -40,24 +35,21 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
 
     @MockitoBean
     CallbackClient callbackClient;
-    List<ServiceBusProcessorClient> processorClients = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
-        assumeTrue(testService.isServiceBusReady(),
+        assumeTrue(adminService.isServiceBusReady(),
                 "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
         testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
+
         adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
-        processorClients.add(processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC));
+        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
     }
 
     @AfterEach
     void afterEach() {
-        processorClients.forEach(client -> {
-            if (client != null) {
-                client.stop();
-            }
-        });
+        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
     }
 
     @SneakyThrows

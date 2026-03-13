@@ -101,6 +101,7 @@ public abstract class IntegrationTestBase {
     protected DocumentMappingEntity insertDocument(UUID materialId, EntityEventType eventType) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         DocumentMappingEntity document = DocumentMappingEntity.builder()
+                .documentId(UUID.randomUUID())
                 .materialId(materialId)
                 .eventType(eventType)
                 .createdAt(now)

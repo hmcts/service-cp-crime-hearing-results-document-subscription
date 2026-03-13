@@ -63,7 +63,7 @@ class NotificationManagerTest {
 
     @Test
     void processPcrNotification_should_process_deliver() {
-        when(documentService.getDocumentIdForMaterialId(materialId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(documentId);
+        when(notificationService.processInboundEvent(payload)).thenReturn(documentId);
 
         notificationManager.processPcrNotification(payload);
 

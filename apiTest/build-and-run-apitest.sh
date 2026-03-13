@@ -8,28 +8,18 @@ cd apiTest
 
 echo "STARTED project ${projectname} at $(date)"
 
-./build-and-run-docker.sh
+./build-docker.sh
 
-echo "Running docker compose up -d ... and waiting for 8082 /actuator/health"
+echo "Running docker compose up --wait ... (waits for all healthchecks to pass, timeout 10 min)"
 export DOCKER_IMAGE=$projectname
 
-docker compose up -d
-for i in {1..30}; do
-    if curl -s http://localhost:8082/actuator/health > /dev/null; then
-        echo "App is up"
-        break
-    fi
-    echo "Waiting for app to be up ($i)..."
-    sleep 2
-done
+# --wait blocks until all services with healthchecks are healthy (or fails on timeout).
+# Ordering enforced by depends_on condition:service_healthy in docker-compose.yml:
+#   sqledge -> servicebus (90s start_period + port 5300 check) -> app1/app2 (actuator/health)
+docker compose up -d --wait --wait-timeout 600
 
 echo "Running ./gradlew test"
 ./gradlew test
 docker compose down
 
 echo "ENDED at $(date)"
-
-
-
-
-

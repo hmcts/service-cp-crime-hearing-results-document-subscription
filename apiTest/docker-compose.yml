@@ -12,15 +12,11 @@ services:
   sqledge:
     image: "mcr.microsoft.com/azure-sql-edge:latest"
     platform: linux/amd64
-    networks:
-      sb-emulator:
-        aliases:
-          - "sqledge"
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "Str0ngPassword!"
 
-  servicebus-emulator:
+  servicebus:
     image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
     volumes:
       - "./service-bus-config.json:/ServiceBus_Emulator/ConfigFiles/Config.json"
@@ -32,12 +28,9 @@ services:
       MSSQL_SA_PASSWORD: "Str0ngPassword!"
       ACCEPT_EULA: "Y"
       SQL_WAIT_INTERVAL: 60
+    # servicebus emulator waits 60 seconds for sqledge to start up
     depends_on:
       - sqledge
-    networks:
-      sb-emulator:
-        aliases:
-          - "sb-emulator"
 
   wiremock:
     image: wiremock/wiremock:3.13.2
@@ -51,7 +44,7 @@ services:
       - "--global-response-templating"
       - "--verbose"
 
-  app:
+  app1:
     image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
     build:
       context: ..
@@ -59,12 +52,47 @@ services:
       SERVER_PORT: 8082
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
       MATERIAL_CLIENT_URL: http://wiremock:8080
+      SERVICE_BUS_ENABLED: true
+      SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_MAX_TRIES: 4
     depends_on:
       - db
       - wiremock
+      - servicebus
     ports:
       - "8082:8082"
+    # The app @PostConstruct polls service bus for up to 120s before the HTTP server starts.
+    # start_period gives the app time to finish initialising before health failures count.
+    # Once actuator/health returns 200, service bus is confirmed ready.
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8082/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 60s
 
-networks:
-  sb-emulator:
-
+  app2:
+    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
+    build:
+      context: ..
+    environment:
+      SERVER_PORT: 8083
+      DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
+      MATERIAL_CLIENT_URL: http://wiremock:8080
+      SERVICE_BUS_ENABLED: true
+      SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      SERVICE_BUS_MAX_TRIES: 4
+    depends_on:
+      - db
+      - wiremock
+      - servicebus
+    ports:
+      - "8083:8083"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 60s
