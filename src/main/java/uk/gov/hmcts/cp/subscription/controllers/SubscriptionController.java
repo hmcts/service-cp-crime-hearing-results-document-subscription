@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +13,8 @@ import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.EventTypeResponse;
+import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
@@ -24,6 +27,7 @@ import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
 public class SubscriptionController implements SubscriptionApi {
 
     private final SubscriptionService subscriptionService;
+    private final EventTypeService eventTypeService;
 
     @Override
     public ResponseEntity<ClientSubscription> createClientSubscription(
@@ -67,5 +71,13 @@ public class SubscriptionController implements SubscriptionApi {
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
         subscriptionService.deleteSubscription(clientSubscriptionId, clientId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Override
+    public ResponseEntity<EventTypeResponse> getEventTypes() {
+        EventTypeResponse eventTypes = eventTypeService.getAllEventTypes();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(eventTypes);
     }
 }

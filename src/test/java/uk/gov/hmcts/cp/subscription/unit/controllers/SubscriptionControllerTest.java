@@ -13,6 +13,7 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.List;
@@ -28,6 +29,9 @@ class SubscriptionControllerTest {
 
     @Mock
     SubscriptionService subscriptionService;
+
+    @Mock
+    EventTypeService eventTypeService;
 
     @InjectMocks
     SubscriptionController subscriptionController;
@@ -85,5 +89,12 @@ class SubscriptionControllerTest {
         var result = subscriptionController.deleteClientSubscription(subscriptionId, null);
         verify(subscriptionService).deleteSubscription(subscriptionId, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(204);
+    }
+
+    @Test
+    void get_event_types_controller_should_call_event_type_service() {
+        var result = subscriptionController.getEventTypes();
+        verify(eventTypeService).getAllEventTypes();
+        assertThat(result.getStatusCode().value()).isEqualTo(200);
     }
 }
