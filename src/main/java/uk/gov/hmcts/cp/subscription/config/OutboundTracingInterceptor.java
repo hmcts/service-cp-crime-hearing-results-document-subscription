@@ -18,7 +18,7 @@ public class OutboundTracingInterceptor implements ClientHttpRequestInterceptor 
     public ClientHttpResponse intercept(final HttpRequest request,
                                         final byte[] body,
                                         final ClientHttpRequestExecution execution) throws IOException {
-        final String correlationId = MDC.get("correlationId");
+        final String correlationId = MDC.get(CORRELATION_ID_KEY);
         if (correlationId != null) {
             request.getHeaders().set(CORRELATION_ID_KEY, correlationId);
         }

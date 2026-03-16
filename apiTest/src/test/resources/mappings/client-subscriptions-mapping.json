@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/client-subscriptions"
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "Content-Type": "application/json",
+      "X-Correlation-Id": "{{#if request.headers.X-Correlation-Id}}{{request.headers.X-Correlation-Id}}{{else}}{{randomValue type='UUID'}}{{/if}}"
+    },
+    "bodyFileName": "subscription-created.json",
+    "transformers": ["response-template"]
+  }
+}

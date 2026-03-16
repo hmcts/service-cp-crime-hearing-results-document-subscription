@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPattern": "/material-query-api/query/api/rest/material/material/([a-zA-Z0-9-]*)/metadata"
+    "urlPattern": "/client-subscriptions/([a-zA-Z0-9-]*)"
   },
   "response": {
     "status": 200,
@@ -9,7 +9,7 @@
       "Content-Type": "application/json",
       "X-Correlation-Id": "{{request.headers.X-Correlation-Id}}"
     },
-    "bodyFileName": "material-response.json",
+    "bodyFileName": "subscription-get.json",
     "transformers": ["response-template"]
   }
 }

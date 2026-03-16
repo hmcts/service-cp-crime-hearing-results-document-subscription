@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 
 @Slf4j
@@ -79,7 +80,7 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
 
     private void queueMessageForCallbackUrl(String callbackUrl) {
         EventNotificationPayload payload = EventNotificationPayload.builder().build();
-        MDC.put("correlationId", UUID.randomUUID().toString());
+        MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
         clientService.queueMessage(PCR_OUTBOUND_TOPIC, callbackUrl, jsonMapper.toJson(payload), 0);
         MDC.clear();
     }
