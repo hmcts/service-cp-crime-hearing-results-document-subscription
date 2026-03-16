@@ -21,7 +21,7 @@ import java.util.UUID;
 public class TracingFilter extends OncePerRequestFilter {
 
     public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
-    public static final String MDC_CORRELATION_ID = "correlationId";
+    public static final String MDC_CORRELATION_ID = "X-Correlation-Id";
 
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {

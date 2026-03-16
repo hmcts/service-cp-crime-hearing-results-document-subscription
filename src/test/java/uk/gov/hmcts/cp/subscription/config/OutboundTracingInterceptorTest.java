@@ -13,6 +13,8 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpResponse;
 import uk.gov.hmcts.cp.filters.TracingFilter;
 
+import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
+
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +48,7 @@ class OutboundTracingInterceptorTest {
     @Test
     void intercept_adds_X_Correlation_Id_from_MDC() throws Exception {
         final String correlationId = UUID.randomUUID().toString();
-        MDC.put("correlationId", correlationId);
+        MDC.put(MDC_CORRELATION_ID, correlationId);
         final HttpHeaders headers = new HttpHeaders();
         when(request.getHeaders()).thenReturn(headers);
         when(execution.execute(request, new byte[0])).thenReturn(clientHttpResponse);

@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class SubscriptionApiTest {
     private static final String AUTHORIZATION = "Authorization";
+    private static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
 
     private String testClientId = "11111111-2222-3333-4444-555555555555";
     private String bearerToken = JwtHelper.bearerTokenWithAzp(testClientId);
@@ -44,23 +45,7 @@ class SubscriptionApiTest {
 
 
     @Test
-    void round_trip_subscription_should_work_ok() throws InterruptedException {
-        // To maker this idempotent we catch the 409 use the subscriptionId in the response.
-        // i.e. From 409 Conflict: "{"error":"invalid_request","message":"subscription already exist with 215767e1-3da3-470e-b8aa-f5da1d79a064"}
-        try {
-            UUID subscriptionId = createSubscription();
-            getSubscription(subscriptionId);
-        } catch (HttpClientErrorException e) {
-            log.info("Subscription already exists ... trying to parse subscriptionId from:{}", e.getMessage());
-            JsonNode jsonNode = new JsonMapper().toJsonNode(e.getResponseBodyAsString());
-            String message = String.valueOf(jsonNode.get("message"));
-            String subscriptionIdString = message.replaceAll("subscription already exist with ", "").replaceAll("\"", "");
-            UUID subscriptionId = UUID.fromString(subscriptionIdString);
-            getSubscription(subscriptionId);
-        }
-    }
-
-    private UUID createSubscription() {
+    void create_subscription_without_correlation_id_should_have_one_generated_in_response() {
         final String postUrl = baseUrl + "/client-subscriptions";
         final String body = "{\"notificationEndpoint\":{\"callbackUrl\":\"https://my-callback-url\"},\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\"]}";
         ResponseEntity<String> postResult = restClient.post()
@@ -70,21 +55,59 @@ class SubscriptionApiTest {
                 .body(body)
                 .retrieve()
                 .toEntity(String.class);
+        String generatedCorrelationId = postResult.getHeaders().getFirst(CORRELATION_ID_HEADER);
+        assertThat(generatedCorrelationId).isNotNull();
+        assertThat(generatedCorrelationId).matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
+        log.info("filter generated correlationId:{}", generatedCorrelationId);
+    }
+
+    @Test
+    void round_trip_subscription_should_work_ok() throws InterruptedException {
+        String correlationId = UUID.randomUUID().toString();
+        // To maker this idempotent we catch the 409 use the subscriptionId in the response.
+        // i.e. From 409 Conflict: "{"error":"invalid_request","message":"subscription already exist with 215767e1-3da3-470e-b8aa-f5da1d79a064"}
+        try {
+            UUID subscriptionId = createSubscription(correlationId);
+            getSubscription(subscriptionId, correlationId);
+        } catch (HttpClientErrorException e) {
+            log.info("Subscription already exists ... trying to parse subscriptionId from:{}", e.getMessage());
+            JsonNode jsonNode = new JsonMapper().toJsonNode(e.getResponseBodyAsString());
+            String message = String.valueOf(jsonNode.get("message"));
+            String subscriptionIdString = message.replaceAll("subscription already exist with ", "").replaceAll("\"", "");
+            UUID subscriptionId = UUID.fromString(subscriptionIdString);
+            getSubscription(subscriptionId, correlationId);
+        }
+    }
+
+    private UUID createSubscription(String correlationId) {
+        final String postUrl = baseUrl + "/client-subscriptions";
+        final String body = "{\"notificationEndpoint\":{\"callbackUrl\":\"https://my-callback-url\"},\"eventTypes\":[\"PRISON_COURT_REGISTER_GENERATED\"]}";
+        ResponseEntity<String> postResult = restClient.post()
+                .uri(postUrl)
+                .header(AUTHORIZATION, bearerToken)
+                .header(CORRELATION_ID_HEADER, correlationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .retrieve()
+                .toEntity(String.class);
         assertThat(postResult.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(postResult.getHeaders().getFirst(CORRELATION_ID_HEADER)).isEqualTo(correlationId);
         JsonNode jsonNode = new JsonMapper().toJsonNode(postResult.getBody());
         String subscriptiuonIdString = String.valueOf(jsonNode.get("clientSubscriptionId")).replaceAll("\"", "");
         return UUID.fromString(subscriptiuonIdString);
     }
 
-    private void getSubscription(UUID subscriptionId) {
+    private void getSubscription(UUID subscriptionId, String correlationId) {
         final String getUrl = String.format("%s/client-subscriptions/%s", baseUrl, subscriptionId);
         ResponseEntity<String> getResult = RestClient.builder().baseUrl(getUrl)
                 .defaultHeader(AUTHORIZATION, bearerToken)
+                .defaultHeader(CORRELATION_ID_HEADER, correlationId)
                 .build()
                 .get()
                 .retrieve()
                 .toEntity(String.class);
         assertThat(getResult.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(getResult.getBody()).contains("clientSubscriptionId\":\"" + subscriptionId);
+        assertThat(getResult.getHeaders().getFirst(CORRELATION_ID_HEADER)).isEqualTo(correlationId);
     }
 }

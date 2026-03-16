@@ -8,6 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -18,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class ServiceBusQueueTest {
     private static final String AUTHORIZATION = "Authorization";
+    private static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
 
     private String testClientId = "11111111-2222-3333-4444-555555555555";
     private String baseUrl = System.getProperty("app.baseUrl", "http://localhost:8082");
@@ -35,7 +38,7 @@ class ServiceBusQueueTest {
     }
 
     @Test
-    void post_notification() {
+    void post_notification_without_correlation_id_should_have_one_generated_in_response() {
         final String postUrl = baseUrl + "/notifications";
         ResponseEntity<String> postResponse = restClient.post()
                 .uri(postUrl)
@@ -44,6 +47,24 @@ class ServiceBusQueueTest {
                 .retrieve()
                 .toEntity(String.class);
         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        String generatedCorrelationId = postResponse.getHeaders().getFirst(CORRELATION_ID_HEADER);
+        assertThat(generatedCorrelationId).isNotNull();
+        log.info("filter generated correlationId:{}", generatedCorrelationId);
+    }
+
+    @Test
+    void post_notification() {
+        final String postUrl = baseUrl + "/notifications";
+        String correlationId = UUID.randomUUID().toString();
+        ResponseEntity<String> postResponse = restClient.post()
+                .uri(postUrl)
+                .header(CORRELATION_ID_HEADER, correlationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(notificationBody())
+                .retrieve()
+                .toEntity(String.class);
+        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        assertThat(postResponse.getHeaders().getFirst(CORRELATION_ID_HEADER)).isEqualTo(correlationId);
         log.info("postResponse:{}", postResponse.getBody());
     }
 

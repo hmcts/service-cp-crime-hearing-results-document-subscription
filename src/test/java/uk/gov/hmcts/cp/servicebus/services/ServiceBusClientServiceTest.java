@@ -19,6 +19,7 @@ import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,7 +50,7 @@ class ServiceBusClientServiceTest {
     @Test
     void queue_message_should_pass_to_topic() {
         UUID correlationId = UUID.randomUUID();
-        MDC.put("correlationId", correlationId.toString());
+        MDC.put(MDC_CORRELATION_ID, correlationId.toString());
         when(configService.senderClient(PCR_INBOUND_TOPIC)).thenReturn(senderClient);
         when(wrapperMapper.newWrapper(correlationId, 1, callbackUrl, "message")).thenReturn(wrappedMessage);
         when(jsonMapper.toJson(wrappedMessage)).thenReturn("wrapped-message");
@@ -60,6 +61,6 @@ class ServiceBusClientServiceTest {
 
         verify(senderClient).sendMessage(serviceBusMessage);
         verify(senderClient).close();
-        MDC.remove("correlationId");
+        MDC.remove(MDC_CORRELATION_ID);
     }
 }
