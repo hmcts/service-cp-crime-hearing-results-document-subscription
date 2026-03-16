@@ -25,9 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Probably best as a separate app with its own gradle build
  */
 @Slf4j
-class SubscriptionApiTest {
-    private static final String AUTHORIZATION = "Authorization";
-    private static final String CORRELATION_ID_KEY = "X-Correlation-Id";
+public class SubscriptionApiTest {
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
 
     private String testClientId = "11111111-2222-3333-4444-555555555555";
     private String bearerToken = JwtHelper.bearerTokenWithAzp(testClientId);

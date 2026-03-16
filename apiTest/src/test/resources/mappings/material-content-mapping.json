@@ -1,7 +1,12 @@
 {
   "request": {
     "method": "GET",
-    "url": "/material-query-api/query/api/rest/material/material/6c198796-08bb-4803-b456-fa0c29ca6021/content"
+    "urlPattern": "/material-query-api/query/api/rest/material/material/([a-zA-Z0-9-]*)/content",
+    "headers": {
+      "X-Correlation-Id": {
+        "matches": "^([a-zA-Z0-9-]*)$"
+      }
+    }
   },
   "response": {
     "status": 200,
