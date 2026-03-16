@@ -16,8 +16,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class MaterialServiceTest {
     private final String baseUrl = "http://localhost:8090";
+    private final String CORRELATION_ID_KEY = "X-Correlation-Id";
     private final RestClient restClient = RestClient.create();
-    private static final String CORRELATION_ID_KEY = "X-Correlation-Id";
 
     @Test
     void material_metadata() {
