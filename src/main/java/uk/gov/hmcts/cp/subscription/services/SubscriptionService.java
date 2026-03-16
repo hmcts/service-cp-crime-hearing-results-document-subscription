@@ -7,8 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyStore;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.HmacCredentials;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
@@ -24,6 +27,7 @@ public class SubscriptionService {
     private final ClockService clockService;
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionMapper mapper;
+    private final HmacKeyStore hmacKeyStore;
 
     @Transactional
     public ClientSubscription saveSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
@@ -33,7 +37,11 @@ public class SubscriptionService {
         });
         ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(request, clockService.nowOffsetUTC());
         entity = entity.toBuilder().clientId(clientId).build();
-        return mapper.mapEntityToResponse(subscriptionRepository.save(entity));
+        entity = subscriptionRepository.save(entity);
+        final ClientSubscription response = mapper.mapEntityToResponse(entity);
+        final HmacKeyService.KeyPair keyPair = hmacKeyStore.generateAndStore(entity.getId());
+        response.setHmac(HmacCredentials.builder().keyId(keyPair.keyId()).secret(keyPair.secret()).build());
+        return response;
     }
 
     @Transactional
