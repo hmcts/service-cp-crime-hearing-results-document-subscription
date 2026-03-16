@@ -1,14 +1,12 @@
-package uk.gov.hmcts.cp.subscription.http;
+package uk.gov.hmcts.cp.subscription.http.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
-import org.springframework.stereotype.Service;
 
-@Service
 public class JsonMapper {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @SneakyThrows
     public String toJson(final Object object) {

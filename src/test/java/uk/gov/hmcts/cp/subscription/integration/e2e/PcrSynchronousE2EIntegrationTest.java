@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_HEADER;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
@@ -225,7 +225,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         return mockMvc.perform(post(NOTIFICATIONS_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .header(CORRELATION_ID_HEADER, correlationId)
+                        .header(CORRELATION_ID_KEY, correlationId)
                         .content(loadPayload(payloadPath)));
     }
 
@@ -269,21 +269,21 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private void getDocumentAndExpectPdf(UUID subId, UUID docId) throws Exception {
         mockMvc.perform(get(DOCUMENT_URI, subId, docId)
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
-                        .header(CORRELATION_ID_HEADER, correlationId))
+                        .header(CORRELATION_ID_KEY, correlationId))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
-                .andExpect(header().string(CORRELATION_ID_HEADER, correlationId));
+                .andExpect(header().string(CORRELATION_ID_KEY, correlationId));
     }
 
     private void getDocumentAndExpectPdf(UUID subId, UUID docId, String clientId) throws Exception {
         mockMvc.perform(get(DOCUMENT_URI, subId, docId)
                         .header("Authorization", bearerTokenWithAzp(clientId))
-                        .header(CORRELATION_ID_HEADER, correlationId))
+                        .header(CORRELATION_ID_KEY, correlationId))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
-                .andExpect(header().string(CORRELATION_ID_HEADER, correlationId));
+                .andExpect(header().string(CORRELATION_ID_KEY, correlationId));
     }
 
     private void createSubscription() throws Exception {

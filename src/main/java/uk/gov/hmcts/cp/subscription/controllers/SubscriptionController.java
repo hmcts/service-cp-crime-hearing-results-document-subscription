@@ -19,7 +19,7 @@ import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +32,7 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     public ResponseEntity<ClientSubscription> createClientSubscription(
             final ClientSubscriptionRequest clientSubscriptionRequest,
-            @RequestHeader(value = MDC_CORRELATION_ID, required = false) final UUID xCorrelationId) {
+            @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         log.info("createClientSubscription callbackUrl:{} clientId:{}",
                 Encode.forJava(clientSubscriptionRequest.getNotificationEndpoint().getCallbackUrl()), clientId);
@@ -45,7 +45,7 @@ public class SubscriptionController implements SubscriptionApi {
     public ResponseEntity<ClientSubscription> updateClientSubscription(
             final UUID clientSubscriptionId,
             final ClientSubscriptionRequest clientSubscriptionRequest,
-            @RequestHeader(value = MDC_CORRELATION_ID, required = false) final UUID xCorrelationId) {
+            @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
         final ClientSubscription response = subscriptionService.updateSubscription(
@@ -56,7 +56,7 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     public ResponseEntity<ClientSubscription> getClientSubscription(
             final UUID clientSubscriptionId,
-            @RequestHeader(value = MDC_CORRELATION_ID, required = false) final UUID xCorrelationId) {
+            @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         log.info("getClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
         final ClientSubscription response = subscriptionService.getSubscription(clientSubscriptionId, clientId);
@@ -66,7 +66,7 @@ public class SubscriptionController implements SubscriptionApi {
     @Override
     public ResponseEntity<Void> deleteClientSubscription(
             final UUID clientSubscriptionId,
-            @RequestHeader(value = MDC_CORRELATION_ID, required = false) final UUID xCorrelationId) {
+            @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
         subscriptionService.deleteSubscription(clientSubscriptionId, clientId);

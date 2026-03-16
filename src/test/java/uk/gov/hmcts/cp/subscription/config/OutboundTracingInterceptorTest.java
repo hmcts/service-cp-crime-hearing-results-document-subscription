@@ -13,6 +13,8 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpResponse;
 import uk.gov.hmcts.cp.filters.TracingFilter;
 
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
+
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,14 +48,14 @@ class OutboundTracingInterceptorTest {
     @Test
     void intercept_adds_X_Correlation_Id_from_MDC() throws Exception {
         final String correlationId = UUID.randomUUID().toString();
-        MDC.put("correlationId", correlationId);
+        MDC.put(CORRELATION_ID_KEY, correlationId);
         final HttpHeaders headers = new HttpHeaders();
         when(request.getHeaders()).thenReturn(headers);
         when(execution.execute(request, new byte[0])).thenReturn(clientHttpResponse);
 
         interceptor.intercept(request, new byte[0], execution);
 
-        assertThat(headers.getFirst(TracingFilter.CORRELATION_ID_HEADER))
+        assertThat(headers.getFirst(TracingFilter.CORRELATION_ID_KEY))
                 .isEqualTo(correlationId);
     }
 
@@ -65,6 +67,6 @@ class OutboundTracingInterceptorTest {
 
         interceptor.intercept(request, new byte[0], execution);
 
-        assertThat(request.getHeaders().getFirst(TracingFilter.CORRELATION_ID_HEADER)).isNull();
+        assertThat(request.getHeaders().getFirst(TracingFilter.CORRELATION_ID_KEY)).isNull();
     }
 }
