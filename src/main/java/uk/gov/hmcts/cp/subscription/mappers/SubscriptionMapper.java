@@ -40,8 +40,7 @@ public interface SubscriptionMapper {
     @Mapping(source = "id", target = "clientSubscriptionId")
     @Mapping(target = "createdAt", expression = "java(entity.getCreatedAt().toInstant())")
     @Mapping(target = "updatedAt", expression = "java(entity.getUpdatedAt().toInstant())")
-    @Mapping(target = "keyId", ignore = true) //TBD
-    @Mapping(target = "secret", ignore = true) //TBD
+    @Mapping(target = "hmac", ignore = true)
     ClientSubscription mapEntityToResponse(ClientSubscriptionEntity entity);
 
     @Named("mapWithSortedEventTypes")
