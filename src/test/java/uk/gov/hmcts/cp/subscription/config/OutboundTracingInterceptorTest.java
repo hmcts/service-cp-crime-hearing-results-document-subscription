@@ -53,7 +53,7 @@ class OutboundTracingInterceptorTest {
 
         interceptor.intercept(request, new byte[0], execution);
 
-        assertThat(headers.getFirst(TracingFilter.CORRELATION_ID_HEADER))
+        assertThat(headers.getFirst(TracingFilter.CORRELATION_ID_KEY))
                 .isEqualTo(correlationId);
     }
 
@@ -65,6 +65,6 @@ class OutboundTracingInterceptorTest {
 
         interceptor.intercept(request, new byte[0], execution);
 
-        assertThat(request.getHeaders().getFirst(TracingFilter.CORRELATION_ID_HEADER)).isNull();
+        assertThat(request.getHeaders().getFirst(TracingFilter.CORRELATION_ID_KEY)).isNull();
     }
 }

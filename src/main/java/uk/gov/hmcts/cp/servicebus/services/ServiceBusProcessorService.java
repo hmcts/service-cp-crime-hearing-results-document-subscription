@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.awaitility.Awaitility.await;
-import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
 
@@ -85,7 +85,7 @@ public class ServiceBusProcessorService {
         final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
         log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
         try {
-            MDC.put(MDC_CORRELATION_ID, queueMessage.getCorrelationId().toString());
+            MDC.put(CORRELATION_ID_KEY, queueMessage.getCorrelationId().toString());
             serviceBusHandlers.handleMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
@@ -97,7 +97,7 @@ public class ServiceBusProcessorService {
             clientService.queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
             // Because we added a new message and swallowed the error then the current message will be dropped
         } finally {
-            MDC.remove(MDC_CORRELATION_ID);
+            MDC.remove(CORRELATION_ID_KEY);
         }
     }
 

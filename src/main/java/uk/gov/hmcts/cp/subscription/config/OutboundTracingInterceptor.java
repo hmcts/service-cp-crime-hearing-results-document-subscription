@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_HEADER;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 
 @Component
 public class OutboundTracingInterceptor implements ClientHttpRequestInterceptor {
@@ -20,7 +20,7 @@ public class OutboundTracingInterceptor implements ClientHttpRequestInterceptor 
                                         final ClientHttpRequestExecution execution) throws IOException {
         final String correlationId = MDC.get("correlationId");
         if (correlationId != null) {
-            request.getHeaders().set(CORRELATION_ID_HEADER, correlationId);
+            request.getHeaders().set(CORRELATION_ID_KEY, correlationId);
         }
         return execution.execute(request, body);
     }

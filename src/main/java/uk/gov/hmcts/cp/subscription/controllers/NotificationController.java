@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.filters.TracingFilter.MDC_CORRELATION_ID;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 
 /**
@@ -77,7 +77,7 @@ public class NotificationController implements InternalApi, NotificationApi {
     public ResponseEntity<Resource> getDocument(
             @NotNull @PathVariable("clientSubscriptionId") final UUID clientSubscriptionId,
             @NotNull @PathVariable("documentId") final UUID documentId,
-            @RequestHeader(value = MDC_CORRELATION_ID, required = false) final UUID xCorrelationId) {
+            @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, clientId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());

@@ -45,22 +45,22 @@ class TracingFilterTest {
     @Test
     void doFilterInternal_puts_correlationId_in_MDC_and_response_when_header_present() throws ServletException, IOException {
         final String correlationId = UUID.randomUUID().toString();
-        when(request.getHeader(TracingFilter.CORRELATION_ID_HEADER)).thenReturn(correlationId);
+        when(request.getHeader(TracingFilter.CORRELATION_ID_KEY)).thenReturn(correlationId);
 
         filter.doFilterInternal(request, response, filterChain);
 
-        verify(response).setHeader(TracingFilter.CORRELATION_ID_HEADER, correlationId);
+        verify(response).setHeader(TracingFilter.CORRELATION_ID_KEY, correlationId);
         verify(filterChain).doFilter(request, response);
-        assertThat(MDC.get(TracingFilter.MDC_CORRELATION_ID)).isNull();
+        assertThat(MDC.get(TracingFilter.CORRELATION_ID_KEY)).isNull();
     }
 
     @Test
     void doFilterInternal_generates_correlationId_when_header_absent() throws ServletException, IOException {
-        when(request.getHeader(TracingFilter.CORRELATION_ID_HEADER)).thenReturn(null);
+        when(request.getHeader(TracingFilter.CORRELATION_ID_KEY)).thenReturn(null);
 
         filter.doFilterInternal(request, response, filterChain);
 
-        verify(response).setHeader(eq(TracingFilter.CORRELATION_ID_HEADER), anyString());
+        verify(response).setHeader(eq(TracingFilter.CORRELATION_ID_KEY), anyString());
         verify(filterChain).doFilter(request, response);
     }
 }

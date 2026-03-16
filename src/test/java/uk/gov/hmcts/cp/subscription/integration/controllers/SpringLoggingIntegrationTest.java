@@ -13,8 +13,10 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 
 @Slf4j
 class SpringLoggingIntegrationTest extends IntegrationTestBase {
@@ -26,9 +28,11 @@ class SpringLoggingIntegrationTest extends IntegrationTestBase {
         System.setOut(originalStdOut);
     }
 
+    UUID correlationId = UUID.randomUUID();
+
     @Test
     void springboot_test_should_log_correct_fields() throws IOException {
-        MDC.put("any-mdc-field", "1234-1234");
+        MDC.put(CORRELATION_ID_KEY, correlationId.toString());
         final ByteArrayOutputStream capturedStdOut = captureStdOut();
         log.info("spring boot test message", new RuntimeException("TestException"));
 
@@ -36,18 +40,19 @@ class SpringLoggingIntegrationTest extends IntegrationTestBase {
         assertThat(logMessage).isNotEmpty();
 
         final Map<String, Object> capturedFields =
-                new ObjectMapper().readValue(logMessage, new TypeReference<>() { });
+                new ObjectMapper().readValue(logMessage, new TypeReference<>() {
+                });
 
-        assertThat(capturedFields.get("any-mdc-field")).isEqualTo("1234-1234");
+        assertThat(capturedFields.get(CORRELATION_ID_KEY)).isEqualTo(correlationId.toString());
         assertThat(capturedFields.get("timestamp")).isNotNull();
-        assertThat(capturedFields.get("logger_name"))
-                .isEqualTo("uk.gov.hmcts.cp.subscription.integration.controllers.SpringLoggingIntegrationTest");
-        assertThat(capturedFields.get("thread_name")).isEqualTo("Test worker");
-        assertThat(capturedFields.get("level")).isEqualTo("INFO");
         assertThat(capturedFields.get("message").toString())
                 .contains("spring boot test message")
                 .contains("java.lang.RuntimeException: TestException")
                 .contains("uk.gov.hmcts.cp.subscription.integration.controllers.SpringLoggingIntegrationTest");
+        assertThat(capturedFields.get("logger_name"))
+                .isEqualTo("uk.gov.hmcts.cp.subscription.integration.controllers.SpringLoggingIntegrationTest");
+        assertThat(capturedFields.get("thread_name")).isEqualTo("Test worker");
+        assertThat(capturedFields.get("level")).isEqualTo("INFO");
     }
 
     private ByteArrayOutputStream captureStdOut() {

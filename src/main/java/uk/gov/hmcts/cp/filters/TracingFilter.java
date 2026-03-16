@@ -20,8 +20,7 @@ import java.util.UUID;
 @Slf4j
 public class TracingFilter extends OncePerRequestFilter {
 
-    public static final String CORRELATION_ID_HEADER = "X-Correlation-Id";
-    public static final String MDC_CORRELATION_ID = "correlationId";
+    public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
 
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
@@ -33,15 +32,18 @@ public class TracingFilter extends OncePerRequestFilter {
                                     @Nonnull final HttpServletResponse response,
                                     @Nonnull final FilterChain filterChain) throws ServletException, IOException {
         try {
-            String correlationId = request.getHeader(CORRELATION_ID_HEADER);
-            if (correlationId == null) {
-                correlationId = UUID.randomUUID().toString();
-            }
-            MDC.put(MDC_CORRELATION_ID, correlationId);
-            response.setHeader(CORRELATION_ID_HEADER, correlationId);
+            final String correlationId = getCorrelationId(request);
+            MDC.put(CORRELATION_ID_KEY, getCorrelationId(request));
+            response.setHeader(CORRELATION_ID_KEY, correlationId);
             filterChain.doFilter(request, response);
         } finally {
-            MDC.remove(MDC_CORRELATION_ID);
+            MDC.remove(CORRELATION_ID_KEY);
         }
+    }
+
+    private String getCorrelationId(final HttpServletRequest request) {
+        return request.getHeader(CORRELATION_ID_KEY) == null
+                ? UUID.randomUUID().toString()
+                : request.getHeader(CORRELATION_ID_KEY);
     }
 }
