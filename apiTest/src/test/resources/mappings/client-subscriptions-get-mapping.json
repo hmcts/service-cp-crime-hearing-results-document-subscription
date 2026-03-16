@@ -6,8 +6,7 @@
   "response": {
     "status": 200,
     "headers": {
-      "Content-Type": "application/json",
-      "X-Correlation-Id": "{{request.headers.X-Correlation-Id}}"
+      "Content-Type": "application/json"
     },
     "bodyFileName": "subscription-get.json",
     "transformers": ["response-template"]
