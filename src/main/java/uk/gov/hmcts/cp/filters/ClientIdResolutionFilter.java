@@ -22,6 +22,8 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
     public static final String MDC_CLIENT_ID = "clientId";
 
     private static final String CLIENT_SUBSCRIPTIONS_PREFIX = "/client-subscriptions";
+    private static final String NOTIFICATIONS_PREFIX = "/notifications";
+
     private static final String CLIENT_ID_HEADER = "X-Client-Id";
 
     private final JwtTokenParser jwtTokenParser;
@@ -32,9 +34,14 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
         this.config = config;
     }
 
+    @SuppressWarnings("PMD.OnlyOneReturn")
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
-        return !request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX);
+        if (!request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX) ||
+                request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX + NOTIFICATIONS_PREFIX)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
