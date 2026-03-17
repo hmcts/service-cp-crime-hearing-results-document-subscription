@@ -55,6 +55,17 @@ class SpringLoggingIntegrationTest extends IntegrationTestBase {
         assertThat(capturedFields.get("level")).isEqualTo("INFO");
     }
 
+    @Test
+    void log_exception_should_be_just_about_visible_in_idea() {
+        log.info("An info message");
+        log.error("An error message");
+        // This error is very difficult to see in idea.
+        // We get a grey / non obvious "<1 internal line>" link on the end of previous line
+        log.error("An error message with exception", new RuntimeException("Json parse error"));
+        log.info("Another info message");
+        log.error("Another error message");
+    }
+
     private ByteArrayOutputStream captureStdOut() {
         final ByteArrayOutputStream capturedStdOut = new ByteArrayOutputStream();
         System.setOut(new PrintStream(capturedStdOut, true, StandardCharsets.UTF_8));
