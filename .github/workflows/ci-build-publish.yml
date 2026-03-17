@@ -9,6 +9,15 @@ on:
         required: true
       HMCTS_ADO_PAT:
         required: true
+      DEPLOYMENT_APP_ID:
+        required: true
+        description: "GitHub App ID for deployment"
+      DEPLOYMENT_APP_PRIVATE_KEY:
+        required: true
+        description: "GitHub App private key for deployment"
+      DEPLOYMENT_APP_INSTALLATION_ID:
+        required: true
+        description: "GitHub App installation ID for deployment"
     inputs:
       environment:
         required: true
@@ -31,6 +40,10 @@ on:
         required: false
         type: boolean
         default: false
+      deploy_environment:
+        required: false
+        type: string
+        default: dev
 
 
 jobs:
@@ -273,12 +286,15 @@ jobs:
     needs: [ Provider-Deploy, Build, Artefact-Version ]
     if: ${{ inputs.trigger_deploy }}
     runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.trigger.outputs.run_id }}
     steps:
       - name: Extract repo name
         run: echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
 
-      - name: Trigger ADO pipeline
-        uses: hmcts/trigger-ado-pipeline@v1
+      - name: Trigger ADO pipeline 460
+        id: trigger
+        uses: hmcts/trigger-ado-pipeline@v2
         with:
           pipeline_id: 460
           ado_pat: ${{ secrets.HMCTS_ADO_PAT }}
@@ -291,4 +307,31 @@ jobs:
               "agentDemand": "ubuntu-j25",
               "baseImage": "hmcts/apm-services:25-jre"
             }
+
+  Wait-For-ACR-Push:
+    needs: [Deploy]
+    if: ${{ inputs.trigger_deploy }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for ADO pipeline 460
+        uses: hmcts/monitor-ado-pipeline@v1
+        with:
+          pipeline_id: 460
+          run_id: ${{ needs.Deploy.outputs.run_id }}
+          ado_pat: ${{ secrets.HMCTS_ADO_PAT }}
+          poll_interval: 30
+          timeout: 1800
+
+  Deploy-To-K8s:
+    needs: [Wait-For-ACR-Push, Artefact-Version, Build]
+    if: ${{ inputs.trigger_deploy }}
+    uses: hmcts/cp-vp-aks-deploy/.github/workflows/update-service-tag.yml@main
+    with:
+      service_name: ${{ needs.Build.outputs.repo_name }}
+      image_tag: ${{ needs.Artefact-Version.outputs.artefact_version }}
+      environment: ${{ inputs.deploy_environment }}
+    secrets:
+      app_id: ${{ secrets.DEPLOYMENT_APP_ID }}
+      app_private_key: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
+      app_installation_id: ${{ secrets.DEPLOYMENT_APP_INSTALLATION_ID }}
 
