@@ -324,11 +324,17 @@ jobs:
     if: ${{ inputs.trigger_deploy }}
     runs-on: ubuntu-latest
     steps:
+      - name: Generate date suffix
+        id: date
+        shell: bash
+        run: echo "suffix=_$(date -u +'%d%m%y')" >> "$GITHUB_OUTPUT"
+
       - name: Deploy via ADO pipeline
         uses: hmcts/action-ado-deploy@v1
         with:
           service_name: ${{ needs.build.outputs.repo_name }}
           image_tag: ${{ needs.version.outputs.artefact_version }}
+          tag_suffix: ${{ steps.date.outputs.suffix }}
           app_id: ${{ secrets.DEPLOYMENT_APP_ID }}
           app_private_key: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
           target_repository: hmcts/cp-vp-aks-deploy
