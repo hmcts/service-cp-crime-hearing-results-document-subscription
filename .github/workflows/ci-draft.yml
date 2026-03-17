@@ -22,7 +22,10 @@ jobs:
     with:
       environment: dev
       is_publish: ${{ github.event_name == 'push' }}
-      trigger_docker: ${{ github.event_name == 'push' }}
-      trigger_deploy: ${{ github.event_name == 'push' }}
+#      trigger_docker: ${{ github.event_name == 'push' }}
+#      trigger_deploy: ${{ github.event_name == 'push' }}
+      trigger_docker: true
+      trigger_deploy: true
+
       run_api_test: ${{ github.event_name == 'pull_request' }}
       deploy_environment: dev
