@@ -325,13 +325,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via ADO pipeline
-        uses: hmcts/deployment-via-ado-pipeline@v1
+        uses: hmcts/action-ado-deploy@v1
         with:
           service_name: ${{ needs.Build.outputs.repo_name }}
           image_tag: ${{ needs.Artefact-Version.outputs.artefact_version }}
           app_id: ${{ secrets.DEPLOYMENT_APP_ID }}
           app_private_key: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
+          target_repository: hmcts/cp-vp-aks-deploy
           target_branch: env/dev
+          values_file: vp-config/services_values.yml
           pipeline_id: 434
           ado_pat: ${{ secrets.HMCTS_ADO_PAT }}
           ref_name: refs/heads/env/dev
