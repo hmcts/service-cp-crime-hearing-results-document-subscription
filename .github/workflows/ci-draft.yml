@@ -21,12 +21,9 @@ jobs:
       DEPLOYMENT_APP_PRIVATE_KEY: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
     with:
       environment: dev
-#      is_publish: ${{ github.event_name == 'push' }}
-#      trigger_docker: ${{ github.event_name == 'push' }}
-#      trigger_deploy: ${{ github.event_name == 'push' }}
-      is_publish: true
-      trigger_docker: true
-      trigger_deploy: true
+      is_publish: ${{ github.event_name == 'push' }}
+      trigger_docker: ${{ github.event_name == 'push' }}
+      trigger_deploy: ${{ github.event_name == 'push' }}
 
       run_api_test: ${{ github.event_name == 'pull_request' }}
       deploy_environment: dev
