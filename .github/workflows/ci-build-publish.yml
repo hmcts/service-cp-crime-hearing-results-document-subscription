@@ -44,7 +44,7 @@ on:
 
 
 jobs:
-  Artefact-Version:
+  version:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment }}
@@ -64,8 +64,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  Build:
-    needs: [Artefact-Version]
+  build:
+    needs: [version]
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment }}
@@ -89,7 +89,7 @@ jobs:
 
       - name: Gradle Build
         env:
-          ARTEFACT_VERSION: ${{ needs.Artefact-Version.outputs.artefact_version }}
+          ARTEFACT_VERSION: ${{ needs.version.outputs.artefact_version }}
         run: |
           echo "Building with ARTEFACT_VERSION=$ARTEFACT_VERSION"
           ./gradlew composeUp
@@ -101,7 +101,7 @@ jobs:
         run: |
           repo_name=${GITHUB_REPOSITORY##*/}
           echo "repo_name=${repo_name}" >> $GITHUB_OUTPUT
-          echo "artefact_name=${repo_name}-${{ needs.Artefact-Version.outputs.artefact_version }}" >> $GITHUB_OUTPUT
+          echo "artefact_name=${repo_name}-${{ needs.version.outputs.artefact_version }}" >> $GITHUB_OUTPUT
 
       - name: Upload JAR Artefact
         uses: actions/upload-artifact@v7
@@ -118,9 +118,9 @@ jobs:
             build/reports/tests/test/
             build/test-results/test/
 
-  API-Test-PR:
+  api-test-pr:
     if: ${{ inputs.run_api_test }}
-    needs: [Build]
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -154,8 +154,8 @@ jobs:
             apiTest/build/reports/tests/test/
             apiTest/build/test-results/test/
 
-  Provider-Deploy:
-    needs: [ Artefact-Version, Build ]
+  publish-artefact:
+    needs: [ version, build ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
@@ -175,7 +175,7 @@ jobs:
       - name: Gradle Publish
         if: ${{ inputs.is_publish }}
         env:
-          ARTEFACT_VERSION: ${{ needs.Artefact-Version.outputs.artefact_version }}
+          ARTEFACT_VERSION: ${{ needs.version.outputs.artefact_version }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AZURE_DEVOPS_ARTIFACT_USERNAME: ${{ secrets.AZURE_DEVOPS_ARTIFACT_USERNAME }}
           AZURE_DEVOPS_ARTIFACT_TOKEN: ${{ secrets.AZURE_DEVOPS_ARTIFACT_TOKEN }}
@@ -198,8 +198,8 @@ jobs:
             -DAZURE_DEVOPS_ARTIFACT_USERNAME=$AZURE_DEVOPS_ARTIFACT_USERNAME \
             -DAZURE_DEVOPS_ARTIFACT_TOKEN=$AZURE_DEVOPS_ARTIFACT_TOKEN
 
-  Build-Docker:
-    needs: [ Provider-Deploy, Build, Artefact-Version ]
+  push-ghcr:
+    needs: [ publish-artefact, build, version ]
     if: ${{ inputs.trigger_docker }}
     runs-on: ubuntu-latest
     steps:
@@ -229,14 +229,14 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ needs.Artefact-Version.outputs.artefact_version }}
+            ghcr.io/${{ github.repository }}:${{ needs.version.outputs.artefact_version }}
           build-args: |
             BASE_IMAGE=eclipse-temurin:25
-            JAR_FILENAME=${{ needs.Build.outputs.artefact_name }}.jar
+            JAR_FILENAME=${{ needs.build.outputs.artefact_name }}.jar
 
-  API-Test-Main:
+  api-test-image:
     if: ${{ inputs.trigger_docker }}
-    needs: [Build-Docker, Artefact-Version]
+    needs: [push-ghcr, version]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -265,7 +265,7 @@ jobs:
 
       - name: Run API Tests against published Docker image
         env:
-          DOCKER_IMAGE: ghcr.io/${{ github.repository }}:${{ needs.Artefact-Version.outputs.artefact_version }}
+          DOCKER_IMAGE: ghcr.io/${{ github.repository }}:${{ needs.version.outputs.artefact_version }}
         run: |
           cd apiTest
           ./build-and-run-apitest.sh
@@ -279,8 +279,8 @@ jobs:
             apiTest/build/reports/tests/test/
             apiTest/build/test-results/test/
 
-  Deploy:
-    needs: [ Provider-Deploy, Build, Artefact-Version ]
+  trigger-acr-copy:
+    needs: [ publish-artefact, build, version ]
     if: ${{ inputs.trigger_deploy }}
     runs-on: ubuntu-latest
     outputs:
@@ -299,14 +299,14 @@ jobs:
             {
               "GROUP_ID": "uk.gov.hmcts.cp",
               "ARTIFACT_ID": "${{ env.REPO_NAME }}",
-              "ARTIFACT_VERSION": "${{ needs.Artefact-Version.outputs.artefact_version }}",
+              "ARTIFACT_VERSION": "${{ needs.version.outputs.artefact_version }}",
               "TARGET_REPOSITORY": "${{ github.repository }}",
               "agentDemand": "ubuntu-j25",
               "baseImage": "hmcts/apm-services:25-jre"
             }
 
-  Wait-For-ACR-Push:
-    needs: [Deploy]
+  wait-acr-copy:
+    needs: [trigger-acr-copy]
     if: ${{ inputs.trigger_deploy }}
     runs-on: ubuntu-latest
     steps:
@@ -314,21 +314,21 @@ jobs:
         uses: hmcts/monitor-ado-pipeline@v1
         with:
           pipeline_id: 460
-          run_id: ${{ needs.Deploy.outputs.run_id }}
+          run_id: ${{ needs.trigger-acr-copy.outputs.run_id }}
           ado_pat: ${{ secrets.HMCTS_ADO_PAT }}
           poll_interval: 30
           timeout: 1800
 
-  Deploy-To-K8s:
-    needs: [Wait-For-ACR-Push, Artefact-Version, Build]
+  deploy-dev:
+    needs: [wait-acr-copy, version, build]
     if: ${{ inputs.trigger_deploy }}
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via ADO pipeline
         uses: hmcts/action-ado-deploy@v1
         with:
-          service_name: ${{ needs.Build.outputs.repo_name }}
-          image_tag: ${{ needs.Artefact-Version.outputs.artefact_version }}
+          service_name: ${{ needs.build.outputs.repo_name }}
+          image_tag: ${{ needs.version.outputs.artefact_version }}
           app_id: ${{ secrets.DEPLOYMENT_APP_ID }}
           app_private_key: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
           target_repository: hmcts/cp-vp-aks-deploy
