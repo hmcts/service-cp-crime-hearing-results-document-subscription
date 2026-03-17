@@ -14,7 +14,6 @@ jobs:
       HMCTS_ADO_PAT: ${{ secrets.HMCTS_CP_ADO_PAT }}
       DEPLOYMENT_APP_ID: ${{ secrets.DEPLOYMENT_APP_ID }}
       DEPLOYMENT_APP_PRIVATE_KEY: ${{ secrets.DEPLOYMENT_APP_PRIVATE_KEY }}
-      DEPLOYMENT_APP_INSTALLATION_ID: ${{ secrets.DEPLOYMENT_APP_INSTALLATION_ID }}
     with:
       environment: dev
       is_release: true
