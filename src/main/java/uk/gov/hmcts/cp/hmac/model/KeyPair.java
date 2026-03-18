@@ -7,5 +7,5 @@ import lombok.Getter;
 @Builder
 public class KeyPair {
     private String keyId;
-    private String secret;
+    private byte[] secret;
 }

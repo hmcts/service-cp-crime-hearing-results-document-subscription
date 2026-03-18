@@ -67,7 +67,7 @@ class SubscriptionServiceTest {
             .clientId(clientId)
             .build();
     ClientSubscription response = ClientSubscription.builder().build();
-    KeyPair hmacKeyPair = KeyPair.builder().keyId("kid-1").secret("secret-1").build();
+    KeyPair hmacKeyPair = KeyPair.builder().keyId("kid-1").secret("secret-1".getBytes()).build();
 
     @Test
     void create_request_should_save_new_entity() {

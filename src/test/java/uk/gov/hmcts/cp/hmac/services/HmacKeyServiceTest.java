@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.hmac.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,14 +9,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_KEY_ID;
-import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_SECRET;
+import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_SECRET_STRING;
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 class HmacKeyServiceTest {
 
@@ -32,8 +35,7 @@ class HmacKeyServiceTest {
         given(config.isVaultEnabled()).willReturn(true);
         KeyPair keyPair = service.generateKey();
         assertThat(keyPair.getKeyId()).matches("^kid_([a-z0-9\\-]{36})$");
-        assertThat(keyPair.getSecret()).hasSize(43);
-        assertThat(keyPair.getSecret()).matches("^([a-zA-Z0-9\\-_]{43})$");
+        assertThat(keyPair.getSecret()).hasSize(32);
     }
 
     @Test
@@ -44,7 +46,7 @@ class HmacKeyServiceTest {
         for (int n = 0; n < KEY_PAIR_ATTEMPTS; n++) {
             KeyPair keyPair = service.generateKey();
             keyIds.add(keyPair.getKeyId());
-            secrets.add(keyPair.getSecret());
+            secrets.add(new String(keyPair.getSecret()));
         }
         assertThat(keyIds).hasSize(KEY_PAIR_ATTEMPTS);
         assertThat(secrets).hasSize(KEY_PAIR_ATTEMPTS);
@@ -57,7 +59,7 @@ class HmacKeyServiceTest {
         for (int n = 0; n < KEY_PAIR_ATTEMPTS; n++) {
             KeyPair keyPair = service.generateKey();
             keyIds.add(keyPair.getKeyId());
-            secrets.add(keyPair.getSecret());
+            secrets.add(new String(keyPair.getSecret()));
         }
         assertThat(keyIds).hasSize(1);
         assertThat(secrets).hasSize(1);
@@ -67,7 +69,7 @@ class HmacKeyServiceTest {
     void generateKey_should_use_hardcoded_when_vault_disabled() {
         KeyPair keyPair1 = service.generateKey();
         assertThat(keyPair1.getKeyId()).isEqualTo(STUB_KEY_ID);
-        assertThat(keyPair1.getSecret()).isEqualTo(STUB_SECRET);
+        assertThat(keyPair1.getSecret()).isEqualTo(STUB_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
     }
 }
 

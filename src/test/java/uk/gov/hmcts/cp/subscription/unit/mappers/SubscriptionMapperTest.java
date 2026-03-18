@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
+import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -43,7 +44,7 @@ class SubscriptionMapperTest {
             .createdAt(createdAt)
             .updatedAt(updatedAt)
             .build();
-    KeyPair hmac = KeyPair.builder().build();
+    KeyPair hmac = KeyPair.builder().keyId("keyId").secret("secret".getBytes()).build();
 
     @Test
     void create_request_should_map_to_entity() {
@@ -91,7 +92,8 @@ class SubscriptionMapperTest {
         assertThat(subscription.getCreatedAt()).isEqualTo(createdAt.toInstant());
         assertThat(subscription.getUpdatedAt()).isEqualTo(updatedAt.toInstant());
         assertThat(subscription.getHmac().getKeyId()).isEqualTo(hmac.getKeyId());
-        assertThat(subscription.getHmac().getSecret()).isEqualTo(hmac.getSecret());
+        String expectedSecretString = new EncodingService().encodeWithBase64(hmac.getSecret());
+        assertThat(subscription.getHmac().getSecret()).isEqualTo(expectedSecretString);
     }
 
     private List<EntityEventType> mutableLisOfEventTypes() {

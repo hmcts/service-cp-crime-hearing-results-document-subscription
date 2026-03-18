@@ -56,7 +56,7 @@ class CallbackDeliveryServiceTest {
     private Subscriber subscriber = Subscriber.builder().notificationEndpoint(callbackUrl).build();
     private EventNotificationPayload payload = EventNotificationPayload.builder().build();
     private EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
-    private KeyPair keyPair = KeyPair.builder().keyId("keyId").secret("secret").build();
+    private KeyPair keyPair = KeyPair.builder().keyId("keyId").secret("secret".getBytes()).build();
 
     @Test
     void submit_should_send_when_servicebus_disabled() {
@@ -65,7 +65,7 @@ class CallbackDeliveryServiceTest {
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
         when(hmacKeyService.generateKey()).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret", "{payload}")).thenReturn("signature");
+        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);

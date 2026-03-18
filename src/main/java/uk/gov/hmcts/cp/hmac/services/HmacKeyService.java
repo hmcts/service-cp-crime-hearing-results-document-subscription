@@ -6,8 +6,9 @@ import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 
 import java.security.SecureRandom;
-import java.util.Base64;
 import java.util.UUID;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Service
 @AllArgsConstructor
@@ -15,7 +16,7 @@ public class HmacKeyService {
 
     private static final int SECRET_BYTES_LENGTH = 32;
     public static final String STUB_KEY_ID = "kid_" + "f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
-    public static final String STUB_SECRET = "MBi30Xgjr4hidOeEgpXrzA_fPCn7787_jcfydsBWgoQ";
+    public static final String STUB_SECRET_STRING = "Stub string used purely for development purposes. To be secured.";
 
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -27,10 +28,9 @@ public class HmacKeyService {
             final String keyId = "kid_" + UUID.randomUUID();
             final byte[] secretBytes = new byte[SECRET_BYTES_LENGTH];
             secureRandom.nextBytes(secretBytes);
-            final String secret = Base64.getUrlEncoder().withoutPadding().encodeToString(secretBytes);
-            return KeyPair.builder().keyId(keyId).secret(secret).build();
+            return KeyPair.builder().keyId(keyId).secret(secretBytes).build();
         } else {
-            return KeyPair.builder().keyId(STUB_KEY_ID).secret(STUB_SECRET).build();
+            return KeyPair.builder().keyId(STUB_KEY_ID).secret(STUB_SECRET_STRING.getBytes(UTF_8)).build();
         }
     }
 }

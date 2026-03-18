@@ -9,7 +9,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;

@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.NullValueMappingStrategy;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
+import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventType;
@@ -41,8 +42,8 @@ public interface SubscriptionMapper {
     @Mapping(source = "entity.id", target = "clientSubscriptionId")
     @Mapping(target = "createdAt", expression = "java(entity.getCreatedAt().toInstant())")
     @Mapping(target = "updatedAt", expression = "java(entity.getUpdatedAt().toInstant())")
-    @Mapping(source = "hmac", target = "hmac")
-        //         response.setHmac(HmacCredentials.builder().keyId(keyPair.keyId()).secret(keyPair.secret()).build());
+    @Mapping(source = "hmac.keyId", target = "hmac.keyId")
+    @Mapping(source = "hmac.secret", target = "hmac.secret", qualifiedByName = "encodeToBase64")
     ClientSubscription mapEntityToResponse(ClientSubscriptionEntity entity, KeyPair hmac);
 
     @Named("mapWithSortedEventTypes")
@@ -56,7 +57,13 @@ public interface SubscriptionMapper {
         return notificationEndpoint.getCallbackUrl();
     }
 
+    @Named("encodeToBase64")
+    static String encodeToBase64(final byte[] bytes) {
+        return new EncodingService().encodeWithBase64(bytes);
+    }
+
     static NotificationEndpoint mapToNotificationEndpoint(final String endpointUrl) {
         return NotificationEndpoint.builder().callbackUrl(endpointUrl).build();
     }
+
 }
