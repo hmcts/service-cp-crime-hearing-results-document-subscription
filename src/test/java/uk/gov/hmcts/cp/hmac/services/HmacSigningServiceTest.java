@@ -13,8 +13,8 @@ class HmacSigningServiceTest {
         String secret = "test-secret";
         String message = "payload";
 
-        String sig1 = signingService.sign(secret, message);
-        String sig2 = signingService.sign(secret, message);
+        String sig1 = signingService.sign(secret.getBytes(), message);
+        String sig2 = signingService.sign(secret.getBytes(), message);
 
         assertThat(sig1).isNotBlank();
         assertThat(sig2).isEqualTo(sig1);
@@ -25,9 +25,9 @@ class HmacSigningServiceTest {
         String secret = "test-secret";
         String message = "payload";
 
-        String base = signingService.sign(secret, message);
-        String withDifferentMessage = signingService.sign(secret, "payload-2");
-        String withDifferentSecret = signingService.sign("other-secret", message);
+        String base = signingService.sign(secret.getBytes(), message);
+        String withDifferentMessage = signingService.sign(secret.getBytes(), "payload-2");
+        String withDifferentSecret = signingService.sign("other-secret".getBytes(), message);
 
         assertThat(withDifferentMessage).isNotEqualTo(base);
         assertThat(withDifferentSecret).isNotEqualTo(base);
@@ -38,19 +38,19 @@ class HmacSigningServiceTest {
         String secret = "test-secret";
         String message = "payload";
 
-        String signature = signingService.sign(secret, message);
+        String signature = signingService.sign(secret.getBytes(), message);
 
-        assertThat(signingService.isSignatureValid(secret, message, signature)).isTrue();
+        assertThat(signingService.isSignatureValid(secret.getBytes(), message, signature)).isTrue();
     }
 
     @Test
     void isSignatureValid_shouldReturnFalseWhenSecretOrMessageDiffers() {
         String secret = "test-secret";
         String message = "payload";
-        String signature = signingService.sign(secret, message);
+        String signature = signingService.sign(secret.getBytes(), message);
 
-        assertThat(signingService.isSignatureValid("other-secret", message, signature)).isFalse();
-        assertThat(signingService.isSignatureValid(secret, "other-payload", signature)).isFalse();
+        assertThat(signingService.isSignatureValid("other-secret".getBytes(), message, signature)).isFalse();
+        assertThat(signingService.isSignatureValid(secret.getBytes(), "other-payload", signature)).isFalse();
     }
 }
 

@@ -6,6 +6,7 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
+import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.util.List;
@@ -33,11 +34,11 @@ public class NotificationMapper {
                 .build();
     }
 
-    public String mapToJson(final EventNotificationPayload payload) {
-        return jsonMapper.toJson(payload);
-    }
-
-    public EventNotificationPayload mapFromJson(final String json) {
-        return jsonMapper.fromJson(json, EventNotificationPayload.class);
+    public EventNotificationPayloadWrapper mapToWrapper(final EventNotificationPayload payload, final String keyId, final String signature) {
+        return EventNotificationPayloadWrapper.builder()
+                .payload(payload)
+                .keyId(keyId)
+                .signature(signature)
+                .build();
     }
 }
