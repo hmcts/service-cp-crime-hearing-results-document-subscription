@@ -10,8 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import uk.gov.hmcts.cp.subscription.http.util.JwtHelper;
 import uk.gov.hmcts.cp.subscription.http.util.JsonMapper;
+import uk.gov.hmcts.cp.subscription.http.util.JwtHelper;
 
 import java.util.UUID;
 
@@ -53,7 +53,7 @@ public class SubscriptionApiTest {
         String token = JwtHelper.bearerTokenWithAzp(clientId);
 
         ResponseEntity<String> response = restClient.post()
-                .uri("http://localhost:8090/client-subscriptions")
+                .uri(baseUrl + "/client-subscriptions")
                 .header(AUTHORIZATION, token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(subscriptionRequestBody())
