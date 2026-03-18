@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
-public class HmacSIgningServiceTest {
+public class HmacSigningServiceTest {
     @Mock
     HmacServiceConfig hmacServiceConfig;
 
