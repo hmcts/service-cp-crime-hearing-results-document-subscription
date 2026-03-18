@@ -6,7 +6,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static uk.gov.hmcts.cp.subscription.http.SubscriptionApiTest.CORRELATION_ID_KEY;
 
 /* This might seem a little odd ... testing the test framework but as well as being sure about what
    endpoints we expose, it also services to document our mocked endpoints
@@ -17,12 +20,14 @@ class CallbackWiremockTest {
     private String callbackUrl = "/callback/notify";
     private RestClient restClient = RestClient.create();
 
+    UUID correlationId = UUID.randomUUID();
 
     @Test
     void callback() {
         ResponseEntity<String> response = restClient
                 .post()
                 .uri(baseUrl + callbackUrl)
+                .header(CORRELATION_ID_KEY, correlationId.toString())
                 .retrieve()
                 .toEntity(String.class);
         log.info("callback response:{}", response.getBody());

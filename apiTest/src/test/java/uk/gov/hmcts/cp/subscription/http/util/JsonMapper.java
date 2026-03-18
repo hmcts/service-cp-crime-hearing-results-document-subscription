@@ -22,4 +22,14 @@ public class JsonMapper {
     public JsonNode toJsonNode(final String json) {
         return objectMapper.readTree(json);
     }
+
+    @SneakyThrows
+    public String getStringAtPath(final String json, final String jsonPointer) {
+        return toJsonNode(json).at(jsonPointer).textValue();
+    }
+
+    @SneakyThrows
+    public int getIntAtPath(final String json, final String jsonPointer) {
+        return toJsonNode(json).at(jsonPointer).intValue();
+    }
 }

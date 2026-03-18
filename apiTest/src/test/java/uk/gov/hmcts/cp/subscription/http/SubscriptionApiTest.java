@@ -10,8 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import uk.gov.hmcts.cp.subscription.http.util.JwtHelper;
 import uk.gov.hmcts.cp.subscription.http.util.JsonMapper;
+import uk.gov.hmcts.cp.subscription.http.util.JwtHelper;
 
 import java.util.UUID;
 
@@ -25,9 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Probably best as a separate app with its own gradle build
  */
 @Slf4j
-class SubscriptionApiTest {
-    private static final String AUTHORIZATION = "Authorization";
-    private static final String CORRELATION_ID_KEY = "X-Correlation-Id";
+public class SubscriptionApiTest {
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
 
     private String testClientId = "11111111-2222-3333-4444-555555555555";
     private String bearerToken = JwtHelper.bearerTokenWithAzp(testClientId);
@@ -53,7 +53,7 @@ class SubscriptionApiTest {
         String token = JwtHelper.bearerTokenWithAzp(clientId);
 
         ResponseEntity<String> response = restClient.post()
-                .uri("http://localhost:8090/client-subscriptions")
+                .uri(baseUrl + "/client-subscriptions")
                 .header(AUTHORIZATION, token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(subscriptionRequestBody())

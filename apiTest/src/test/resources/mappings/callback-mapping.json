@@ -1,7 +1,12 @@
 {
   "request": {
     "method": "POST",
-    "url": "/callback/notify"
+    "url": "/callback/notify",
+    "headers": {
+      "X-Correlation-Id": {
+        "matches": "^([a-zA-Z0-9-]*)$"
+      }
+    }
   },
   "response": {
     "status": 200,

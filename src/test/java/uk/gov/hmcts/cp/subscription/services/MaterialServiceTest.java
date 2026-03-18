@@ -30,12 +30,20 @@ class MaterialServiceTest {
     @InjectMocks
     MaterialService materialService;
 
+    UUID materialId = randomUUID();
+    MaterialMetadata materialMetadata = new MaterialMetadata();
+
+    @Test
+    void material_metadata_should_return(){
+        when(materialApi.getMaterialMetadataByMaterialId(materialId)).thenReturn(materialMetadata);
+        MaterialMetadata response = materialService.getMaterialMetadata(materialId);
+        assertThat(response).isEqualTo(materialMetadata);
+    }
+
     @Test
     void material_ready_should_be_returned() {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
-        UUID materialId = randomUUID();
-        MaterialMetadata materialMetadata = new MaterialMetadata();
         materialMetadata.setMaterialId(materialId);
         when(materialApi.getMaterialMetadataByMaterialId(any(UUID.class))).thenReturn(materialMetadata);
 
@@ -49,7 +57,6 @@ class MaterialServiceTest {
     void material_not_ready_should_throw_timeout_exception() {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
-        UUID materialId = randomUUID();
         when(materialApi.getMaterialMetadataByMaterialId(materialId)).thenReturn(null);
 
         assertThrows(ConditionTimeoutException.class, () -> materialService.waitForMaterialMetadata(materialId));
