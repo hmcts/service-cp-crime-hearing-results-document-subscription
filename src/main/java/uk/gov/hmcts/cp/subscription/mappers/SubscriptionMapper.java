@@ -4,6 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.NullValueMappingStrategy;
+import uk.gov.hmcts.cp.hmac.model.KeyPair;
+import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventType;
@@ -13,6 +15,7 @@ import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static java.util.stream.Collectors.toList;
 
@@ -21,13 +24,12 @@ import static java.util.stream.Collectors.toList;
         nullValueMapMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT)
 public interface SubscriptionMapper {
 
-    @Mapping(target = "id", expression = "java(null)")
-    @Mapping(target = "clientId", ignore = true)
+    @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID())")
     @Mapping(source = "request.eventTypes", target = "eventTypes", qualifiedByName = "mapWithSortedEventTypes")
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(source = "now", target = "createdAt")
     @Mapping(source = "now", target = "updatedAt")
-    ClientSubscriptionEntity mapCreateRequestToEntity(ClientSubscriptionRequest request, OffsetDateTime now);
+    ClientSubscriptionEntity mapCreateRequestToEntity(UUID clientId, ClientSubscriptionRequest request, OffsetDateTime now);
 
     @Mapping(source = "existing.id", target = "id")
     @Mapping(source = "existing.clientId", target = "clientId")
@@ -37,11 +39,12 @@ public interface SubscriptionMapper {
     @Mapping(source = "now", target = "updatedAt")
     ClientSubscriptionEntity mapUpdateRequestToEntity(ClientSubscriptionEntity existing, ClientSubscriptionRequest request, OffsetDateTime now);
 
-    @Mapping(source = "id", target = "clientSubscriptionId")
+    @Mapping(source = "entity.id", target = "clientSubscriptionId")
     @Mapping(target = "createdAt", expression = "java(entity.getCreatedAt().toInstant())")
     @Mapping(target = "updatedAt", expression = "java(entity.getUpdatedAt().toInstant())")
-    @Mapping(target = "hmac", ignore = true)
-    ClientSubscription mapEntityToResponse(ClientSubscriptionEntity entity);
+    @Mapping(source = "hmac.keyId", target = "hmac.keyId")
+    @Mapping(source = "hmac.secret", target = "hmac.secret", qualifiedByName = "encodeToBase64")
+    ClientSubscription mapEntityToResponse(ClientSubscriptionEntity entity, KeyPair hmac);
 
     @Named("mapWithSortedEventTypes")
     static List<EntityEventType> sortedEventTypes(final List<EventType> events) {
@@ -54,7 +57,13 @@ public interface SubscriptionMapper {
         return notificationEndpoint.getCallbackUrl();
     }
 
+    @Named("encodeToBase64")
+    static String encodeToBase64(final byte[] bytes) {
+        return new EncodingService().encodeWithBase64(bytes);
+    }
+
     static NotificationEndpoint mapToNotificationEndpoint(final String endpointUrl) {
         return NotificationEndpoint.builder().callbackUrl(endpointUrl).build();
     }
+
 }

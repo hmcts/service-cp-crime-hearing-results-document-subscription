@@ -1,24 +1,25 @@
 package uk.gov.hmcts.cp.hmac.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
+@Slf4j
 @Service
 public class HmacSigningService {
 
-    private static final String HMAC_SHA256 = "HmacSHA256";
+    private static final String HMAC_SHA_256 = "HmacSHA256";
 
-    public String sign(final String secret, final String message) {
+    public String sign(final byte[] secret, final String message) {
         try {
-            final Mac mac = Mac.getInstance(HMAC_SHA256);
-            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256));
+            final Mac mac = Mac.getInstance(HMAC_SHA_256);
+            mac.init(new SecretKeySpec(secret, HMAC_SHA_256));
             final byte[] hmac = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
             return Base64.getEncoder().encodeToString(hmac);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
@@ -26,12 +27,11 @@ public class HmacSigningService {
         }
     }
 
-    public boolean isSignatureValid(final String secret,
-                                    final String message,
-                                    final String signature) {
+    public void validateSignature(final byte[] secret, final String message, final String signature) throws InvalidKeyException {
         final String expectedSignature = sign(secret, message);
-        final byte[] expectedBytes = expectedSignature.getBytes(StandardCharsets.UTF_8);
-        final byte[] providedBytes = signature.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(expectedBytes, providedBytes);
+        if (!expectedSignature.equals(signature)) {
+            log.error("Invalid signature does not match expected");
+            throw new InvalidKeyException("");
+        }
     }
 }

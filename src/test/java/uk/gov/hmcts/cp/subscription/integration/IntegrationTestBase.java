@@ -89,6 +89,7 @@ public abstract class IntegrationTestBase {
     protected ClientSubscriptionEntity insertSubscription(UUID clientId, List<EntityEventType> entityEventTypes, String notificationUri) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         ClientSubscriptionEntity subscription = ClientSubscriptionEntity.builder()
+                .id(UUID.randomUUID())
                 .clientId(clientId)
                 .eventTypes(entityEventTypes)
                 .notificationEndpoint(notificationUri)

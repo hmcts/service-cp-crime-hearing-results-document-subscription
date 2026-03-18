@@ -11,18 +11,10 @@ import org.springframework.stereotype.Service;
 public class HmacServiceConfig {
 
     private final boolean vaultEnabled;
-    private final String keyId;
-    private final String secret;
 
-    public HmacServiceConfig(
-            @Value("${hmac.vault-enabled:false}") final boolean vaultEnabled,
-            @Value("${hmac.key-id:}") final String keyId,
-            @Value("${hmac.secret:}") final String secret) {
-        log.info("Hmac initialised with enabled {}", vaultEnabled);
-        log.info("Hmac initialised with keyId {}", keyId);
+    public HmacServiceConfig(@Value("${hmac.vault-enabled:false}") final boolean vaultEnabled) {
+        log.info("Hmac initialised with vaultEnabled:{}", vaultEnabled);
         this.vaultEnabled = vaultEnabled;
-        this.keyId = keyId;
-        this.secret = secret;
     }
 }
 

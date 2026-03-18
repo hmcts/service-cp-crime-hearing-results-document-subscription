@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 class ClientIdResolutionFilterTest {
 
     private static final String CLIENT_SUBSCRIPTIONS_PATH = "/client-subscriptions";
+    private static final String NOTIFICATIONS_PREFIX = "/notifications";
 
     @Mock
     private HttpServletRequest httpRequest;
@@ -61,6 +62,14 @@ class ClientIdResolutionFilterTest {
 
         filter.doFilter(httpRequest, httpResponse, filterChain);
 
+        verify(filterChain).doFilter(httpRequest, httpResponse);
+        assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
+    }
+
+    @Test
+    void path_notifications_should_not_be_filtered() throws Exception {
+        when(httpRequest.getRequestURI()).thenReturn(NOTIFICATIONS_PREFIX );
+        filter.doFilter(httpRequest, httpResponse, filterChain);
         verify(filterChain).doFilter(httpRequest, httpResponse);
         assertThat(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID)).isNull();
     }
