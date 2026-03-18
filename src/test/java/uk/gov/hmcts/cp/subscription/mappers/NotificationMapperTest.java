@@ -5,12 +5,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.openapi.model.EventNotificationPayloadCasesInner;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCasesInner;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCustodyEstablishmentDetails;
+import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.time.Instant;
@@ -44,7 +45,7 @@ class NotificationMapperTest {
             .build();
 
     @Test
-    void mapper_should_return_populated_object() {
+    void mapper_should_return_populated_payload() {
         EventPayload eventPayload = EventPayload.builder()
                 .defendant(defendant)
                 .timestamp(now)
@@ -63,37 +64,12 @@ class NotificationMapperTest {
     }
 
     @Test
-    void mapper_should_convert_to_json_and_back_again() {
-        EventNotificationPayloadCasesInner casesInner = EventNotificationPayloadCasesInner.builder()
-                .urn("CTAB1234567")
-                .build();
-        EventNotificationPayload payload = EventNotificationPayload.builder()
-                .masterDefendantId(UUID.randomUUID())
-                .defendantName("Jayne Doe")
-                .defendantDateOfBirth(LocalDate.of(2000, 1, 1))
-                .documentId(UUID.randomUUID())
-                .documentGeneratedTimestamp(Instant.now())
-                .prisonEmailAddress("wansdworth@example.com")
-                .cases(List.of(casesInner))
-                .build();
+    void mapper_should_return_populated_wrapper() {
+        EventNotificationPayload payload = EventNotificationPayload.builder().build();
+        EventNotificationPayloadWrapper response = notificationMapper.mapToWrapper(payload, "key-id", "signature");
 
-        String json = notificationMapper.mapToJson(payload);
-
-        EventNotificationPayload payloadAgain = notificationMapper.mapFromJson(json);
-
-        assertThat(payloadAgain).isEqualTo(payloadAgain);
-    }
-
-    @Test
-    void mapper_should_convert_payload_to_json_and_back_again() {
-        EventPayload eventPayload = EventPayload.builder()
-                .defendant(defendant)
-                .timestamp(now)
-                .build();
-        EventNotificationPayload payload = notificationMapper.mapToPayload(documentId, eventPayload);
-
-        String json = notificationMapper.mapToJson(payload);
-        EventNotificationPayload payloadAgain = notificationMapper.mapFromJson(json);
-        assertThat(payloadAgain).isEqualTo(payload);
+        assertThat(response.getPayload()).isEqualTo(payload);
+        assertThat(response.getKeyId()).isEqualTo("key-id");
+        assertThat(response.getSignature()).isEqualTo("signature");
     }
 }

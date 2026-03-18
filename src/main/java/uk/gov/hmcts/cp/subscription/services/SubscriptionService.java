@@ -7,11 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyStore;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
-import uk.gov.hmcts.cp.openapi.model.HmacCredentials;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
@@ -27,21 +26,18 @@ public class SubscriptionService {
     private final ClockService clockService;
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriptionMapper mapper;
-    private final HmacKeyStore hmacKeyStore;
+    private final HmacKeyService hmacKeyService;
 
     @Transactional
-    public ClientSubscription saveSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
+    public ClientSubscription createSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
         subscriptionRepository.findFirstByClientId(clientId).ifPresent(existing -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist with " + existing.getId());
         });
-        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(request, clockService.nowOffsetUTC());
-        entity = entity.toBuilder().clientId(clientId).build();
-        entity = subscriptionRepository.save(entity);
-        final ClientSubscription response = mapper.mapEntityToResponse(entity);
-        final HmacKeyService.KeyPair keyPair = hmacKeyStore.generateAndStore(entity.getId());
-        response.setHmac(HmacCredentials.builder().keyId(keyPair.keyId()).secret(keyPair.secret()).build());
-        return response;
+        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, clockService.nowOffsetUTC());
+        subscriptionRepository.save(entity);
+        final KeyPair keyPair = hmacKeyService.generateKey();
+        return mapper.mapEntityToResponse(entity, keyPair);
     }
 
     @Transactional
@@ -49,14 +45,14 @@ public class SubscriptionService {
         final ClientSubscriptionEntity existing = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
         final ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, clockService.nowOffsetUTC());
-        return mapper.mapEntityToResponse(subscriptionRepository.save(entity));
+        return mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
     }
 
     @Transactional
     public ClientSubscription getSubscription(final UUID clientSubscriptionId, final UUID clientId) {
         final ClientSubscriptionEntity entity = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        return mapper.mapEntityToResponse(entity);
+        return mapper.mapEntityToResponse(entity, null);
     }
 
     @Transactional

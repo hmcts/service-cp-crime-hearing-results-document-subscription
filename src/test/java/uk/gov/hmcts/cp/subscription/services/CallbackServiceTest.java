@@ -6,9 +6,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
-import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
+import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -32,24 +32,24 @@ class CallbackServiceTest {
         when(appProperties.getCallbackRetryIntervalMilliSecs()).thenReturn(10);
         when(appProperties.getCallbackRetryTimeoutMilliSecs()).thenReturn(1000);
 
-        EventNotificationPayload eventNotificationPayload = EventNotificationPayload.builder().build();
-        callbackService.sendToSubscriber("url", eventNotificationPayload);
+        EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
+        callbackService.sendToSubscriber("url", payloadWrapper);
 
-        verify(callbackClient).sendNotification("url", eventNotificationPayload);
+        verify(callbackClient).sendNotification("url", payloadWrapper);
     }
 
     @Test
     void send_to_subscriber_should_retry_until_success() {
         when(appProperties.getCallbackRetryIntervalMilliSecs()).thenReturn(10);
         when(appProperties.getCallbackRetryTimeoutMilliSecs()).thenReturn(500);
-        EventNotificationPayload payload = EventNotificationPayload.builder().build();
+        EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
 
         doThrow(new RestClientException("intermittent failure"))
                 .doNothing()
-                .when(callbackClient).sendNotification("url", payload);
+                .when(callbackClient).sendNotification("url", payloadWrapper);
 
-        callbackService.sendToSubscriber("url", payload);
+        callbackService.sendToSubscriber("url", payloadWrapper);
 
-        verify(callbackClient, times(2)).sendNotification("url", payload);
+        verify(callbackClient, times(2)).sendNotification("url", payloadWrapper);
     }
 }

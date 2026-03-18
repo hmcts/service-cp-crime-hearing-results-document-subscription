@@ -58,7 +58,7 @@ class SubscriptionControllerTest {
     @Test
     void create_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.saveSubscription(createRequest, TEST_CLIENT_UUID)).thenReturn(response);
+        when(subscriptionService.createSubscription(createRequest, TEST_CLIENT_UUID)).thenReturn(response);
         var result = subscriptionController.createClientSubscription(createRequest, null);
         assertThat(result.getStatusCode().value()).isEqualTo(201);
         assertThat(result.getBody()).isEqualTo(response);

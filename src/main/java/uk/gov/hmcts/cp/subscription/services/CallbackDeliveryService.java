@@ -3,6 +3,9 @@ package uk.gov.hmcts.cp.subscription.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.cp.hmac.model.KeyPair;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
@@ -11,6 +14,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.model.Subscriber;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
@@ -31,6 +35,8 @@ public class CallbackDeliveryService {
     private final ServiceBusConfigService serviceBusConfig;
     private final ServiceBusClientService clientService;
     private final CallbackService callbackService;
+    private final HmacKeyService hmacKeyService;
+    private final HmacSigningService hmacSigningService;
 
     public void submitOutboundPcrEvents(final EventPayload eventPayload, final UUID documentId) {
         final EntityEventType eventType = EntityEventType.valueOf(eventPayload.getEventType().name());
@@ -39,12 +45,14 @@ public class CallbackDeliveryService {
         log.info("sending {} outbound notifications", entities.size());
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
+            final KeyPair keyPair = hmacKeyService.generateKey();
+            final String signature = hmacSigningService.sign(keyPair.getSecret(), jsonMapper.toJson(eventNotificationPayload));
+            final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, keyPair.getKeyId(), signature);
             if (serviceBusConfig.isEnabled()) {
-                final String payload = jsonMapper.toJson(eventNotificationPayload);
-                // FOR EACH SUBSCRIBER
+                final String payload = jsonMapper.toJson(payloadWrapper);
                 clientService.queueMessage(PCR_OUTBOUND_TOPIC, subscriber.getNotificationEndpoint(), payload, 0);
             } else {
-                callbackService.sendToSubscriber(subscriber.getNotificationEndpoint(), eventNotificationPayload);
+                callbackService.sendToSubscriber(subscriber.getNotificationEndpoint(), payloadWrapper);
                 log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), subscriber.getNotificationEndpoint(), eventNotificationPayload.getDocumentId());
             }
         }

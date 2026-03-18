@@ -7,8 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyStore;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -41,7 +41,8 @@ class SubscriptionServiceTest {
     @Mock
     SubscriptionMapper mapper;
     @Mock
-    HmacKeyStore hmacKeyStore;
+    HmacKeyService hmacKeyService;
+
     @InjectMocks
     SubscriptionService subscriptionService;
 
@@ -66,29 +67,26 @@ class SubscriptionServiceTest {
             .clientId(clientId)
             .build();
     ClientSubscription response = ClientSubscription.builder().build();
+    KeyPair hmacKeyPair = KeyPair.builder().keyId("kid-1").secret("secret-1").build();
 
     @Test
-    void save_request_should_save_new_entity() {
+    void create_request_should_save_new_entity() {
         when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.empty());
         when(clockService.nowOffsetUTC()).thenReturn(now);
-        when(mapper.mapCreateRequestToEntity(createRequest, now)).thenReturn(requestEntity);
-        when(subscriptionRepository.save(any(ClientSubscriptionEntity.class))).thenReturn(savedEntity);
-        when(hmacKeyStore.generateAndStore(subscriptionId))
-                .thenReturn(new HmacKeyService.KeyPair("kid-1", "secret-1"));
-        when(mapper.mapEntityToResponse(savedEntity)).thenReturn(response);
+        when(mapper.mapCreateRequestToEntity(clientId, createRequest, now)).thenReturn(requestEntity);
+        when(hmacKeyService.generateKey()).thenReturn(hmacKeyPair);
+        when(mapper.mapEntityToResponse(requestEntity, hmacKeyPair)).thenReturn(response);
 
-        ClientSubscription result = subscriptionService.saveSubscription(createRequest, clientId);
+        ClientSubscription result = subscriptionService.createSubscription(createRequest, clientId);
 
         assertThat(result).isEqualTo(response);
-        assertThat(result.getHmac().getKeyId()).isEqualTo("kid-1");
-        assertThat(result.getHmac().getSecret()).isEqualTo("secret-1");
     }
 
     @Test
-    void save_request_should_throw_conflict_when_subscription_already_exists() {
+    void create_request_should_throw_conflict_when_subscription_already_exists() {
         when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.of(savedEntity));
 
-        assertThatThrownBy(() -> subscriptionService.saveSubscription(createRequest, clientId))
+        assertThatThrownBy(() -> subscriptionService.createSubscription(createRequest, clientId))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(e -> {
                     ResponseStatusException ex = (ResponseStatusException) e;
@@ -104,24 +102,21 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findByIdAndClientId(subscriptionId, clientId)).thenReturn(Optional.of(savedEntity));
         when(clockService.nowOffsetUTC()).thenReturn(now);
         when(mapper.mapUpdateRequestToEntity(savedEntity, updateRequest, now)).thenReturn(requestEntity);
-        when(subscriptionRepository.save(requestEntity)).thenReturn(updatedEntity);
-        when(mapper.mapEntityToResponse(updatedEntity)).thenReturn(response);
+        when(subscriptionRepository.save(requestEntity)).thenReturn(savedEntity);
+        when(mapper.mapEntityToResponse(savedEntity, null)).thenReturn(response);
 
         ClientSubscription result = subscriptionService.updateSubscription(subscriptionId, updateRequest, clientId);
 
-        verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
-        verify(subscriptionRepository).save(requestEntity);
         assertThat(result).isEqualTo(response);
     }
 
     @Test
     void get_should_return_subscription_when_owned_by_client() {
         when(subscriptionRepository.findByIdAndClientId(subscriptionId, clientId)).thenReturn(Optional.of(savedEntity));
-        when(mapper.mapEntityToResponse(savedEntity)).thenReturn(response);
+        when(mapper.mapEntityToResponse(savedEntity, null)).thenReturn(response);
 
         ClientSubscription result = subscriptionService.getSubscription(subscriptionId, clientId);
 
-        verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
         assertThat(result).isEqualTo(response);
     }
 

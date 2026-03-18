@@ -1,15 +1,20 @@
 package uk.gov.hmcts.cp.hmac.services;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
+import uk.gov.hmcts.cp.hmac.model.KeyPair;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_KEY_ID;
+import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_SECRET;
 
 @ExtendWith(MockitoExtension.class)
 class HmacKeyServiceTest {
@@ -20,32 +25,49 @@ class HmacKeyServiceTest {
     @InjectMocks
     private HmacKeyService service;
 
-    @BeforeEach
-    void setUp() {
-        given(config.isVaultEnabled()).willReturn(false);
-    }
+    private static final int KEY_PAIR_ATTEMPTS = 100000;
 
     @Test
-    void generateKey_shouldReturnConfiguredValues_whenLocalVaultEnabled() {
+    void generateKey_should_generate_random_when_vault_enabled() {
         given(config.isVaultEnabled()).willReturn(true);
-        given(config.getKeyId()).willReturn("kid-config");
-        given(config.getSecret()).willReturn("secret-config");
-
-        HmacKeyService.KeyPair keyPair = service.generateKey();
-
-        assertThat(keyPair.keyId()).isEqualTo("kid-config");
-        assertThat(keyPair.secret()).isEqualTo("secret-config");
+        KeyPair keyPair = service.generateKey();
+        assertThat(keyPair.getKeyId()).matches("^kid_([a-z0-9\\-]{36})$");
+        assertThat(keyPair.getSecret()).hasSize(43);
+        assertThat(keyPair.getSecret()).matches("^([a-zA-Z0-9\\-_]{43})$");
     }
 
     @Test
-    void generateKey_shouldGenerateRandomSecret_whenLocalVaultDisabled() {
-        HmacKeyService.KeyPair keyPair1 = service.generateKey();
-        HmacKeyService.KeyPair keyPair2 = service.generateKey();
+    void generateKey_should_return_distinct_when_vault_enabled() {
+        given(config.isVaultEnabled()).willReturn(true);
+        Set<String> keyIds = new HashSet<>();
+        Set<String> secrets = new HashSet<>();
+        for (int n = 0; n < KEY_PAIR_ATTEMPTS; n++) {
+            KeyPair keyPair = service.generateKey();
+            keyIds.add(keyPair.getKeyId());
+            secrets.add(keyPair.getSecret());
+        }
+        assertThat(keyIds).hasSize(KEY_PAIR_ATTEMPTS);
+        assertThat(secrets).hasSize(KEY_PAIR_ATTEMPTS);
+    }
 
-        assertThat(keyPair1.keyId()).startsWith("kid_");
-        assertThat(keyPair1.secret()).isNotBlank();
-        assertThat(keyPair2.secret()).isNotBlank();
-        assertThat(keyPair1.secret()).isNotEqualTo(keyPair2.secret());
+    @Test
+    void generateKey_should_always_return_same_when_vault_disabled() {
+        Set<String> keyIds = new HashSet<>();
+        Set<String> secrets = new HashSet<>();
+        for (int n = 0; n < KEY_PAIR_ATTEMPTS; n++) {
+            KeyPair keyPair = service.generateKey();
+            keyIds.add(keyPair.getKeyId());
+            secrets.add(keyPair.getSecret());
+        }
+        assertThat(keyIds).hasSize(1);
+        assertThat(secrets).hasSize(1);
+    }
+
+    @Test
+    void generateKey_should_use_hardcoded_when_vault_disabled() {
+        KeyPair keyPair1 = service.generateKey();
+        assertThat(keyPair1.getKeyId()).isEqualTo(STUB_KEY_ID);
+        assertThat(keyPair1.getSecret()).isEqualTo(STUB_SECRET);
     }
 }
 

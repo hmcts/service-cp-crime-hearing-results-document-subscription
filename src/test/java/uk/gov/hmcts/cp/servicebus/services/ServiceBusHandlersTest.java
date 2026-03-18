@@ -9,6 +9,7 @@ import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
+import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,12 +42,12 @@ class ServiceBusHandlersTest {
 
     @Test
     void outbound_callback_should_handle_ok() {
-        EventNotificationPayload notificationPayload = EventNotificationPayload.builder().build();
-        when(jsonMapper.fromJson("callback-json", EventNotificationPayload.class)).thenReturn(notificationPayload);
+        EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
+        when(jsonMapper.fromJson("callback-json", EventNotificationPayloadWrapper.class)).thenReturn(payloadWrapper);
 
         serviceBusHandlers.handleMessage(PCR_OUTBOUND_TOPIC, "https://callback", "callback-json");
 
-        verify(callbackClient).sendNotification("https://callback", notificationPayload);
+        verify(callbackClient).sendNotification("https://callback", payloadWrapper);
     }
 
     @Test
