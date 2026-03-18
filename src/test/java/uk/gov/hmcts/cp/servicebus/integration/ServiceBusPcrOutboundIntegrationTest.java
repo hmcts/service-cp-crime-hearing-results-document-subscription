@@ -5,6 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -16,6 +20,7 @@ import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,10 +37,17 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
         "service-bus.max-tries=2",
         "service-bus.retry-msecs=0"
 })
+@ExtendWith(MockitoExtension.class)
 public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationTestBase {
+
+    public static final String STUB_KEY_ID = "kid_" + "f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
+    public static final String STUB_SECRET_STRING = "Stub string used purely for development purposes. To be secured.";
 
     @MockitoBean
     CallbackClient callbackClient;
+
+    @Captor
+    ArgumentCaptor<EventNotificationPayloadWrapper> captor;
 
     @BeforeEach
     void setUp() {
@@ -65,7 +77,8 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
         Thread.sleep(2000);
         for (int n = 0; n < 10; n++) {
             String callbackUrl = String.format("http://callback%d", n);
-            verify(callbackClient).sendNotification(eq(callbackUrl), any(EventNotificationPayloadWrapper.class));
+            verify(callbackClient).sendNotification(eq(callbackUrl), captor.capture());
+            assertCallbackPayload(captor.getValue());
         }
     }
 
@@ -79,9 +92,17 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
     }
 
     private void queueMessageForCallbackUrl(String callbackUrl) {
-        EventNotificationPayloadWrapper payload = EventNotificationPayloadWrapper.builder().build();
+        EventNotificationPayloadWrapper payload = EventNotificationPayloadWrapper.builder()
+                .keyId("keyId")
+                .signature("signature")
+                .build();
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
         clientService.queueMessage(PCR_OUTBOUND_TOPIC, callbackUrl, jsonMapper.toJson(payload), 0);
         MDC.clear();
+    }
+
+    private void assertCallbackPayload(EventNotificationPayloadWrapper payloadWrapper) {
+        assertThat(payloadWrapper.getKeyId()).isEqualTo("keyId");
+        assertThat(payloadWrapper.getSignature()).isEqualTo("signature");
     }
 }
