@@ -40,9 +40,6 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
 @ExtendWith(MockitoExtension.class)
 public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationTestBase {
 
-    public static final String STUB_KEY_ID = "kid_" + "f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
-    public static final String STUB_SECRET_STRING = "Stub string used purely for development purposes. To be secured.";
-
     @MockitoBean
     CallbackClient callbackClient;
 
