@@ -10,6 +10,8 @@ import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 @Configuration
 public class MaterialApiConfig {
 
+    public static final String CJSCPPUID_HEADER = "CJSCPPUID";
+
     @Bean
     public ApiClient materialApiClient(
             @Value("${material-client.url}") final String baseUrl,
@@ -17,7 +19,7 @@ public class MaterialApiConfig {
             final RestTemplate restTemplate) {
         final ApiClient client = new ApiClient(restTemplate);
         client.setBasePath(baseUrl);
-        client.addDefaultHeader("CJSCPPUID", cjscppuid);
+        client.addDefaultHeader(CJSCPPUID_HEADER, cjscppuid);
         return client;
     }
 
