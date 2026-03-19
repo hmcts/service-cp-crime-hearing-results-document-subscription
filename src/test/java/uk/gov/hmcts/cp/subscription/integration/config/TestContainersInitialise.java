@@ -25,7 +25,8 @@ public class TestContainersInitialise implements ApplicationContextInitializer<C
                 "spring.datasource.url=" + POSTGRE_SQL_CONTAINER.getJdbcUrl(),
                 "spring.datasource.username=" + POSTGRE_SQL_CONTAINER.getUsername(),
                 "spring.datasource.password=" + POSTGRE_SQL_CONTAINER.getPassword(),
-                "subscription.oauth-enabled=true"
+                "subscription.oauth-enabled=true",
+                "material-client.cjscppuid=test-cjscppuid"
         ).applyTo(applicationContext.getEnvironment());
     }
 }
