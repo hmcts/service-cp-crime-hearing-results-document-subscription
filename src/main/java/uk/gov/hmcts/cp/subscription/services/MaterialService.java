@@ -3,7 +3,9 @@ package uk.gov.hmcts.cp.subscription.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
@@ -30,9 +32,17 @@ public class MaterialService {
                 .pollInterval(Duration.ofMillis(appProperties.getMaterialRetryIntervalMilliSecs()))
                 .atMost(Duration.ofMillis(appProperties.getMaterialRetryTimeoutMilliSecs()))
                 .until(() -> {
-                    final MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId);
-                    materialResponse.set(response);
-                    return response != null;
+                    try {
+                        final MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId);
+                        materialResponse.set(response);
+                        return response != null;
+                    } catch (HttpClientErrorException e) {
+                        if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                            log.warn("Material metadata not ready for materialId: {}, retrying...", materialId);
+                            return false;
+                        }
+                        throw e;
+                    }
                 });
         return materialResponse.get();
     }

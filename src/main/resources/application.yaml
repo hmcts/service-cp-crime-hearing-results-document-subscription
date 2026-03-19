@@ -19,8 +19,8 @@ material-client:
   url: ${MATERIAL_CLIENT_URL:http://localhost:8081}
   cjscppuid: ${CJSCPPUID:00000000-0000-0000-0000-000000000000}
   retry:
-    intervalMilliSecs: ${MATERIAL_CLIENT_INTERVAL_MSECS:500}
-    timeoutMilliSecs: ${MATERIAL_CLIENT_TIMEOUT_MSECS:10000}
+    intervalMilliSecs: ${MATERIAL_CLIENT_INTERVAL_MSECS:100}
+    timeoutMilliSecs: ${MATERIAL_CLIENT_TIMEOUT_MSECS:500}
 
 callback-client:
   retry:

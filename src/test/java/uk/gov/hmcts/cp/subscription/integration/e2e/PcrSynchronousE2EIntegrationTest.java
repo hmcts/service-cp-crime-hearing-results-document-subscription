@@ -56,7 +56,9 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
         "subscription.oauth-enabled=true",
-        "service-bus.enabled=false"
+        "service-bus.enabled=false",
+        "material-client.retry.intervalMilliSecs=100",
+        "material-client.retry.timeoutMilliSecs=500"
 })
 class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 

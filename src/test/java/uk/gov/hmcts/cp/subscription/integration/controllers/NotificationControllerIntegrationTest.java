@@ -58,14 +58,16 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void material_metadata_not_found_should_return_404() throws Exception {
+    void material_metadata_not_found_should_return_504_after_timeout() throws Exception {
         String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-material-not-found.json");
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(pcrPayload))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isGatewayTimeout())
+                .andExpect(jsonPath("$.error").value("gateway_timeout"))
+                .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
     @Test
