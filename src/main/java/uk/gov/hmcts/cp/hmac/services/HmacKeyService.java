@@ -27,13 +27,12 @@ public class HmacKeyService {
     @SuppressWarnings("PMD.OnlyOneReturn")
     public KeyPair generateKey() {
         if (config.isVaultEnabled()) {
-            log.info("Generating new keyPair");
             final String keyId = "kid_" + UUID.randomUUID();
+            log.info("Generating new keyPair for keyId:{}", keyId);
             final byte[] secretBytes = new byte[SECRET_BYTES_LENGTH];
             secureRandom.nextBytes(secretBytes);
             return KeyPair.builder().keyId(keyId).secret(secretBytes).build();
         } else {
-            log.info("Returning STUB keyPair");
             return KeyPair.builder().keyId(STUB_KEY_ID).secret(STUB_SECRET_STRING.getBytes(UTF_8)).build();
         }
     }
