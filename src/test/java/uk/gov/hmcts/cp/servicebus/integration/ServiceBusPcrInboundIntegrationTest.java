@@ -58,7 +58,6 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
         processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
     }
 
-    @Disabled
     @SneakyThrows
     @Test
     void inbound_notification_should_process_material_service() {
@@ -72,7 +71,6 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
         verify(materialService).getMaterialMetadata(materialId);
     }
 
-    @Disabled
     @SneakyThrows
     @Test
     void process_message_should_retry_n_times_then_send_to_DLQ() {

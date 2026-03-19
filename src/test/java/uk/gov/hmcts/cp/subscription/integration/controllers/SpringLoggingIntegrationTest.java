@@ -45,14 +45,14 @@ class SpringLoggingIntegrationTest extends IntegrationTestBase {
 
         assertThat(capturedFields.get(CORRELATION_ID_KEY)).isEqualTo(correlationId.toString());
         assertThat(capturedFields.get("timestamp")).isNotNull();
-        assertThat(capturedFields.get("message").toString())
-                .contains("spring boot test message")
-                .contains("java.lang.RuntimeException: TestException")
-                .contains("uk.gov.hmcts.cp.subscription.integration.controllers.SpringLoggingIntegrationTest");
+        assertThat(capturedFields.get("message").toString()).contains("spring boot test message");
         assertThat(capturedFields.get("logger_name"))
                 .isEqualTo("uk.gov.hmcts.cp.subscription.integration.controllers.SpringLoggingIntegrationTest");
         assertThat(capturedFields.get("thread_name")).isEqualTo("Test worker");
         assertThat(capturedFields.get("level")).isEqualTo("INFO");
+        assertThat(capturedFields.get("exception").toString())
+                .contains("java.lang.RuntimeException: TestException")
+                .contains("uk.gov.hmcts.cp.subscription.integration.controllers.SpringLoggingIntegrationTest");
     }
 
     @Test
