@@ -58,7 +58,10 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
         "servicebus.enabled=true",
-        "service-bus.retry.msecs=0,500,1000,5000"})
+        "service-bus.retry.msecs=0,500,1000,5000",
+        "material-client.retry.intervalMilliSecs=100",
+        "material-client.retry.timeoutMilliSecs=500"
+})
 @Slf4j
 class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
