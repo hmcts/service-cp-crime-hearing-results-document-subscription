@@ -51,7 +51,6 @@ public class MaterialService {
     }
 
     public MaterialMetadata getMaterialMetadata(final UUID materialId) {
-        log.info("COLING MDC corId:{}", MDC.get("X-Correlation-Id"));
         return materialApi.getMaterialMetadataByMaterialId(materialId);
     }
 }

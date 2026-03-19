@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.services;
 
 import org.awaitility.core.ConditionTimeoutException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -37,6 +38,12 @@ class MaterialServiceTest {
 
     UUID materialId = randomUUID();
     MaterialMetadata materialMetadata = new MaterialMetadata();
+
+    @BeforeEach
+    void setUp() {
+        when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
+        when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
+    }
 
     @Test
     void material_metadata_should_return(){
