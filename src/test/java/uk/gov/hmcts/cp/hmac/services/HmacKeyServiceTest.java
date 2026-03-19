@@ -9,6 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
@@ -40,6 +42,8 @@ class HmacKeyServiceTest {
 
     @Test
     void generateKey_should_return_distinct_when_vault_enabled() {
+        PrintStream originalStdOut = System.out;
+        captureStdOut();
         given(config.isVaultEnabled()).willReturn(true);
         Set<String> keyIds = new HashSet<>();
         Set<String> secrets = new HashSet<>();
@@ -50,6 +54,7 @@ class HmacKeyServiceTest {
         }
         assertThat(keyIds).hasSize(KEY_PAIR_ATTEMPTS);
         assertThat(secrets).hasSize(KEY_PAIR_ATTEMPTS);
+        System.setOut(originalStdOut);
     }
 
     @Test
@@ -67,9 +72,17 @@ class HmacKeyServiceTest {
 
     @Test
     void generateKey_should_use_hardcoded_when_vault_disabled() {
-        KeyPair keyPair1 = service.generateKey();
-        assertThat(keyPair1.getKeyId()).isEqualTo(STUB_KEY_ID);
-        assertThat(keyPair1.getSecret()).isEqualTo(STUB_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+        KeyPair keyPair = service.generateKey();
+        assertThat(keyPair.getKeyId()).isEqualTo(STUB_KEY_ID);
+        assertThat(keyPair.getSecret()).isEqualTo(STUB_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+        String encodedSecret = new EncodingService().encodeWithBase64(keyPair.getSecret());
+        assertThat(encodedSecret).isEqualTo("U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==");
+    }
+
+    private ByteArrayOutputStream captureStdOut() {
+        final ByteArrayOutputStream capturedStdOut = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(capturedStdOut, true, StandardCharsets.UTF_8));
+        return capturedStdOut;
     }
 }
 
