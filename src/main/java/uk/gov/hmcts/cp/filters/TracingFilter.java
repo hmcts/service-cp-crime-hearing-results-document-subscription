@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
@@ -18,9 +19,12 @@ import java.util.UUID;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Slf4j
+@AllArgsConstructor
 public class TracingFilter extends OncePerRequestFilter {
 
     public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
+
+    private CorrelationIdService correlationIdService;
 
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
@@ -43,7 +47,7 @@ public class TracingFilter extends OncePerRequestFilter {
 
     private String getCorrelationId(final HttpServletRequest request) {
         return request.getHeader(CORRELATION_ID_KEY) == null
-                ? UUID.randomUUID().toString()
+                ? correlationIdService.randomString()
                 : request.getHeader(CORRELATION_ID_KEY);
     }
 }

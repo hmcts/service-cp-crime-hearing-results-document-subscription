@@ -37,23 +37,24 @@ class ServiceBusQueueTest {
         }
     }
 
-    @Test
-    void post_notification_without_correlation_id_should_have_one_generated_in_response() {
-        final String postUrl = baseUrl + "/notifications";
-        ResponseEntity<String> postResponse = restClient.post()
-                .uri(postUrl)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(notificationBody())
-                .retrieve()
-                .toEntity(String.class);
-        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
-        String generatedCorrelationId = postResponse.getHeaders().getFirst(CORRELATION_ID_KEY);
-        assertThat(generatedCorrelationId).isNotNull();
-        log.info("filter generated correlationId:{}", generatedCorrelationId);
-    }
+    // TODO This does not need to be an api test it can be a int test
+//    @Test
+//    void post_notification_without_correlation_id_should_have_one_generated_in_response() {
+//        final String postUrl = baseUrl + "/notifications";
+//        ResponseEntity<String> postResponse = restClient.post()
+//                .uri(postUrl)
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .body(notificationBody())
+//                .retrieve()
+//                .toEntity(String.class);
+//        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+//        String generatedCorrelationId = postResponse.getHeaders().getFirst(CORRELATION_ID_KEY);
+//        assertThat(generatedCorrelationId).isNotNull();
+//        log.info("filter generated correlationId:{}", generatedCorrelationId);
+//    }
 
     @Test
-    void post_notification() {
+    void post_notification_should_get_material_and_send_callback() {
         final String postUrl = baseUrl + "/notifications";
         String correlationId = UUID.randomUUID().toString();
         ResponseEntity<String> postResponse = restClient.post()

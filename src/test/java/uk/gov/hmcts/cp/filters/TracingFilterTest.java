@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
@@ -15,8 +16,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,8 +28,11 @@ class TracingFilterTest {
     private HttpServletResponse response;
     @Mock
     private FilterChain filterChain;
+    @Mock
+    CorrelationIdService correlationIdService;
 
-    private final TracingFilter filter = new TracingFilter();
+    @InjectMocks
+    TracingFilter tracingFilter;
 
     @AfterEach
     void tearDown() {
@@ -39,7 +41,7 @@ class TracingFilterTest {
 
     @Test
     void shouldAlwaysFilter_all_paths() {
-        assertThat(filter.shouldNotFilter(request)).isFalse();
+        assertThat(tracingFilter.shouldNotFilter(request)).isFalse();
     }
 
     @Test
@@ -47,7 +49,7 @@ class TracingFilterTest {
         final String correlationId = UUID.randomUUID().toString();
         when(request.getHeader(TracingFilter.CORRELATION_ID_KEY)).thenReturn(correlationId);
 
-        filter.doFilterInternal(request, response, filterChain);
+        tracingFilter.doFilterInternal(request, response, filterChain);
 
         verify(response).setHeader(TracingFilter.CORRELATION_ID_KEY, correlationId);
         verify(filterChain).doFilter(request, response);
@@ -56,11 +58,12 @@ class TracingFilterTest {
 
     @Test
     void doFilterInternal_generates_correlationId_when_header_absent() throws ServletException, IOException {
+        when(correlationIdService.randomString()).thenReturn("283bdad6-6a67-4e74-9f28-e556d7410e59");
         when(request.getHeader(TracingFilter.CORRELATION_ID_KEY)).thenReturn(null);
 
-        filter.doFilterInternal(request, response, filterChain);
+        tracingFilter.doFilterInternal(request, response, filterChain);
 
-        verify(response).setHeader(eq(TracingFilter.CORRELATION_ID_KEY), anyString());
+        verify(response).setHeader(TracingFilter.CORRELATION_ID_KEY, "283bdad6-6a67-4e74-9f28-e556d7410e59");
         verify(filterChain).doFilter(request, response);
     }
 }
