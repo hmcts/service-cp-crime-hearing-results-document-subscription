@@ -13,9 +13,11 @@ public class MaterialApiConfig {
     @Bean
     public ApiClient materialApiClient(
             @Value("${material-client.url}") final String baseUrl,
+            @Value("${material-client.cjscppuid}") final String cjscppuid,
             final RestTemplate restTemplate) {
         final ApiClient client = new ApiClient(restTemplate);
         client.setBasePath(baseUrl);
+        client.addDefaultHeader("CJSCPPUID", cjscppuid);
         return client;
     }
 
