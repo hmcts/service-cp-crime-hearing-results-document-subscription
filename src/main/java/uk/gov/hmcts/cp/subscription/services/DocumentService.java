@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.material.openapi.model.Material;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
@@ -51,12 +50,14 @@ public class DocumentService {
     public DocumentContent getDocumentContent(final UUID documentId) {
         final DocumentMappingEntity documentMapping = documentMappingRepository.findById(documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
-        final Material materialDetails = materialApi.getMaterialByMaterialId(documentMapping.getMaterialId(), null, null);
-        final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(materialDetails.getContentUrl());
+        final UUID materialId = documentMapping.getMaterialId();
+        final var metadata = materialApi.getMaterialMetadataByMaterialId(materialId);
+        final String contentUrl = materialClient.getContentUrl(materialId);
+        final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(contentUrl);
         return DocumentContent.builder()
                 .body(document.getBody())
                 .contentType(MediaType.APPLICATION_PDF)
-                .fileName(materialDetails.getMetadata().getFileName())
+                .fileName(metadata.getFileName())
                 .build();
     }
 }
