@@ -78,6 +78,7 @@ public class MaterialClient {
                     resolvedUri.getFragment());
             log.info("Getting material document from host:{}", sanitizeForLog(safeUri.getHost()));
             final HttpHeaders headers = new HttpHeaders();
+            headers.set(CJSCPPUID_HEADER, cjscppuid);
             headers.setContentType(MediaType.APPLICATION_JSON);
             final HttpEntity<Void> req = new HttpEntity<>(headers);
             return restTemplate.exchange(safeUri, GET, req, byte[].class);

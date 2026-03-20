@@ -34,3 +34,5 @@ applicationinsights-agent-*.jar
 
 .DS_Store
 */.DS_Store
+
+pmd-output.txt
