@@ -58,12 +58,13 @@ class TracingFilterTest {
 
     @Test
     void doFilterInternal_generates_correlationId_when_header_absent() throws ServletException, IOException {
-        when(correlationIdService.randomString()).thenReturn("283bdad6-6a67-4e74-9f28-e556d7410e59");
+        String correlationId = "283bdad6-6a67-4e74-9f28-e556d7410e59";
+        when(correlationIdService.randomString()).thenReturn(correlationId);
         when(request.getHeader(TracingFilter.CORRELATION_ID_KEY)).thenReturn(null);
 
         tracingFilter.doFilterInternal(request, response, filterChain);
 
-        verify(response).setHeader(TracingFilter.CORRELATION_ID_KEY, "283bdad6-6a67-4e74-9f28-e556d7410e59");
+        verify(response).setHeader(TracingFilter.CORRELATION_ID_KEY, correlationId);
         verify(filterChain).doFilter(request, response);
     }
 }
