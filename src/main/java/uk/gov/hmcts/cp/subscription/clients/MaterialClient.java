@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
+import java.net.URI;
 import java.util.UUID;
 
 import static org.springframework.http.HttpMethod.GET;
@@ -56,10 +57,14 @@ public class MaterialClient {
     }
 
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
-        log.info("Getting material document from {}", url);
+        final URI uri = URI.create(url);
+        if (!"https".equals(uri.getScheme()) && !"http".equals(uri.getScheme())) {
+            throw new IllegalArgumentException("Invalid document URL scheme");
+        }
+        log.info("Getting material document from host:{}", uri.getHost());
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         final HttpEntity<Void> req = new HttpEntity<>(headers);
-        return restTemplate.exchange(url, GET, req, byte[].class);
+        return restTemplate.exchange(uri, GET, req, byte[].class);
     }
 }
