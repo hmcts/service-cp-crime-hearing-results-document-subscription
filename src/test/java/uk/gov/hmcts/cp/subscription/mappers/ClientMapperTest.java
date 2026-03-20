@@ -25,7 +25,6 @@ class ClientMapperTest {
 
     @Test
     void mapToClientEntity_should_map_client_subscription_to_entity() {
-        // Given
         UUID subscriptionId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();
         String callbackUrl = "https://example.com/callback";
@@ -40,15 +39,12 @@ class ClientMapperTest {
                         .build())
                 .build();
 
-        // When
         ClientEntity result = clientMapper.mapToClientEntity(clockService, clientSubscription, clientId);
 
-        // Then
         assertThat(result.getId()).isEqualTo(clientId); // ID should be ignored (set by service)
         assertThat(result.getSubscriptionId()).isEqualTo(subscriptionId);
         assertThat(result.getCallbackUrl()).isEqualTo(callbackUrl);
-        assertThat(result.getCreatedAt()).isNotNull();
-        assertThat(result.getUpdatedAt()).isNotNull();
-        assertThat(result.getCreatedAt()).isEqualTo(result.getUpdatedAt()); // Both set to now
+        assertThat(result.getCreatedAt()).isEqualTo(now);
+        assertThat(result.getUpdatedAt()).isEqualTo(now);
     }
 }

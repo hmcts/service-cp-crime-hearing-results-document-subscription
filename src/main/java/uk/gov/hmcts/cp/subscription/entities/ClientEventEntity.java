@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,6 +26,10 @@ public class ClientEventEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "subscription_id")
     private UUID subscriptionId;
+
+    @Column(name = "event_type_id")
     private Long eventTypeId;
 }

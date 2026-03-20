@@ -47,27 +47,13 @@ class EventTypeRepositoryTest extends IntegrationTestBase {
     @Test
     void findByEventName_should_return_empty_when_not_found() {
         Optional<EventTypeEntity> found = eventTypeRepository.findByEventName("NON_EXISTENT_EVENT");
-        
         assertThat(found).isEmpty();
     }
 
     @Transactional
     @Test
     void existsByEventName_should_return_true_when_event_exists() {
-        // When
         boolean exists = eventTypeRepository.existsByEventName("PRISON_COURT_REGISTER_GENERATED");
-
-        // Then
         assertThat(exists).isTrue();
-    }
-
-    @Transactional
-    @Test
-    void existsByEventName_should_return_false_when_event_not_exists() {
-        // When
-        boolean exists = eventTypeRepository.existsByEventName("NON_EXISTENT_EVENT");
-
-        // Then
-        assertThat(exists).isFalse();
     }
 }

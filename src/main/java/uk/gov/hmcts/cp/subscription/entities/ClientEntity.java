@@ -25,8 +25,16 @@ public class ClientEntity {
     @Id
     @Column(name = "client_id")
     private UUID id;
+
+    @Column(name =  "subscription_id")
     private UUID subscriptionId;
+
+    @Column(name = "callback_url")
     private String callbackUrl;
+
+    @Column(name = "created_at")
     private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 }

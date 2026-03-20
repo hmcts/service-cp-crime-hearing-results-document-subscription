@@ -52,86 +52,53 @@ class ClientEventsServiceTest {
 
     @Test
     void getEventTypes_should_return_event_type_entities_for_valid_event_types() {
-        // Given
-        EventTypeEntity eventType = EventTypeEntity.builder()
-                .id(1L)
-                .eventName("PRISON_COURT_REGISTER_GENERATED")
-                .displayName("Prison court register")
-                .category("REGISTER")
-                .build();
+        EventTypeEntity eventType = getEventTypeEntity();
 
-        ClientSubscription clientSubscription = ClientSubscription.builder()
-                .eventTypes(List.of(
-                        EventType.PRISON_COURT_REGISTER_GENERATED
-                ))
-                .build();
+        ClientSubscription clientSubscription = getClientSubscription(UUID.randomUUID(), List.of(
+                EventType.PRISON_COURT_REGISTER_GENERATED
+        ));
 
         when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
 
-        // When
         Set<EventTypeEntity> result = clientEventsService.getEventTypes(clientSubscription);
-
-        // Then
         assertThat(result).hasSize(1);
         assertThat(result).containsExactly(eventType);
     }
 
-   // TODO : write a test for multiple events and invalid event types in next commit AMP-197
+    // TODO : write a test for multiple events and invalid event types in next commit AMP-197
 
     @Test
     void getEventTypes_should_handle_duplicate_event_types_in_subscription() {
-        // Given
-        EventTypeEntity eventType = EventTypeEntity.builder()
-                .id(1L)
-                .eventName("PRISON_COURT_REGISTER_GENERATED")
-                .displayName("Prison court register")
-                .category("REGISTER")
-                .build();
+        EventTypeEntity eventType = getEventTypeEntity();
 
-        ClientSubscription clientSubscription = ClientSubscription.builder()
-                .eventTypes(List.of(
+        ClientSubscription clientSubscription = getClientSubscription(UUID.randomUUID(), List.of(
                         EventType.PRISON_COURT_REGISTER_GENERATED,
                         EventType.PRISON_COURT_REGISTER_GENERATED
-                ))
-                .build();
+                ));
 
         when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
 
-        // When
         Set<EventTypeEntity> result = clientEventsService.getEventTypes(clientSubscription);
 
-        // Then
         assertThat(result).hasSize(1);
         assertThat(result).contains(eventType);
     }
 
     @Test
     void saveClientInfo_should_save_client_and_event_entities() {
-        // Given
         UUID clientId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
 
-        EventTypeEntity eventType = EventTypeEntity.builder()
-                .id(1L)
-                .eventName("PRISON_COURT_REGISTER_GENERATED")
-                .displayName("Prison court register")
-                .category("REGISTER")
-                .build();
+        EventTypeEntity eventType = getEventTypeEntity();
 
         ClientEventEntity clientEventEntity = ClientEventEntity.builder()
                 .eventTypeId(1L)
                 .subscriptionId(subscriptionId)
                 .build();
 
-        ClientSubscription clientSubscription = ClientSubscription.builder()
-                .clientSubscriptionId(subscriptionId)
-                .notificationEndpoint(NotificationEndpoint.builder()
-                        .callbackUrl("https://example.com/callback")
-                        .build())
-                .eventTypes(List.of(
+        ClientSubscription clientSubscription = getClientSubscription(subscriptionId, List.of(
                         EventType.PRISON_COURT_REGISTER_GENERATED
-                ))
-                .build();
+                ));
 
         when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
 
@@ -144,12 +111,28 @@ class ClientEventsServiceTest {
         when(clientMapper.mapToClientEntity(clockService, clientSubscription, clientId)).thenReturn(clientEntity);
         when(clientEventMapper.mapToClientEventEntityList(subscriptionId, Set.of(eventType))).thenReturn(List.of(clientEventEntity));
 
-        // When
         clientEventsService.saveClientInfo(clientSubscription, clientId);
-
-        // Then
         verify(eventTypeRepository).findAll();
         verify(clientRepository).save(clientEntity);
-        verify(clientEventsRepository).save(any());
+        verify(clientEventsRepository).saveAll(any());
+    }
+
+    private static EventTypeEntity getEventTypeEntity() {
+        return EventTypeEntity.builder()
+                .id(1L)
+                .eventName("PRISON_COURT_REGISTER_GENERATED")
+                .displayName("Prison court register")
+                .category("REGISTER")
+                .build();
+    }
+
+    private static ClientSubscription getClientSubscription(UUID subscriptionId, List<EventType> eventTypes) {
+        return ClientSubscription.builder()
+                .clientSubscriptionId(subscriptionId)
+                .notificationEndpoint(NotificationEndpoint.builder()
+                        .callbackUrl("https://example.com/callback")
+                        .build())
+                .eventTypes(eventTypes)
+                .build();
     }
 }

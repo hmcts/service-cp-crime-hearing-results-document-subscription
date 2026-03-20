@@ -17,23 +17,13 @@ class ClientRepositoryTest extends IntegrationTestBase {
     @Transactional
     @Test
     void save_should_persist_client_entity() {
-        // Given
         UUID clientId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
-        ClientEntity client = ClientEntity.builder()
-                .id(clientId)
-                .subscriptionId(subscriptionId)
-                .callbackUrl("https://example.com/callback")
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+        ClientEntity client = getClientEntity(clientId, subscriptionId, "https://example.com/callback", now);
 
-        // When
         ClientEntity saved = clientRepository.save(client);
-
-        // Then
         assertThat(saved.getId()).isEqualTo(clientId);
         assertThat(saved.getSubscriptionId()).isEqualTo(subscriptionId);
         assertThat(saved.getCallbackUrl()).isEqualTo("https://example.com/callback");
@@ -44,25 +34,16 @@ class ClientRepositoryTest extends IntegrationTestBase {
     @Transactional
     @Test
     void findById_should_return_client_entity_when_exists() {
-        // Given
         UUID clientId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
-        ClientEntity client = ClientEntity.builder()
-                .id(clientId)
-                .subscriptionId(subscriptionId)
-                .callbackUrl("https://test.com/webhook")
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
+        ClientEntity client = getClientEntity(clientId, subscriptionId, "https://test.com/webhook", now);
 
         clientRepository.save(client);
 
-        // When
         Optional<ClientEntity> found = clientRepository.findById(clientId);
-
-        // Then
+        assertThat(found.isPresent()).isTrue();
         assertThat(found.get().getId()).isEqualTo(clientId);
         assertThat(found.get().getSubscriptionId()).isEqualTo(subscriptionId);
         assertThat(found.get().getCallbackUrl()).isEqualTo("https://test.com/webhook");
@@ -71,31 +52,19 @@ class ClientRepositoryTest extends IntegrationTestBase {
     @Transactional
     @Test
     void findById_should_return_empty_when_client_not_found() {
-        // Given
         UUID nonExistentId = UUID.randomUUID();
-
-        // When
         Optional<ClientEntity> found = clientRepository.findById(nonExistentId);
-
-        // Then
         assertThat(found).isEmpty();
     }
 
     @Transactional
     @Test
     void save_should_update_existing_client_entity() {
-        // Given
         UUID clientId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
         OffsetDateTime originalTime = OffsetDateTime.now(ZoneOffset.UTC).minusHours(1);
 
-        ClientEntity originalClient = ClientEntity.builder()
-                .id(clientId)
-                .subscriptionId(subscriptionId)
-                .callbackUrl("https://original.com/callback")
-                .createdAt(originalTime)
-                .updatedAt(originalTime)
-                .build();
+        ClientEntity originalClient = getClientEntity(clientId, subscriptionId, "https://original.com/callback", originalTime);
 
         clientRepository.save(originalClient);
 
@@ -105,12 +74,19 @@ class ClientRepositoryTest extends IntegrationTestBase {
                 .updatedAt(updatedTime)
                 .build();
 
-        // When
         ClientEntity saved = clientRepository.save(updatedClient);
-
-        // Then
         assertThat(saved.getCallbackUrl()).isEqualTo("https://updated.com/callback");
         assertThat(saved.getUpdatedAt()).isEqualTo(updatedTime);
         assertThat(saved.getCreatedAt()).isEqualTo(originalTime);
+    }
+
+    private static ClientEntity getClientEntity(UUID clientId, UUID subscriptionId, String callbackUrl, OffsetDateTime originalTime) {
+        return ClientEntity.builder()
+                .id(clientId)
+                .subscriptionId(subscriptionId)
+                .callbackUrl(callbackUrl)
+                .createdAt(originalTime)
+                .updatedAt(originalTime)
+                .build();
     }
 }
