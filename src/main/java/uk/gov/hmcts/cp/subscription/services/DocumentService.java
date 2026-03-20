@@ -8,12 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.model.EntityEventType;
+import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 
 import java.util.UUID;
@@ -26,7 +26,6 @@ public class DocumentService {
     private final DocumentMappingRepository documentMappingRepository;
     private final ClockService clockService;
     private final DocumentMapper documentMapper;
-    private final MaterialApi materialApi;
     private final MaterialClient materialClient;
 
     @Transactional
@@ -51,7 +50,7 @@ public class DocumentService {
         final DocumentMappingEntity documentMapping = documentMappingRepository.findById(documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
         final UUID materialId = documentMapping.getMaterialId();
-        final var metadata = materialApi.getMaterialMetadataByMaterialId(materialId);
+        final MaterialMetadata metadata = materialClient.getMetadata(materialId);
         final String contentUrl = materialClient.getContentUrl(materialId);
         final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(contentUrl);
         return DocumentContent.builder()

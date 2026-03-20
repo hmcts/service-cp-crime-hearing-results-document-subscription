@@ -5,12 +5,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
+import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
@@ -30,8 +29,6 @@ class NotificationServiceTest {
     ServiceBusConfigService configService;
     @Mock
     AppProperties appProperties;
-    @Mock
-    private MaterialApi materialApi;
     @Mock
     private DocumentService documentService;
     @Mock

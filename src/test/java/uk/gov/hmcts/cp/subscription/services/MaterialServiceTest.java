@@ -8,9 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
-import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
+import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
 import java.util.Map;
 import java.util.UUID;
@@ -30,7 +30,7 @@ class MaterialServiceTest {
     @Mock
     AppProperties appProperties;
     @Mock
-    MaterialApi materialApi;
+    MaterialClient materialClient;
 
     @InjectMocks
     MaterialService materialService;
@@ -40,7 +40,7 @@ class MaterialServiceTest {
 
     @Test
     void material_metadata_should_return(){
-        when(materialApi.getMaterialMetadataByMaterialId(materialId)).thenReturn(materialMetadata);
+        when(materialClient.getMetadata(materialId)).thenReturn(materialMetadata);
         MaterialMetadata response = materialService.getMaterialMetadata(materialId);
         assertThat(response).isEqualTo(materialMetadata);
     }
@@ -50,11 +50,11 @@ class MaterialServiceTest {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
         materialMetadata.setMaterialId(materialId);
-        when(materialApi.getMaterialMetadataByMaterialId(any(UUID.class))).thenReturn(materialMetadata);
+        when(materialClient.getMetadata(any(UUID.class))).thenReturn(materialMetadata);
 
         MaterialMetadata response = materialService.waitForMaterialMetadata(materialId);
 
-        verify(materialApi, times(1)).getMaterialMetadataByMaterialId(materialId);
+        verify(materialClient, times(1)).getMetadata(materialId);
         assertThat(response.getMaterialId()).isEqualTo(materialId);
     }
 
@@ -62,23 +62,23 @@ class MaterialServiceTest {
     void material_not_ready_should_throw_timeout_exception() {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
-        when(materialApi.getMaterialMetadataByMaterialId(materialId)).thenReturn(null);
+        when(materialClient.getMetadata(materialId)).thenReturn(null);
 
         assertThrows(ConditionTimeoutException.class, () -> materialService.waitForMaterialMetadata(materialId));
 
-        verify(materialApi, times(3)).getMaterialMetadataByMaterialId(materialId);
+        verify(materialClient, times(3)).getMetadata(materialId);
     }
 
     @Test
     void material_404_should_retry_until_timeout() {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
-        when(materialApi.getMaterialMetadataByMaterialId(materialId))
+        when(materialClient.getMetadata(materialId))
                 .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
         assertThrows(ConditionTimeoutException.class, () -> materialService.waitForMaterialMetadata(materialId));
 
-        verify(materialApi, atLeast(2)).getMaterialMetadataByMaterialId(materialId);
+        verify(materialClient, atLeast(2)).getMetadata(materialId);
     }
 
     @Test
@@ -86,44 +86,44 @@ class MaterialServiceTest {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(1000);
         materialMetadata.setMaterialId(materialId);
-        when(materialApi.getMaterialMetadataByMaterialId(materialId))
+        when(materialClient.getMetadata(materialId))
                 .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND))
                 .thenReturn(materialMetadata);
 
         MaterialMetadata response = materialService.waitForMaterialMetadata(materialId);
 
         assertThat(response.getMaterialId()).isEqualTo(materialId);
-        verify(materialApi, times(2)).getMaterialMetadataByMaterialId(materialId);
+        verify(materialClient, times(2)).getMetadata(materialId);
     }
 
     @Test
     void material_network_error_should_retry_until_timeout() {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
-        when(materialApi.getMaterialMetadataByMaterialId(materialId))
+        when(materialClient.getMetadata(materialId))
                 .thenThrow(new RuntimeException("Connection refused"));
 
         assertThrows(ConditionTimeoutException.class, () -> materialService.waitForMaterialMetadata(materialId));
 
-        verify(materialApi, atLeast(2)).getMaterialMetadataByMaterialId(materialId);
+        verify(materialClient, atLeast(2)).getMetadata(materialId);
     }
 
     @Test
     void material_500_should_retry_until_timeout() {
         when(appProperties.getMaterialRetryIntervalMilliSecs()).thenReturn(100);
         when(appProperties.getMaterialRetryTimeoutMilliSecs()).thenReturn(400);
-        when(materialApi.getMaterialMetadataByMaterialId(materialId))
+        when(materialClient.getMetadata(materialId))
                 .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
         assertThrows(ConditionTimeoutException.class, () -> materialService.waitForMaterialMetadata(materialId));
 
-        verify(materialApi, atLeast(2)).getMaterialMetadataByMaterialId(materialId);
+        verify(materialClient, atLeast(2)).getMetadata(materialId);
     }
 
     @Test
     void poll_should_return_true_when_metadata_available() {
         materialMetadata.setMaterialId(materialId);
-        when(materialApi.getMaterialMetadataByMaterialId(materialId)).thenReturn(materialMetadata);
+        when(materialClient.getMetadata(materialId)).thenReturn(materialMetadata);
         final AtomicReference<MaterialMetadata> ref = new AtomicReference<>();
 
         boolean result = materialService.pollMaterialMetadata(materialId, Map.of(), ref);
@@ -134,7 +134,7 @@ class MaterialServiceTest {
 
     @Test
     void poll_should_return_false_when_exception_thrown() {
-        when(materialApi.getMaterialMetadataByMaterialId(materialId))
+        when(materialClient.getMetadata(materialId))
                 .thenThrow(new RuntimeException("Connection refused"));
 
         boolean result = materialService.pollMaterialMetadata(materialId, Map.of(), new AtomicReference<>());
@@ -144,7 +144,7 @@ class MaterialServiceTest {
 
     @Test
     void poll_should_return_false_when_response_is_null() {
-        when(materialApi.getMaterialMetadataByMaterialId(materialId)).thenReturn(null);
+        when(materialClient.getMetadata(materialId)).thenReturn(null);
 
         boolean result = materialService.pollMaterialMetadata(materialId, Map.of(), new AtomicReference<>());
 

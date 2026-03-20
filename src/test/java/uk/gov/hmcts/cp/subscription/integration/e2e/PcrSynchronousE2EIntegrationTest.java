@@ -13,7 +13,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
-import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
@@ -85,7 +85,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private String callbackBaseUrl;
 
     @MockitoSpyBean
-    private MaterialApi materialApi;
+    private MaterialClient materialClient;
 
     @BeforeEach
     void setUp() {
@@ -235,11 +235,11 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         await()
                 .pollInterval(Duration.ofMillis(50))
                 .atMost(Duration.ofSeconds(3))
-                .untilAsserted(() -> verify(materialApi, atLeastOnce()).getMaterialMetadataByMaterialId(any(UUID.class)));
+                .untilAsserted(() -> verify(materialClient, atLeastOnce()).getMetadata(any(UUID.class)));
     }
 
     private void then_the_material_api_was_polled() {
-        verify(materialApi, atLeastOnce()).getMaterialMetadataByMaterialId(eq(MATERIAL_ID_TIMEOUT));
+        verify(materialClient, atLeastOnce()).getMetadata(eq(MATERIAL_ID_TIMEOUT));
     }
 
     private void then_the_subscriber_receives_a_callback() {

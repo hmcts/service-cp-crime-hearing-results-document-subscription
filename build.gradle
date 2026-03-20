@@ -19,7 +19,6 @@ apply {
   from("$rootDir/gradle/dependencies/java-core.gradle")
   from("$rootDir/gradle/dependencies/spring-core.gradle")
   from("$rootDir/gradle/dependencies/spring-db.gradle")
-  from("$rootDir/gradle/dependencies/openapi-material.gradle")
   from("$rootDir/gradle/dependencies/spring-cloud.gradle")
   from("$rootDir/gradle/dependencies/spring-actuator.gradle")
   from("$rootDir/gradle/dependencies/docker-test.gradle")
