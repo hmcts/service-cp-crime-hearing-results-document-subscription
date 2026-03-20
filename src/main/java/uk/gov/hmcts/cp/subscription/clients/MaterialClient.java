@@ -11,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.UUID;
 
 import static org.springframework.http.HttpMethod.GET;
@@ -66,11 +67,23 @@ public class MaterialClient {
         if (!baseUri.getHost().equalsIgnoreCase(resolvedUri.getHost())) {
             throw new IllegalArgumentException("Invalid document URL host");
         }
-        log.info("Getting material document from host:{}", sanitizeForLog(resolvedUri.getHost()));
-        final HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        final HttpEntity<Void> req = new HttpEntity<>(headers);
-        return restTemplate.exchange(resolvedUri, GET, req, byte[].class);
+        try {
+            final URI safeUri = new URI(
+                    resolvedUri.getScheme(),
+                    resolvedUri.getUserInfo(),
+                    baseUri.getHost(),
+                    resolvedUri.getPort(),
+                    resolvedUri.getPath(),
+                    resolvedUri.getQuery(),
+                    resolvedUri.getFragment());
+            log.info("Getting material document from host:{}", sanitizeForLog(safeUri.getHost()));
+            final HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            final HttpEntity<Void> req = new HttpEntity<>(headers);
+            return restTemplate.exchange(safeUri, GET, req, byte[].class);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Invalid document URL", e);
+        }
     }
 
     private static String sanitizeForLog(final String value) {
