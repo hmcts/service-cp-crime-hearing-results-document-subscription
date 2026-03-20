@@ -6,8 +6,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import static com.azure.core.http.ContentType.APPLICATION_JSON;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -20,6 +20,7 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
 @Slf4j
 public class CallbackClient {
 
+    private JsonMapper jsonMapper;
     private RestTemplate restTemplate;
 
     public void sendNotification(final String url, final EventNotificationPayloadWrapper payloadWrapper) {
@@ -28,7 +29,8 @@ public class CallbackClient {
         headers.set(CONTENT_TYPE, APPLICATION_JSON);
         headers.set(KEY_ID_HEADER, payloadWrapper.getKeyId());
         headers.set(SIGNATURE_HEADER, payloadWrapper.getSignature());
-        final HttpEntity<EventNotificationPayload> req = new HttpEntity<>(payloadWrapper.getPayload(), headers);
+        final String payloadJson = jsonMapper.toJson(payloadWrapper.getPayload());
+        final HttpEntity<String> req = new HttpEntity<>(payloadJson, headers);
         restTemplate.exchange(url, POST, req, String.class);
     }
 }
