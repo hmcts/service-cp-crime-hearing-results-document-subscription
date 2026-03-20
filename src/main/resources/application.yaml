@@ -20,7 +20,7 @@ material-client:
   cjscppuid: ${CJSCPPUID:00000000-0000-0000-0000-000000000000}
   retry:
     intervalMilliSecs: ${MATERIAL_CLIENT_INTERVAL_MSECS:500}
-    timeoutMilliSecs: ${MATERIAL_CLIENT_TIMEOUT_MSECS:10000}
+    timeoutMilliSecs: ${MATERIAL_CLIENT_TIMEOUT_MSECS:60000}
 
 callback-client:
   retry:
