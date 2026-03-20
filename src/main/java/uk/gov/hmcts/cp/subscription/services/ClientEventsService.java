@@ -32,16 +32,17 @@ public class ClientEventsService {
 
     private final ClockService clockService;
 
-    public void saveClientInfo(final ClientSubscription clientSubscription, UUID clientId) {
-        List<ClientEventEntity> clientEventEntityList = clientEventMapper.mapToClientEventEntityList(clientSubscription.getClientSubscriptionId(), getEventTypes(clientSubscription));
+    public void saveClientInfo(final ClientSubscription clientSubscription, final UUID clientId) {
+        final List<ClientEventEntity> clientEventEntityList = clientEventMapper.mapToClientEventEntityList(clientSubscription.getClientSubscriptionId(), getEventTypes(clientSubscription));
         clientEventEntityList.forEach(clientEventsRepository::save);
 
-        ClientEntity clientEntity = clientMapper.mapToClientEntity(clockService, clientSubscription, clientId);
+        final ClientEntity clientEntity = clientMapper.mapToClientEntity(clockService, clientSubscription, clientId);
         clientRepository.save(clientEntity);
     }
 
+    /* package */
     Set<EventTypeEntity> getEventTypes(final ClientSubscription clientSubscription) {
-        List<EventTypeEntity> eventTypeEntities = eventTypeRepository.findAll();
+        final List<EventTypeEntity> eventTypeEntities = eventTypeRepository.findAll();
         return clientSubscription.getEventTypes()
                 .stream()
                 .map(eventType -> eventTypeEntities.stream()

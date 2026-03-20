@@ -23,7 +23,7 @@ public class EventTypeService {
         return eventTypeMapper.mapToEventTypes(eventTypeEntityList);
     }
 
-    public boolean eventExists(String eventName) {
+    public boolean eventExists(final String eventName) {
         return eventTypeRepository.existsByEventName(eventName);
     }
 }

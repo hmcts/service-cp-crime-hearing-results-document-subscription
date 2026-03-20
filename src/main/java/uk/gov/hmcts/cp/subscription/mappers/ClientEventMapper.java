@@ -18,7 +18,7 @@ public interface ClientEventMapper {
     @Mapping(source = "eventTypeEntity.id", target = "eventTypeId")
     ClientEventEntity mapToClientEventEntity(UUID subscriptionId, EventTypeEntity eventTypeEntity);
 
-    default List<ClientEventEntity> mapToClientEventEntityList(UUID subscriptionId, Set<EventTypeEntity> eventTypeEntities) {
+    default List<ClientEventEntity> mapToClientEventEntityList(final UUID subscriptionId, final Set<EventTypeEntity> eventTypeEntities) {
         return eventTypeEntities.stream()
                 .map(eventTypeEntity -> mapToClientEventEntity(subscriptionId, eventTypeEntity))
                 .collect(Collectors.toList());
