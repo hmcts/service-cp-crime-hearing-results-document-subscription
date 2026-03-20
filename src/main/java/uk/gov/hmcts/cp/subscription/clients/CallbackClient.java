@@ -29,7 +29,7 @@ public class CallbackClient {
         headers.set(CONTENT_TYPE, APPLICATION_JSON);
         headers.set(KEY_ID_HEADER, payloadWrapper.getKeyId());
         headers.set(SIGNATURE_HEADER, payloadWrapper.getSignature());
-        String payloadJson = jsonMapper.toJson(payloadWrapper.getPayload());
+        final String payloadJson = jsonMapper.toJson(payloadWrapper.getPayload());
         final HttpEntity<String> req = new HttpEntity<>(payloadJson, headers);
         restTemplate.exchange(url, POST, req, String.class);
     }
