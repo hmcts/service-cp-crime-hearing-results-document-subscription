@@ -9,6 +9,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +36,7 @@ class MaterialClientTest {
     @Test
     void get_document_should_call_material_service() {
         materialClient.getMaterialDocument("http://material-service");
-        verify(restTemplate).exchange(anyString(), eq(GET), any(HttpEntity.class), eq(byte[].class));
+        verify(restTemplate).exchange(any(URI.class), eq(GET), any(HttpEntity.class), eq(byte[].class));
     }
 
     @Test
