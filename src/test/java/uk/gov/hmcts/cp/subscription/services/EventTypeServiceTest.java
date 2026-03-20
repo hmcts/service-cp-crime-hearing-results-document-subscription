@@ -45,4 +45,32 @@ class EventTypeServiceTest {
         verify(eventTypeMapper).mapToEventTypes(entityList);
 
     }
+
+    @Test
+    void eventExists_should_return_true_when_event_exists() {
+        // Given
+        String eventName = "PRISON_COURT_REGISTER_GENERATED";
+        when(eventTypeRepository.existsByEventName(eventName)).thenReturn(true);
+
+        // When
+        boolean result = eventTypeService.eventExists(eventName);
+
+        // Then
+        assertThat(result).isTrue();
+        verify(eventTypeRepository).existsByEventName(eventName);
+    }
+
+    @Test
+    void eventExists_should_return_false_when_event_not_exists() {
+        // Given
+        String eventName = "NON_EXISTENT_EVENT";
+        when(eventTypeRepository.existsByEventName(eventName)).thenReturn(false);
+
+        // When
+        boolean result = eventTypeService.eventExists(eventName);
+
+        // Then
+        assertThat(result).isFalse();
+        verify(eventTypeRepository).existsByEventName(eventName);
+    }
 }
