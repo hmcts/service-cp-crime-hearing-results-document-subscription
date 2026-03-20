@@ -57,14 +57,23 @@ public class MaterialClient {
     }
 
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
+        final URI baseUri = URI.create(baseUrl);
         final URI uri = URI.create(url);
-        if (!"https".equals(uri.getScheme()) && !"http".equals(uri.getScheme())) {
+        final URI resolvedUri = baseUri.resolve(uri);
+        if (!"https".equals(resolvedUri.getScheme()) && !"http".equals(resolvedUri.getScheme())) {
             throw new IllegalArgumentException("Invalid document URL scheme");
         }
-        log.info("Getting material document from host:{}", uri.getHost());
+        if (!baseUri.getHost().equalsIgnoreCase(resolvedUri.getHost())) {
+            throw new IllegalArgumentException("Invalid document URL host");
+        }
+        log.info("Getting material document from host:{}", sanitizeForLog(resolvedUri.getHost()));
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         final HttpEntity<Void> req = new HttpEntity<>(headers);
-        return restTemplate.exchange(uri, GET, req, byte[].class);
+        return restTemplate.exchange(resolvedUri, GET, req, byte[].class);
+    }
+
+    private static String sanitizeForLog(final String value) {
+        return value.replace('\n', '_').replace('\r', '_');
     }
 }
