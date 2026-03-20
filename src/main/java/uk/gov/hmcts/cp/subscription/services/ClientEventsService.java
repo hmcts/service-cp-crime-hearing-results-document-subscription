@@ -32,22 +32,22 @@ public class ClientEventsService {
 
     private final ClockService clockService;
 
-    Set<EventTypeEntity> getEventTypes(final ClientSubscription clientSubscription) {
-        List<EventTypeEntity> eventTypeEntities = eventTypeRepository.findAll();
-        return clientSubscription.getEventTypes()
-                .stream()
-                .map(eventType -> eventTypeEntities.stream()
-                    .filter(e -> e.getEventName().equals(eventType.name()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid event type: " + eventType.name())))
-                .collect(Collectors.toSet());
-    }
-
     public void saveClientInfo(final ClientSubscription clientSubscription, UUID clientId) {
         List<ClientEventEntity> clientEventEntityList = clientEventMapper.mapToClientEventEntityList(clientSubscription.getClientSubscriptionId(), getEventTypes(clientSubscription));
         clientEventEntityList.forEach(clientEventsRepository::save);
 
         ClientEntity clientEntity = clientMapper.mapToClientEntity(clockService, clientSubscription, clientId);
         clientRepository.save(clientEntity);
+    }
+
+    Set<EventTypeEntity> getEventTypes(final ClientSubscription clientSubscription) {
+        List<EventTypeEntity> eventTypeEntities = eventTypeRepository.findAll();
+        return clientSubscription.getEventTypes()
+                .stream()
+                .map(eventType -> eventTypeEntities.stream()
+                        .filter(e -> e.getEventName().equals(eventType.name()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid event type: " + eventType.name())))
+                .collect(Collectors.toSet());
     }
 }
