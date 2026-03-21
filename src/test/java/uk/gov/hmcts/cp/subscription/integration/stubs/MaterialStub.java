@@ -14,6 +14,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 public final class MaterialStub {
 
     private static final String MATERIAL_METADATA_RESPONSE_PATH = "wiremock/material-client/files/material-response.json";
+    private static final String MATERIAL_CONTENT_RESPONSE_PATH = "wiremock/material-client/files/material-content-url.txt";
     private static final String MATERIAL_PDF_PATH = "wiremock/material-client/files/material-content.pdf";
     private static final String MATERIAL_URI = "/material-query-api/query/api/rest/material/material/";
     private static final String METADATA = "/metadata";
@@ -33,14 +34,14 @@ public final class MaterialStub {
                         .withBody(metadataBody)));
     }
 
-    public static void stubMaterialContent(UUID materialId) {
+    public static void stubMaterialContent(UUID materialId) throws IOException {
         String materialPath = MATERIAL_URI + materialId;
-        String blobUrlTemplate = "http://{{request.host}}:{{request.port}}" + materialPath + "/binary";
+        String contentBody = new ClassPathResource(MATERIAL_CONTENT_RESPONSE_PATH).getContentAsString(StandardCharsets.UTF_8);
         stubFor(get(urlPathMatching(".*" + materialPath + "/content"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader(CONTENT_TYPE, "text/uri-list;charset=UTF-8")
-                        .withBody(blobUrlTemplate)
+                        .withBody(contentBody)
                         .withTransformers("response-template")));
     }
 

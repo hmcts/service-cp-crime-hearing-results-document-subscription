@@ -99,8 +99,8 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
     }
 
     MaterialMetadata materialMetadata(UUID materialId) {
-        MaterialMetadata materialMetadata = new MaterialMetadata();
-        materialMetadata.setMaterialId(materialId);
-        return materialMetadata;
+        return MaterialMetadata.builder()
+                .materialId(materialId)
+                .build();
     }
 }

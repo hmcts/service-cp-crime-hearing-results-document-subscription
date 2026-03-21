@@ -76,8 +76,8 @@ class DocumentServiceTest {
     }
 
     private MaterialMetadata createMetadata() {
-        MaterialMetadata metadata = new MaterialMetadata();
-        metadata.setFileName("file.pdf");
-        return metadata;
+        return MaterialMetadata.builder()
+                .fileName("file.pdf")
+                .build();
     }
 }

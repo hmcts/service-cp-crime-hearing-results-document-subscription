@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.clients;
 
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -76,7 +77,7 @@ public class MaterialClient {
                     resolvedUri.getPath(),
                     resolvedUri.getQuery(),
                     resolvedUri.getFragment());
-            log.info("Getting material document from host:{}", sanitizeForLog(safeUri.getHost()));
+            log.info("Getting material document from host:{}", Encode.forJava(safeUri.getHost()));
             final HttpHeaders headers = new HttpHeaders();
             headers.set(CJSCPPUID_HEADER, cjscppuid);
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -85,9 +86,5 @@ public class MaterialClient {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Invalid document URL", e);
         }
-    }
-
-    private static String sanitizeForLog(final String value) {
-        return value.replace('\n', '_').replace('\r', '_');
     }
 }
