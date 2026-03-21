@@ -1,7 +1,6 @@
 package uk.gov.hmcts.cp.subscription.clients;
 
 import lombok.extern.slf4j.Slf4j;
-import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -11,8 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 import static org.springframework.http.HttpMethod.GET;
@@ -59,32 +56,13 @@ public class MaterialClient {
     }
 
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
-        final URI baseUri = URI.create(baseUrl);
-        final URI uri = URI.create(url);
-        final URI resolvedUri = baseUri.resolve(uri);
-        if (!"https".equals(resolvedUri.getScheme()) && !"http".equals(resolvedUri.getScheme())) {
-            throw new IllegalArgumentException("Invalid document URL scheme");
-        }
-        if (!baseUri.getHost().equalsIgnoreCase(resolvedUri.getHost())) {
-            throw new IllegalArgumentException("Invalid document URL host");
-        }
-        try {
-            final URI safeUri = new URI(
-                    resolvedUri.getScheme(),
-                    resolvedUri.getUserInfo(),
-                    baseUri.getHost(),
-                    resolvedUri.getPort(),
-                    resolvedUri.getPath(),
-                    resolvedUri.getQuery(),
-                    resolvedUri.getFragment());
-            log.info("Getting material document from host:{}", Encode.forJava(safeUri.getHost()));
-            final HttpHeaders headers = new HttpHeaders();
-            headers.set(CJSCPPUID_HEADER, cjscppuid);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            final HttpEntity<Void> req = new HttpEntity<>(headers);
-            return restTemplate.exchange(safeUri, GET, req, byte[].class);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Invalid document URL", e);
-        }
+        log.info("Getting material document");
+        final HttpHeaders headers = new HttpHeaders();
+        headers.set(CJSCPPUID_HEADER, cjscppuid);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        final HttpEntity<Void> req = new HttpEntity<>(headers);
+        /* url originates from material-service /content response (trusted internal service),
+        not from user input; AMP proxies the bytes and never exposes the blob URL to subscribers */
+        return restTemplate.exchange(url, GET, req, byte[].class);
     }
 }

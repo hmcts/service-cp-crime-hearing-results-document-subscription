@@ -9,11 +9,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -37,21 +35,7 @@ class MaterialClientTest {
     @Test
     void get_document_should_call_material_service() {
         materialClient.getMaterialDocument("http://material-service");
-        verify(restTemplate).exchange(any(URI.class), eq(GET), any(HttpEntity.class), eq(byte[].class));
-    }
-
-    @Test
-    void get_document_should_reject_non_http_scheme() {
-        assertThatThrownBy(() -> materialClient.getMaterialDocument("ftp://material-service/file.pdf"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Invalid document URL scheme");
-    }
-
-    @Test
-    void get_document_should_reject_different_host() {
-        assertThatThrownBy(() -> materialClient.getMaterialDocument("http://evil.com/file.pdf"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Invalid document URL host");
+        verify(restTemplate).exchange(anyString(), eq(GET), any(HttpEntity.class), eq(byte[].class));
     }
 
     @Test
