@@ -13,9 +13,9 @@ import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
+import uk.gov.hmcts.cp.subscription.services.ClientEventsService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
 
@@ -38,7 +38,7 @@ class NotificationManagerTest {
     DocumentService documentService;
 
     @Mock
-    SubscriptionService subscriptionService;
+    ClientEventsService clientEventsService;
 
     @Mock
     CallbackDeliveryService callbackDeliveryService;
@@ -74,7 +74,7 @@ class NotificationManagerTest {
     @Test
     void getPcrDocumentContent_should_return_content_when_subscription_has_access() {
         when(documentService.getEventTypeForDocument(documentId)).thenReturn(PRISON_COURT_REGISTER_GENERATED);
-        when(subscriptionService.hasAccess(subscriptionId, clientId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
+        when(clientEventsService.hasAccess(subscriptionId, clientId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
         when(documentService.getDocumentContent(documentId)).thenReturn(content);
 
         DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, clientId, documentId);

@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
+import uk.gov.hmcts.cp.subscription.services.ClientEventsService;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
@@ -38,6 +39,8 @@ class SubscriptionServiceTest {
     ClockService clockService;
     @Mock
     SubscriptionRepository subscriptionRepository;
+    @Mock
+    ClientEventsService clientEventsService;
     @Mock
     SubscriptionMapper mapper;
     @Mock
@@ -80,6 +83,7 @@ class SubscriptionServiceTest {
         ClientSubscription result = subscriptionService.createSubscription(createRequest, clientId);
 
         assertThat(result).isEqualTo(response);
+        verify(clientEventsService).saveClientInfo(response, clientId);
     }
 
     @Test
@@ -98,7 +102,7 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void update_request_should_update_existing_entity() {
+    void update_request_should_update_existing_entity_and_client_info() {
         when(subscriptionRepository.findByIdAndClientId(subscriptionId, clientId)).thenReturn(Optional.of(savedEntity));
         when(clockService.nowOffsetUTC()).thenReturn(now);
         when(mapper.mapUpdateRequestToEntity(savedEntity, updateRequest, now)).thenReturn(requestEntity);
@@ -108,6 +112,7 @@ class SubscriptionServiceTest {
         ClientSubscription result = subscriptionService.updateSubscription(subscriptionId, updateRequest, clientId);
 
         assertThat(result).isEqualTo(response);
+        verify(clientEventsService).updateClientInfo(response, clientId);
     }
 
     @Test
@@ -126,7 +131,7 @@ class SubscriptionServiceTest {
 
         subscriptionService.deleteSubscription(subscriptionId, clientId);
 
-        verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
+        verify(clientEventsService).deleteClientInfo(subscriptionId, clientId);
         verify(subscriptionRepository).delete(savedEntity);
     }
 }

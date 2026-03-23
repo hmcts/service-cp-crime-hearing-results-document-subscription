@@ -13,7 +13,6 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.UUID;
@@ -25,6 +24,7 @@ public class SubscriptionService {
 
     private final ClockService clockService;
     private final SubscriptionRepository subscriptionRepository;
+    private final ClientEventsService clientEventsService;
     private final SubscriptionMapper mapper;
     private final HmacKeyService hmacKeyService;
 
@@ -37,7 +37,9 @@ public class SubscriptionService {
         final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, clockService.nowOffsetUTC());
         subscriptionRepository.save(entity);
         final KeyPair keyPair = hmacKeyService.generateKey();
-        return mapper.mapEntityToResponse(entity, keyPair);
+        final ClientSubscription response = mapper.mapEntityToResponse(entity, keyPair);
+        clientEventsService.saveClientInfo(response, clientId);
+        return response;
     }
 
     @Transactional
@@ -45,7 +47,9 @@ public class SubscriptionService {
         final ClientSubscriptionEntity existing = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
         final ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, clockService.nowOffsetUTC());
-        return mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
+        final ClientSubscription response = mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
+        clientEventsService.updateClientInfo(response, clientId);
+        return response;
     }
 
     @Transactional
@@ -59,13 +63,8 @@ public class SubscriptionService {
     public void deleteSubscription(final UUID clientSubscriptionId, final UUID clientId) {
         final ClientSubscriptionEntity entity = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
+        clientEventsService.deleteClientInfo(clientSubscriptionId, clientId);
         subscriptionRepository.delete(entity);
     }
 
-    @Transactional
-    public boolean hasAccess(final UUID clientSubscriptionId, final UUID clientId, final EntityEventType eventType) {
-        return subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
-                .map(entity -> entity.getEventTypes() != null && entity.getEventTypes().contains(eventType))
-                .orElse(false);
-    }
 }

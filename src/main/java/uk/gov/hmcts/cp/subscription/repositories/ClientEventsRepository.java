@@ -25,4 +25,20 @@ public interface ClientEventsRepository extends JpaRepository<ClientEventEntity,
            "WHERE c.id = :clientId " +
            "ORDER BY et.eventName ASC")
     List<ClientEventEntity> findClientEventsWithEventTypes(@Param("clientId") UUID clientId);
+
+    /**
+     * Check whether a given subscription (identified by both subscriptionId and clientId)
+     * has an entry in client_events for the requested event type name.
+     */
+    @Query("SELECT COUNT(ce) FROM ClientEventEntity ce " +
+           "JOIN ClientEntity c ON ce.subscriptionId = c.subscriptionId " +
+           "JOIN EventTypeEntity et ON ce.eventTypeId = et.id " +
+           "WHERE c.subscriptionId = :subscriptionId " +
+           "AND c.id = :clientId " +
+           "AND et.eventName = :eventName")
+    long countBySubscriptionAndClientAndEventName(@Param("subscriptionId") UUID subscriptionId,
+                                                  @Param("clientId") UUID clientId,
+                                                  @Param("eventName") String eventName);
+
+    void deleteBySubscriptionId(UUID subscriptionId);
 }

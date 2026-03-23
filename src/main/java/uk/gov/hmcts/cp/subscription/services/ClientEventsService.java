@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
+import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
@@ -38,6 +39,26 @@ public class ClientEventsService {
 
         final List<ClientEventEntity> clientEventEntityList = clientEventMapper.mapToClientEventEntityList(clientSubscription.getClientSubscriptionId(), getEventTypes(clientSubscription));
         clientEventsRepository.saveAll(clientEventEntityList);
+    }
+
+    public boolean hasAccess(final UUID clientSubscriptionId, final UUID clientId, final EntityEventType eventType) {
+        return clientEventsRepository.countBySubscriptionAndClientAndEventName(
+                clientSubscriptionId, clientId, eventType.name()) > 0;
+    }
+
+    public void updateClientInfo(final ClientSubscription clientSubscription, final UUID clientId) {
+        clientRepository.updateCallbackUrl(clientId,
+                clientSubscription.getNotificationEndpoint().getCallbackUrl(),
+                clockService.nowOffsetUTC());
+        clientEventsRepository.deleteBySubscriptionId(clientSubscription.getClientSubscriptionId());
+        final List<ClientEventEntity> clientEventEntityList = clientEventMapper.mapToClientEventEntityList(
+                clientSubscription.getClientSubscriptionId(), getEventTypes(clientSubscription));
+        clientEventsRepository.saveAll(clientEventEntityList);
+    }
+
+    public void deleteClientInfo(final UUID clientSubscriptionId, final UUID clientId) {
+        clientEventsRepository.deleteBySubscriptionId(clientSubscriptionId);
+        clientRepository.deleteById(clientId);
     }
 
     /* package */

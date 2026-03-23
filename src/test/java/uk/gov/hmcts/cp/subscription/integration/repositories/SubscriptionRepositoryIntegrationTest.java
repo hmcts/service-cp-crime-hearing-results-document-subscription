@@ -16,7 +16,7 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {
-        clearClientSubscriptionTable();
+        clearAllTables();
     }
 
     @Transactional
@@ -48,6 +48,8 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
 
         List<ClientSubscriptionEntity> forPcr = subscriptionRepository.findByEventType(PRISON_COURT_REGISTER_GENERATED.name());
 
-        assertThat(forPcr).containsExactlyInAnyOrder(sub1, sub2);
+        assertThat(forPcr)
+                .extracting(ClientSubscriptionEntity::getId)
+                .containsExactlyInAnyOrder(sub1.getId(), sub2.getId());
     }
 }

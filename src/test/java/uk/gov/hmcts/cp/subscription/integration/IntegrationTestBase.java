@@ -12,6 +12,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
@@ -85,7 +87,9 @@ public abstract class IntegrationTestBase {
     }
 
     protected void clearAllTables() {
-        log.info("Clearing client_subscription and document_mapping tables");
+        log.info("Clearing all tables");
+        clientEventsRepository.deleteAll();
+        clientRepository.deleteAll();
         subscriptionRepository.deleteAll();
         documentMappingRepository.deleteAll();
     }
@@ -104,7 +108,24 @@ public abstract class IntegrationTestBase {
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
-        return subscriptionRepository.save(subscription);
+        subscriptionRepository.save(subscription);
+
+        clientRepository.save(ClientEntity.builder()
+                .id(clientId)
+                .subscriptionId(subscription.getId())
+                .callbackUrl(notificationUri)
+                .createdAt(now)
+                .updatedAt(now)
+                .build());
+
+        entityEventTypes.forEach(eventType ->
+                eventTypeRepository.findByEventName(eventType.name()).ifPresent(eventTypeEntity ->
+                        clientEventsRepository.save(ClientEventEntity.builder()
+                                .subscriptionId(subscription.getId())
+                                .eventTypeId(eventTypeEntity.getId())
+                                .build())));
+
+        return subscription;
     }
 
     protected DocumentMappingEntity insertDocument(UUID materialId) {
