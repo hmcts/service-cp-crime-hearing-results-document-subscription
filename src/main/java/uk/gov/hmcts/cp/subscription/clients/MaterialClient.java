@@ -55,14 +55,13 @@ public class MaterialClient {
         return response.getBody();
     }
 
+    /**
+     * CodeQL error "Potential server-side request forgery due to a user-provided value"
+     * Is overridden in the github pipeline UI since we trust material-service as the supplier of the UI
+     */
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
         log.info("Getting material document from url:{}", Encode.forJava(url));
-        final HttpHeaders headers = new HttpHeaders();
-        headers.set(CJSCPPUID_HEADER, cjscppuid);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        final HttpEntity<Void> req = new HttpEntity<>(headers);
-        /* url originates from material-service /content response (trusted internal service),
-        not from user input; AMP proxies the bytes and never exposes the blob URL to subscribers */
-        return restTemplate.exchange(url, GET, req, byte[].class);
+        final HttpEntity<Void> request = new HttpEntity<>(new HttpHeaders());
+        return restTemplate.exchange(url, GET, request, byte[].class);
     }
 }
