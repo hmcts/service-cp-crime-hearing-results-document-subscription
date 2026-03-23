@@ -16,19 +16,19 @@ group = 'uk.gov.hmcts.cp'
 version = System.getProperty('ARTEFACT_VERSION') ?: '0.0.999'
 
 apply {
-  from("$rootDir/gradle/dependencies/java-core.gradle")
-  from("$rootDir/gradle/dependencies/spring-core.gradle")
-  from("$rootDir/gradle/dependencies/spring-db.gradle")
-  from("$rootDir/gradle/dependencies/spring-cloud.gradle")
-  from("$rootDir/gradle/dependencies/spring-actuator.gradle")
-  from("$rootDir/gradle/dependencies/docker-test.gradle")
+  from("$rootDir/gradle/java-core.gradle")
+  from("$rootDir/gradle/spring-core.gradle")
+  from("$rootDir/gradle/spring-db.gradle")
+  from("$rootDir/gradle/spring-cloud.gradle")
+  from("$rootDir/gradle/spring-actuator.gradle")
+  from("$rootDir/gradle/docker-test.gradle")
 
-  from("$rootDir/gradle/github/repositories.gradle")
-  from("$rootDir/gradle/github/java.gradle")
-  from("$rootDir/gradle/github/dependency.gradle")
-  from("$rootDir/gradle/github/pmd.gradle")
-  from("$rootDir/gradle/github/test.gradle")
-  from("$rootDir/gradle/github/jar.gradle")
+  from("$rootDir/gradle/repositories.gradle")
+  from("$rootDir/gradle/java.gradle")
+  from("$rootDir/gradle/dependency.gradle")
+  from("$rootDir/gradle/pmd.gradle")
+  from("$rootDir/gradle/test.gradle")
+  from("$rootDir/gradle/jar.gradle")
 }
 
 dependencies {
