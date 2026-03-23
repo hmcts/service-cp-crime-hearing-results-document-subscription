@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.clients;
 
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -50,13 +51,12 @@ public class MaterialClient {
         final HttpHeaders headers = new HttpHeaders();
         headers.set(CJSCPPUID_HEADER, cjscppuid);
         final HttpEntity<Void> req = new HttpEntity<>(headers);
-        final ResponseEntity<String> response = restTemplate.exchange(
-                baseUrl + CONTENT_PATH, GET, req, String.class, materialId);
+        final ResponseEntity<String> response = restTemplate.exchange(baseUrl + CONTENT_PATH, GET, req, String.class, materialId);
         return response.getBody();
     }
 
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
-        log.info("Getting material document");
+        log.info("Getting material document from url:{}", Encode.forJava(url));
         final HttpHeaders headers = new HttpHeaders();
         headers.set(CJSCPPUID_HEADER, cjscppuid);
         headers.setContentType(MediaType.APPLICATION_JSON);
