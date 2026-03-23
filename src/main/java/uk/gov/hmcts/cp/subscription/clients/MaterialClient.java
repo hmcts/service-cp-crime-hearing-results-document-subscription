@@ -39,6 +39,7 @@ public class MaterialClient {
         log.info("Getting metadata for materialId:{}", materialId);
         final HttpHeaders headers = new HttpHeaders();
         headers.set(CJSCPPUID_HEADER, cjscppuid);
+        headers.set(ACCEPT, "application/vnd.material.query.material-metadata+json");
         final HttpEntity<Void> req = new HttpEntity<>(headers);
         final ResponseEntity<MaterialMetadata> response = restTemplate.exchange(
                 baseUrl + METADATA_PATH, GET, req, MaterialMetadata.class, materialId);
