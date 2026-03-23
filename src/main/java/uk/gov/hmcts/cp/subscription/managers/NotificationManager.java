@@ -34,9 +34,9 @@ public class NotificationManager {
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
     }
 
-    public DocumentContent getPcrDocumentContent(final UUID clientSubscriptionId, final UUID clientId, final UUID documentId) {
+    public DocumentContent getPcrDocumentContent(final UUID clientId, final UUID clientSubscriptionId, final UUID documentId) {
         final EntityEventType eventType = documentService.getEventTypeForDocument(documentId);
-        if (!clientEventsService.hasAccess(clientSubscriptionId, clientId, eventType)) {
+        if (!clientEventsService.hasAccess(clientId, clientSubscriptionId, eventType)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
         return documentService.getDocumentContent(documentId);

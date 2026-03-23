@@ -33,12 +33,11 @@ public interface ClientEventsRepository extends JpaRepository<ClientEventEntity,
     @Query("SELECT COUNT(ce) FROM ClientEventEntity ce " +
            "JOIN ClientEntity c ON ce.subscriptionId = c.subscriptionId " +
            "JOIN EventTypeEntity et ON ce.eventTypeId = et.id " +
-           "WHERE c.subscriptionId = :subscriptionId " +
-           "AND c.id = :clientId " +
+           "WHERE c.id = :clientId " +
+           "AND c.subscriptionId = :subscriptionId " +
            "AND et.eventName = :eventName")
-    long countBySubscriptionAndClientAndEventName(@Param("subscriptionId") UUID subscriptionId,
-                                                  @Param("clientId") UUID clientId,
-                                                  @Param("eventName") String eventName);
+    long countByClientSubscriptionAndEventName(@Param("clientId") UUID clientId, @Param("subscriptionId") UUID subscriptionId,
+                                               @Param("eventName") String eventName);
 
     void deleteBySubscriptionId(UUID subscriptionId);
 }

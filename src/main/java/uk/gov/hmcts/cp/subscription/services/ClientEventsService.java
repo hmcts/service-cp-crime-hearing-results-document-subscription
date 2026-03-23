@@ -41,9 +41,9 @@ public class ClientEventsService {
         clientEventsRepository.saveAll(clientEventEntityList);
     }
 
-    public boolean hasAccess(final UUID clientSubscriptionId, final UUID clientId, final EntityEventType eventType) {
-        return clientEventsRepository.countBySubscriptionAndClientAndEventName(
-                clientSubscriptionId, clientId, eventType.name()) > 0;
+    public boolean hasAccess(final UUID clientId, final UUID clientSubscriptionId, final EntityEventType eventType) {
+        return clientEventsRepository.countByClientSubscriptionAndEventName(
+                clientId, clientSubscriptionId, eventType.name()) > 0;
     }
 
     public void updateClientInfo(final ClientSubscription clientSubscription, final UUID clientId) {

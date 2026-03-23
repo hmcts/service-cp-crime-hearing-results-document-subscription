@@ -174,10 +174,10 @@ class ClientEventsServiceTest {
         UUID clientSubscriptionId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();
 
-        when(clientEventsRepository.countBySubscriptionAndClientAndEventName(
-                clientSubscriptionId, clientId, EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(1L);
+        when(clientEventsRepository.countByClientSubscriptionAndEventName(
+                clientId, clientSubscriptionId, EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(1L);
 
-        assertThat(clientEventsService.hasAccess(clientSubscriptionId, clientId, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).isTrue();
+        assertThat(clientEventsService.hasAccess(clientId, clientSubscriptionId, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).isTrue();
     }
 
     @Test
@@ -185,10 +185,10 @@ class ClientEventsServiceTest {
         UUID clientSubscriptionId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();
 
-        when(clientEventsRepository.countBySubscriptionAndClientAndEventName(
-                clientSubscriptionId, clientId, EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(0L);
+        when(clientEventsRepository.countByClientSubscriptionAndEventName(
+                clientId, clientSubscriptionId, EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(0L);
 
-        assertThat(clientEventsService.hasAccess(clientSubscriptionId, clientId, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).isFalse();
+        assertThat(clientEventsService.hasAccess(clientId, clientSubscriptionId, EntityEventType.PRISON_COURT_REGISTER_GENERATED)).isFalse();
     }
 
     private static EventTypeEntity getEventTypeEntity() {
