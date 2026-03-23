@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpMethod.GET;
 
@@ -30,12 +29,6 @@ class MaterialClientTest {
     @BeforeEach
     void setUp() {
         materialClient = new MaterialClient(restTemplate, "http://material-service", "11111111-2222-3333-4444-666666666666");
-    }
-
-    @Test
-    void get_document_should_call_material_service() {
-        materialClient.getMaterialDocument("http://material-service");
-        verify(restTemplate).exchange(anyString(), eq(GET), any(HttpEntity.class), eq(byte[].class));
     }
 
     @Test

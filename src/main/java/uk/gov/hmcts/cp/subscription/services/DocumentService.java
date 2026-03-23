@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
+import uk.gov.hmcts.cp.subscription.clients.MaterialDocumentClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
@@ -27,6 +28,7 @@ public class DocumentService {
     private final ClockService clockService;
     private final DocumentMapper documentMapper;
     private final MaterialClient materialClient;
+    private final MaterialDocumentClient materialDocumentClient;
 
     @Transactional
     public UUID saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
@@ -54,7 +56,7 @@ public class DocumentService {
         final MaterialMetadata metadata = materialClient.getMetadata(materialId);
         final String contentUrl = materialClient.getContentUrl(materialId);
         log.info("fetching document bytes for materialId:{}", materialId);
-        final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(contentUrl);
+        final ResponseEntity<byte[]> document = materialDocumentClient.getMaterialDocument(contentUrl);
         return DocumentContent.builder()
                 .body(document.getBody())
                 .contentType(MediaType.APPLICATION_PDF)
