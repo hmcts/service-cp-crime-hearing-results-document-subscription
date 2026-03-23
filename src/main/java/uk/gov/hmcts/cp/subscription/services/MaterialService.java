@@ -4,9 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
+import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
 import java.time.Duration;
 import java.util.Map;
@@ -21,7 +21,7 @@ import static org.awaitility.Awaitility.await;
 public class MaterialService {
 
     private final AppProperties appProperties;
-    private final MaterialApi materialApi;
+    private final MaterialClient materialClient;
 
     // TODO remove once we switch to async only
     public MaterialMetadata waitForMaterialMetadata(final UUID materialId) {
@@ -41,7 +41,7 @@ public class MaterialService {
             MDC.setContextMap(mdcContext);
         }
         try {
-            final MaterialMetadata response = materialApi.getMaterialMetadataByMaterialId(materialId);
+            final MaterialMetadata response = materialClient.getMetadata(materialId);
             materialResponse.set(response);
             return response != null;
         } catch (Exception e) {
@@ -52,6 +52,6 @@ public class MaterialService {
 
     public MaterialMetadata getMaterialMetadata(final UUID materialId) {
         log.info("COLING MDC corId:{}", MDC.get("X-Correlation-Id"));
-        return materialApi.getMaterialMetadataByMaterialId(materialId);
+        return materialClient.getMetadata(materialId);
     }
 }

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
@@ -13,18 +14,17 @@ import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpResponse;
 import uk.gov.hmcts.cp.filters.TracingFilter;
 
-import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 
 @ExtendWith(MockitoExtension.class)
 class OutboundTracingInterceptorTest {
 
-    private final OutboundTracingInterceptor interceptor = new OutboundTracingInterceptor();
+    @InjectMocks
+    OutboundTracingInterceptor interceptor;
 
     @Mock
     HttpRequest request;

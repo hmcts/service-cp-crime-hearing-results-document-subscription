@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
-import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.servicebus.integration.ServiceBusTestService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
@@ -86,7 +86,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     private String callbackBaseUrl;
 
     @MockitoSpyBean
-    private MaterialApi materialApi;
+    private MaterialClient materialClient;
 
     @BeforeEach
     void setUp() {
@@ -178,7 +178,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         await()
                 .pollInterval(Duration.ofMillis(50))
                 .atMost(Duration.ofSeconds(3))
-                .untilAsserted(() -> verify(materialApi, atLeastOnce()).getMaterialMetadataByMaterialId(any(UUID.class)));
+                .untilAsserted(() -> verify(materialClient, atLeastOnce()).getMetadata(any(UUID.class)));
     }
 
     @SneakyThrows

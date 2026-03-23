@@ -7,13 +7,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import uk.gov.hmcts.cp.material.openapi.api.MaterialApi;
-import uk.gov.hmcts.cp.material.openapi.model.Material;
-import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
+import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 
 import java.util.Optional;
@@ -33,8 +31,6 @@ class DocumentServiceTest {
     DocumentMapper documentMapper;
     @Mock
     DocumentMappingRepository documentMappingRepository;
-    @Mock
-    MaterialApi materialApi;
     @Mock
     MaterialClient materialClient;
 
@@ -67,7 +63,8 @@ class DocumentServiceTest {
     @Test
     void get_document_content_should_return_response() {
         when(documentMappingRepository.findById(documentId)).thenReturn(Optional.of(documentMappingEntity));
-        when(materialApi.getMaterialByMaterialId(materialId, null, null)).thenReturn(createMaterial());
+        when(materialClient.getMetadata(materialId)).thenReturn(createMetadata());
+        when(materialClient.getContentUrl(materialId)).thenReturn(materialUrl);
         ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
         when(materialClient.getMaterialDocument(materialUrl)).thenReturn(document);
 
@@ -78,12 +75,9 @@ class DocumentServiceTest {
         assertThat(documentContent.getFileName()).isEqualTo("file.pdf");
     }
 
-    private Material createMaterial() {
-        Material material = new Material();
-        material.setContentUrl(materialUrl);
-        MaterialMetadata materialMetadata = new MaterialMetadata();
-        materialMetadata.setFileName("file.pdf");
-        material.setMetadata(materialMetadata);
-        return material;
+    private MaterialMetadata createMetadata() {
+        return MaterialMetadata.builder()
+                .fileName("file.pdf")
+                .build();
     }
 }

@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.gov.hmcts.cp.material.openapi.model.MaterialMetadata;
+import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCustodyEstablishmentDetails;
@@ -99,8 +99,8 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
     }
 
     MaterialMetadata materialMetadata(UUID materialId) {
-        MaterialMetadata materialMetadata = new MaterialMetadata();
-        materialMetadata.setMaterialId(materialId);
-        return materialMetadata;
+        return MaterialMetadata.builder()
+                .materialId(materialId)
+                .build();
     }
 }

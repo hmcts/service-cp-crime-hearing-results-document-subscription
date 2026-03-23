@@ -101,7 +101,6 @@ components:
         materialAddedDate:
           description: Material added timestamp in '2016-05-03T10:31:50.026' format
           type: string
-          format: date-time
         externalLink:
           description: The external link that serves the file.
           type: string
