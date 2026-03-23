@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
+import uk.gov.hmcts.cp.subscription.clients.MaterialDocumentClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
@@ -33,6 +34,8 @@ class DocumentServiceTest {
     DocumentMappingRepository documentMappingRepository;
     @Mock
     MaterialClient materialClient;
+    @Mock
+    MaterialDocumentClient materialDocumentClient;
 
     @InjectMocks
     DocumentService documentService;
@@ -66,7 +69,7 @@ class DocumentServiceTest {
         when(materialClient.getMetadata(materialId)).thenReturn(createMetadata());
         when(materialClient.getContentUrl(materialId)).thenReturn(materialUrl);
         ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
-        when(materialClient.getMaterialDocument(materialUrl)).thenReturn(document);
+        when(materialDocumentClient.getMaterialDocument(materialUrl)).thenReturn(document);
 
         DocumentContent documentContent = documentService.getDocumentContent(documentId);
 
