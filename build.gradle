@@ -16,30 +16,77 @@ group = 'uk.gov.hmcts.cp'
 version = System.getProperty('ARTEFACT_VERSION') ?: '0.0.999'
 
 apply {
-  from("$rootDir/gradle/dependencies/java-core.gradle")
-  from("$rootDir/gradle/dependencies/spring-core.gradle")
-  from("$rootDir/gradle/dependencies/spring-db.gradle")
-  from("$rootDir/gradle/dependencies/spring-cloud.gradle")
-  from("$rootDir/gradle/dependencies/spring-actuator.gradle")
-  from("$rootDir/gradle/dependencies/docker-test.gradle")
+  from("$rootDir/gradle/spring-cloud.gradle")
+  from("$rootDir/gradle/spring-actuator.gradle")
+  from("$rootDir/gradle/docker-test.gradle")
 
-  from("$rootDir/gradle/github/repositories.gradle")
-  from("$rootDir/gradle/github/java.gradle")
-  from("$rootDir/gradle/github/dependency.gradle")
-  from("$rootDir/gradle/github/pmd.gradle")
-  from("$rootDir/gradle/github/test.gradle")
-  from("$rootDir/gradle/github/jar.gradle")
+  from("$rootDir/gradle/repositories.gradle")
+  from("$rootDir/gradle/java.gradle")
+  from("$rootDir/gradle/dependency.gradle")
+  from("$rootDir/gradle/pmd.gradle")
+  from("$rootDir/gradle/test.gradle")
+  from("$rootDir/gradle/jar.gradle")
 }
 
+// We MUST keep all dependencies in the build.gradle to allow dependabot to provide version updates
+// Sadly, dependabot does not track dependencies in the apply-from files
 dependencies {
+  // Api spec
   implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-case-event-subscription:1.1.5')
-
-  // This is proving to be a real puzzle. This is actually included in the api published pom
-  // ( though with scope of "runtime" )
-  // Yet we still need to add it manually. Grrr. TBC.
   implementation('io.swagger.core.v3:swagger-annotations:2.2.45')
-  implementation('org.owasp.encoder:encoder:1.4.0')
-  implementation 'org.awaitility:awaitility:4.3.0'
 
+
+  // Java core
+  implementation 'net.logstash.logback:logstash-logback-encoder:9.0'
+  implementation 'org.apache.logging.log4j:log4j-to-slf4j'
+  implementation 'ch.qos.logback:logback-classic'
+  implementation 'ch.qos.logback:logback-core'
+  implementation 'org.owasp.encoder:encoder:1.4.0'
+
+  compileOnly 'org.projectlombok:lombok:1.18.44'
+  annotationProcessor 'org.projectlombok:lombok:1.18.44'
+  testCompileOnly 'org.projectlombok:lombok:1.18.44'
+  testAnnotationProcessor 'org.projectlombok:lombok:1.18.44'
+
+  implementation 'org.mapstruct:mapstruct:1.6.3'
+  annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+
+
+  // Spring boot core
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.springframework.boot:spring-boot-starter-aspectj'
+  testImplementation "org.springframework.boot:spring-boot-starter-webmvc-test"
+  testImplementation('org.springframework.boot:spring-boot-starter-test') {
+    exclude group: 'junit', module: 'junit'
+    exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+  }
+
+
+  // Spring boot database / postgres
+  //
+  implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+  implementation 'org.postgresql:postgresql'
+  implementation 'org.springframework.boot:spring-boot-starter-flyway'
+  implementation 'org.flywaydb:flyway-core'
+  implementation 'org.flywaydb:flyway-database-postgresql'
+  testImplementation("org.springframework.boot:spring-boot-testcontainers:4.0.4")
+  testImplementation 'org.testcontainers:postgresql:1.21.4'
+  testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+
+
+  // --- Observability / Actuator / OTEL / Prometheus ---
+  implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'org.hibernate.validator:hibernate-validator'
+  implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+
+
+  // Jwt token
+  implementation 'io.jsonwebtoken:jjwt:0.13.0'
+
+
+  // Project specific
+  implementation 'org.awaitility:awaitility:4.3.0'
   implementation('com.azure:azure-messaging-servicebus:7.17.17')
+  testImplementation 'org.wiremock.integrations:wiremock-spring-boot:3.2.0'
+  testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
 }
