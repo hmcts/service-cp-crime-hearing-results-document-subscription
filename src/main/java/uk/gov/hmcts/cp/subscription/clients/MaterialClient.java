@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.HttpMethod.GET;
@@ -39,6 +40,7 @@ public class MaterialClient {
         log.info("Getting metadata for materialId:{}", materialId);
         final HttpHeaders headers = new HttpHeaders();
         headers.set(CJSCPPUID_HEADER, cjscppuid);
+        headers.setAccept(List.of(MediaType.ALL));
         final HttpEntity<Void> req = new HttpEntity<>(headers);
         final ResponseEntity<MaterialMetadata> response = restTemplate.exchange(
                 baseUrl + METADATA_PATH, GET, req, MaterialMetadata.class, materialId);
@@ -49,6 +51,7 @@ public class MaterialClient {
         log.info("Getting content URL for materialId:{}", materialId);
         final HttpHeaders headers = new HttpHeaders();
         headers.set(CJSCPPUID_HEADER, cjscppuid);
+        headers.setAccept(List.of(MediaType.ALL));
         final HttpEntity<Void> req = new HttpEntity<>(headers);
         final ResponseEntity<String> response = restTemplate.exchange(
                 baseUrl + CONTENT_PATH, GET, req, String.class, materialId);
