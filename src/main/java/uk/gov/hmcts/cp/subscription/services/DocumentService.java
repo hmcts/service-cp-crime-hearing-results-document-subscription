@@ -50,8 +50,10 @@ public class DocumentService {
         final DocumentMappingEntity documentMapping = documentMappingRepository.findById(documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
         final UUID materialId = documentMapping.getMaterialId();
+        log.info("getDocumentContent documentId:{} resolved to materialId:{}", documentId, materialId);
         final MaterialMetadata metadata = materialClient.getMetadata(materialId);
         final String contentUrl = materialClient.getContentUrl(materialId);
+        log.info("fetching document bytes for materialId:{}", materialId);
         final ResponseEntity<byte[]> document = materialClient.getMaterialDocument(contentUrl);
         return DocumentContent.builder()
                 .body(document.getBody())

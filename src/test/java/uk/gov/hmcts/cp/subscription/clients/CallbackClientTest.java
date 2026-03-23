@@ -11,11 +11,13 @@ import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import static com.azure.core.http.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
 import static org.springframework.http.HttpMethod.POST;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
@@ -23,7 +25,8 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
 
 @ExtendWith(MockitoExtension.class)
 class CallbackClientTest {
-
+    @Mock
+    JsonMapper jsonMapper;
     @Mock
     RestTemplate restTemplate;
 
@@ -41,6 +44,7 @@ class CallbackClientTest {
                 .keyId("key-id")
                 .signature("signature")
                 .build();
+        when(jsonMapper.toJson(payload)).thenReturn("payload-json");
 
         client.sendNotification("http://subscriber", wrapper);
 
@@ -48,6 +52,6 @@ class CallbackClientTest {
         assertThat(captor.getValue().getHeaders().containsHeaderValue(CONTENT_TYPE, APPLICATION_JSON));
         assertThat(captor.getValue().getHeaders().containsHeaderValue(KEY_ID_HEADER, "key-id"));
         assertThat(captor.getValue().getHeaders().containsHeaderValue(SIGNATURE_HEADER, "signature"));
-        assertThat(captor.getValue().getBody()).isEqualTo(payload);
+        assertThat(captor.getValue().getBody()).isEqualTo("payload-json");
     }
 }
