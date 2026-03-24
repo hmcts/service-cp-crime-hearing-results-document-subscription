@@ -12,11 +12,11 @@ import org.slf4j.MDC;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
-import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.ACCEPTED;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
@@ -73,7 +73,7 @@ class NotificationControllerTest {
         when(configService.isEnabled()).thenReturn(true);
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
         ResponseEntity<Void> response = notificationController.createNotification(payload, null);
-        verify(clientService).queueMessage(PCR_INBOUND_TOPIC, null, "payload-json", 0);
+        verify(clientService).queueMessage(PCR_INBOUND_QUEUE, null, "payload-json", 0);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
 
