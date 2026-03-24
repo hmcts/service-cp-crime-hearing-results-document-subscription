@@ -43,6 +43,10 @@ subscription:
 hmac:
   vault-enabled: ${HMAC_VAULT_ENABLED:false}
 
+vault:
+  uri: ${AZURE_VAULT_URI:}
+
+
 management:
   endpoints:
     web:
