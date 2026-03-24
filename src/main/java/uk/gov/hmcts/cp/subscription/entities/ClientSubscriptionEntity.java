@@ -10,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -31,8 +30,7 @@ public class ClientSubscriptionEntity {
     private UUID clientId;
 
     private String notificationEndpoint;
-    @Enumerated(EnumType.STRING)
-    private List<EntityEventType> eventTypes;
+    private List<String> eventTypes;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

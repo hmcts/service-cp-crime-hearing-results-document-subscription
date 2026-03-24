@@ -13,7 +13,6 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.UUID;
@@ -25,11 +24,13 @@ public class SubscriptionService {
 
     private final ClockService clockService;
     private final SubscriptionRepository subscriptionRepository;
+    private final EventTypeService eventTypeService;
     private final SubscriptionMapper mapper;
     private final HmacKeyService hmacKeyService;
 
     @Transactional
     public ClientSubscription createSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
+        validateEventsOrThrowError(request, clientId);
         subscriptionRepository.findFirstByClientId(clientId).ifPresent(existing -> {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist with " + existing.getId());
@@ -63,9 +64,18 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public boolean hasAccess(final UUID clientSubscriptionId, final UUID clientId, final EntityEventType eventType) {
+    public boolean hasAccess(final UUID clientSubscriptionId, final UUID clientId, final String eventType) {
         return subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .map(entity -> entity.getEventTypes() != null && entity.getEventTypes().contains(eventType))
                 .orElse(false);
+    }
+
+    public void validateEventsOrThrowError(final ClientSubscriptionRequest request, final UUID clientId) {
+        request.getEventTypes().forEach(eventType -> {
+            if (!eventTypeService.eventExists(eventType)) {
+                log.error("Got invalid event type '{}' for client '{}' in subscription request.", eventType, clientId);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid event type: " + eventType);
+            }
+        });
     }
 }

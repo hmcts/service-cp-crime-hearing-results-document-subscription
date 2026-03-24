@@ -10,7 +10,6 @@ import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 
 import java.util.List;
@@ -88,8 +87,8 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     void get_document_should_return_200_with_pdf_when_subscription_has_access() throws Exception {
         ClientSubscriptionEntity subscription = insertSubscription(
                 CALLBACK_URL,
-                List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
-        DocumentMappingEntity document = insertDocument(MATERIAL_ID, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
+                List.of("PRISON_COURT_REGISTER_GENERATED"));
+        DocumentMappingEntity document = insertDocument(MATERIAL_ID, "PRISON_COURT_REGISTER_GENERATED");
 
         mockMvc.perform(get(DOCUMENT_URI,
                         subscription.getId(), document.getDocumentId())

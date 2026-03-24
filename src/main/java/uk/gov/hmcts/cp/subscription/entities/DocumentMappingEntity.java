@@ -9,7 +9,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -25,8 +24,7 @@ public class DocumentMappingEntity {
     @Id
     private UUID documentId;
     private UUID materialId;
-    @Enumerated(EnumType.STRING)
-    private EntityEventType eventType;
+    private String eventType;
     private OffsetDateTime createdAt;
 }
 

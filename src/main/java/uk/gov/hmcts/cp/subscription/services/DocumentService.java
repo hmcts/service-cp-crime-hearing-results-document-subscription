@@ -13,7 +13,6 @@ import uk.gov.hmcts.cp.subscription.clients.MaterialDocumentClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 
@@ -31,7 +30,7 @@ public class DocumentService {
     private final MaterialDocumentClient materialDocumentClient;
 
     @Transactional
-    public UUID saveDocumentMapping(final UUID materialId, final EntityEventType eventType) {
+    public UUID saveDocumentMapping(final UUID materialId, final String eventType) {
         final DocumentMappingEntity entity = documentMapper.mapToNewEntity(clockService, materialId, eventType);
         log.info("saving DocumentMapping materialId:{} to documentId:{}", materialId, entity.getDocumentId());
         documentMappingRepository.save(entity);
@@ -44,7 +43,7 @@ public class DocumentService {
     }
 
     @Transactional
-    public EntityEventType getEventTypeForDocument(final UUID documentId) {
+    public String getEventTypeForDocument(final UUID documentId) {
         return documentMappingRepository.findById(documentId).get().getEventType();
     }
 

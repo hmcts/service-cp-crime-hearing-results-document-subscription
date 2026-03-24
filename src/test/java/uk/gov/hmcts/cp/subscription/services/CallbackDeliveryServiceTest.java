@@ -10,12 +10,10 @@ import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.model.Subscriber;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
@@ -52,7 +50,7 @@ class CallbackDeliveryServiceTest {
     private UUID documentId = randomUUID();
     private String callbackUrl = "https://callback.example.com";
     private ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().build();
-    private EventPayload eventPayload = EventPayload.builder().eventType(EventType.PRISON_COURT_REGISTER_GENERATED).build();
+    private EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").build();
     private Subscriber subscriber = Subscriber.builder().notificationEndpoint(callbackUrl).build();
     private EventNotificationPayload payload = EventNotificationPayload.builder().build();
     private EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
@@ -60,7 +58,7 @@ class CallbackDeliveryServiceTest {
 
     @Test
     void submit_should_send_when_servicebus_disabled() {
-        when(subscriptionRepository.findByEventType(EntityEventType.PRISON_COURT_REGISTER_GENERATED.name())).thenReturn(List.of(subscriptionEntity));
+        when(subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(subscriptionEntity));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");

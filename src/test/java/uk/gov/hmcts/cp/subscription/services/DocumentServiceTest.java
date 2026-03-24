@@ -21,7 +21,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
@@ -46,13 +45,13 @@ class DocumentServiceTest {
     DocumentMappingEntity documentMappingEntity = DocumentMappingEntity.builder()
             .documentId(documentId)
             .materialId(materialId)
-            .eventType(PRISON_COURT_REGISTER_GENERATED).build();
+            .eventType("PRISON_COURT_REGISTER_GENERATED").build();
 
     @Test
     void save_document_should_save_entity() {
-        when(documentMapper.mapToNewEntity(clockService, materialId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(documentMappingEntity);
+        when(documentMapper.mapToNewEntity(clockService, materialId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(documentMappingEntity);
         when(documentMappingRepository.save(documentMappingEntity)).thenReturn(documentMappingEntity);
-        documentService.saveDocumentMapping(materialId, PRISON_COURT_REGISTER_GENERATED);
+        documentService.saveDocumentMapping(materialId, "PRISON_COURT_REGISTER_GENERATED");
         verify(documentMappingRepository).save(documentMappingEntity);
     }
 

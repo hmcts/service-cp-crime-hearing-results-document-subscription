@@ -25,7 +25,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 
 @Slf4j
@@ -75,7 +74,7 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
     @Test
     void process_message_should_retry_n_times_then_send_to_DLQ() {
         when(materialService.getMaterialMetadata(materialId)).thenReturn(null);
-        EventPayload eventPayload = EventPayload.builder().eventType(PRISON_COURT_REGISTER_GENERATED).materialId(materialId).build();
+        EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").materialId(materialId).build();
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
         clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(eventPayload), 0);
         MDC.clear();
@@ -92,7 +91,7 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
                 .custodyEstablishmentDetails(custodyEstablishmentDetails)
                 .build();
         return EventPayload.builder()
-                .eventType(PRISON_COURT_REGISTER_GENERATED)
+                .eventType("PRISON_COURT_REGISTER_GENERATED")
                 .materialId(materialId)
                 .defendant(defendant)
                 .build();

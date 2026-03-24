@@ -6,7 +6,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
-import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
@@ -55,7 +54,7 @@ class ClientEventsServiceTest {
         EventTypeEntity eventType = getEventTypeEntity();
 
         ClientSubscription clientSubscription = getClientSubscription(UUID.randomUUID(), List.of(
-                EventType.PRISON_COURT_REGISTER_GENERATED
+                "PRISON_COURT_REGISTER_GENERATED"
         ));
 
         when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
@@ -72,8 +71,8 @@ class ClientEventsServiceTest {
         EventTypeEntity eventType = getEventTypeEntity();
 
         ClientSubscription clientSubscription = getClientSubscription(UUID.randomUUID(), List.of(
-                        EventType.PRISON_COURT_REGISTER_GENERATED,
-                        EventType.PRISON_COURT_REGISTER_GENERATED
+                "PRISON_COURT_REGISTER_GENERATED",
+                "PRISON_COURT_REGISTER_GENERATED"
                 ));
 
         when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
@@ -97,7 +96,7 @@ class ClientEventsServiceTest {
                 .build();
 
         ClientSubscription clientSubscription = getClientSubscription(subscriptionId, List.of(
-                        EventType.PRISON_COURT_REGISTER_GENERATED
+                "PRISON_COURT_REGISTER_GENERATED"
                 ));
 
         when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
@@ -126,7 +125,7 @@ class ClientEventsServiceTest {
                 .build();
     }
 
-    private static ClientSubscription getClientSubscription(UUID subscriptionId, List<EventType> eventTypes) {
+    private static ClientSubscription getClientSubscription(UUID subscriptionId, List<String> eventTypes) {
         return ClientSubscription.builder()
                 .clientSubscriptionId(subscriptionId)
                 .notificationEndpoint(NotificationEndpoint.builder()

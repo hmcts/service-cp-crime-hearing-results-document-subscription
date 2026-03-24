@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
@@ -26,7 +25,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationManagerTest {
@@ -52,7 +50,7 @@ class NotificationManagerTest {
     UUID clientId = UUID.fromString("11111111-2222-3333-4444-555555555555");
     EventPayload payload = EventPayload.builder()
             .materialId(materialId)
-            .eventType(EventType.PRISON_COURT_REGISTER_GENERATED)
+            .eventType("PRISON_COURT_REGISTER_GENERATED")
             .build();
 
     DocumentContent content = DocumentContent.builder()
@@ -73,8 +71,8 @@ class NotificationManagerTest {
 
     @Test
     void getPcrDocumentContent_should_return_content_when_subscription_has_access() {
-        when(documentService.getEventTypeForDocument(documentId)).thenReturn(PRISON_COURT_REGISTER_GENERATED);
-        when(subscriptionService.hasAccess(subscriptionId, clientId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(true);
+        when(documentService.getEventTypeForDocument(documentId)).thenReturn("PRISON_COURT_REGISTER_GENERATED");
+        when(subscriptionService.hasAccess(subscriptionId, clientId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
         when(documentService.getDocumentContent(documentId)).thenReturn(content);
 
         DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, clientId, documentId);
@@ -84,7 +82,7 @@ class NotificationManagerTest {
 
     @Test
     void getPcrDocumentContent_should_throw_forbidden_when_subscription_has_no_access() {
-        when(documentService.getEventTypeForDocument(documentId)).thenReturn(PRISON_COURT_REGISTER_GENERATED);
+        when(documentService.getEventTypeForDocument(documentId)).thenReturn("PRISON_COURT_REGISTER_GENERATED");
 
         ResponseStatusException thrown = assertThrows(ResponseStatusException.class,
                 () -> notificationManager.getPcrDocumentContent(subscriptionId, clientId, documentId));
