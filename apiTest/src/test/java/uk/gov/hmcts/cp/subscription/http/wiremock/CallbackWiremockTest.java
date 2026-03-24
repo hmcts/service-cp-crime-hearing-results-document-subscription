@@ -17,6 +17,7 @@ import static uk.gov.hmcts.cp.subscription.http.SubscriptionApiTest.CORRELATION_
 @Slf4j
 class CallbackWiremockTest {
     private String wireMockBaseUrl = "http://localhost:8090";
+    // What port will wiremock expose ssl on ?
     private String wireMockHttpsBaseUrl = "https://localhost:8090";
     private String callbackUrl = "/callback/notify";
     private RestClient restClient = RestClient.create();
