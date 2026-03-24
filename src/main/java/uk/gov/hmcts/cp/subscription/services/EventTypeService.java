@@ -22,4 +22,8 @@ public class EventTypeService {
         final List<EventTypeEntity> eventTypeEntityList = eventTypeRepository.findAll();
         return eventTypeMapper.mapToEventTypes(eventTypeEntityList);
     }
+
+    public boolean eventExists(final String eventName) {
+        return eventTypeRepository.existsByEventName(eventName);
+    }
 }
