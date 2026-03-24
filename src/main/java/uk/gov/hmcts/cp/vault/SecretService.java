@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class SecretService {
 
-    VaultServiceConfig config;
+    private VaultServiceConfig config;
 
     @PostConstruct
     public void debugSecrets() {
@@ -41,16 +41,15 @@ public class SecretService {
      * a) Using environment variables AZURE_CLIENT_ID, AZURE_TENANANT_ID, AZURE_CLIENT_SECRET, if set
      * b) Using az cli login credentials, if available
      */
-    DefaultAzureCredential defaultCredential() {
+    private DefaultAzureCredential defaultCredential() {
         log.info("Getting default azure credential");
         return new DefaultAzureCredentialBuilder().build();
     }
 
-    private void updateTestSecret(SecretClient secretClient) {
-        String secretName = "subscription-delete-me";
-        String secretValue = "Secret set at " + LocalDateTime.now();
+    private void updateTestSecret(final SecretClient secretClient) {
+        final String secretName = "subscription-delete-me";
+        final String secretValue = "Secret set at " + LocalDateTime.now();
         log.info("Setting secret {} : {}", secretName, secretValue);
-        KeyVaultSecret secret = new KeyVaultSecret(secretName, secretValue);
-        secretClient.setSecret(secret);
+        secretClient.setSecret(new KeyVaultSecret(secretName, secretValue));
     }
 }
