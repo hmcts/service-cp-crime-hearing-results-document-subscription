@@ -87,6 +87,6 @@ dependencies {
   // Project specific
   implementation 'org.awaitility:awaitility:4.3.0'
   implementation('com.azure:azure-messaging-servicebus:7.17.17')
-  testImplementation 'org.wiremock.integrations:wiremock-spring-boot:3.2.0'
+  testImplementation 'org.wiremock.integrations:wiremock-spring-boot:3.10.6'
   testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
 }
