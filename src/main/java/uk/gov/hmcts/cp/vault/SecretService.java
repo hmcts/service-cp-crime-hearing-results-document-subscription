@@ -49,7 +49,7 @@ public class SecretService {
     private void updateTestSecret(final SecretClient secretClient) {
         final String secretName = "subscription-delete-me";
         final String secretValue = "Secret set at " + LocalDateTime.now();
-        log.info("Setting secret {} : {}", secretName, secretValue);
+        log.info("Setting secret {}", secretName);
         secretClient.setSecret(new KeyVaultSecret(secretName, secretValue));
     }
 }
