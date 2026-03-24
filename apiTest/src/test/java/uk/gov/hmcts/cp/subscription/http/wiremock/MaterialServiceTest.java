@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 class MaterialServiceTest {
     private String wiremockRequestsUrl = "http://localhost:8090/__admin/requests";
-    private String baseUrl = "http://localhost:8090";
+    private String wireMockBaseUrl = "http://localhost:8090";
     private String CORRELATION_ID_KEY = "X-Correlation-Id";
     private RestClient restClient = RestClient.create();
     private JsonMapper jsonMapper = new JsonMapper();
@@ -33,7 +33,7 @@ class MaterialServiceTest {
     }
 
     @Test
-    void material_metadata_should_return() {
+    void mock_material_metadata_should_return() {
         ResponseEntity<String> response = restClient
                 .get()
                 .uri(metaDataUrl(materialId))
@@ -45,7 +45,7 @@ class MaterialServiceTest {
     }
 
     @Test
-    void material_metadata_should_timeout() {
+    void mock_material_metadata_should_timeout() {
         UUID timeoutId = UUID.fromString("11111111-1111-1111-1111-111111111112");
         ResponseEntity<String> response = restClient
                 .get()
@@ -58,7 +58,7 @@ class MaterialServiceTest {
     }
 
     @Test
-    void material_full_content_with_url_should_return() {
+    void mock_material_full_content_with_url_should_return() {
         ResponseEntity<String> response = restClient
                 .get()
                 .uri(contentUrl(materialId))
@@ -76,13 +76,13 @@ class MaterialServiceTest {
     }
 
     private String metaDataUrl(UUID materialId) {
-        String url = String.format("%s/material-query-api/query/api/rest/material/material/%s/metadata", baseUrl, materialId);
+        String url = String.format("%s/material-query-api/query/api/rest/material/material/%s/metadata", wireMockBaseUrl, materialId);
         log.info("metaDataUrl:{}", url);
         return url;
     }
 
     private String contentUrl(UUID materialId) {
-        String url = String.format("%s/material-query-api/query/api/rest/material/material/%s/content", baseUrl, materialId);
+        String url = String.format("%s/material-query-api/query/api/rest/material/material/%s/content", wireMockBaseUrl, materialId);
         log.info("metaDataUrl:{}", url);
         return url;
     }

@@ -16,17 +16,30 @@ import static uk.gov.hmcts.cp.subscription.http.SubscriptionApiTest.CORRELATION_
  */
 @Slf4j
 class CallbackWiremockTest {
-    private String baseUrl = "http://localhost:8090";
+    private String wireMockBaseUrl = "http://localhost:8090";
+    private String wireMockHttpsBaseUrl = "https://localhost:8090";
     private String callbackUrl = "/callback/notify";
     private RestClient restClient = RestClient.create();
 
     UUID correlationId = UUID.randomUUID();
 
     @Test
-    void callback() {
+    void mock_callback_client_should_respond_ok() {
         ResponseEntity<String> response = restClient
                 .post()
-                .uri(baseUrl + callbackUrl)
+                .uri(wireMockBaseUrl + callbackUrl)
+                .header(CORRELATION_ID_KEY, correlationId.toString())
+                .retrieve()
+                .toEntity(String.class);
+        log.info("callback response:{}", response.getBody());
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    @Test
+    void mock_https_callback_client_should_respond_ok() {
+        ResponseEntity<String> response = restClient
+                .post()
+                .uri(wireMockHttpsBaseUrl + callbackUrl)
                 .header(CORRELATION_ID_KEY, correlationId.toString())
                 .retrieve()
                 .toEntity(String.class);
