@@ -16,7 +16,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
 
 class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
 
@@ -43,7 +42,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.clientSubscriptionId").exists())
-                .andExpect(jsonPath("$.eventTypes.[0]").value(PRISON_COURT_REGISTER_GENERATED.name()))
+                .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.createdAt").exists())
                 .andExpect(jsonPath("$.hmac.keyId").value("kid_f4f5dc10-d6d8-4e94-8b02-459c4121aad0"))
                 .andExpect(jsonPath("$.hmac.secret").value(expectedSecret));
@@ -76,6 +75,6 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
     private void assertThatEventTypesAreSortedInDatabase() {
         List<ClientSubscriptionEntity> entities = subscriptionRepository.findAll();
         assertThat(entities).hasSize(1);
-        assertThat(entities.get(0).getEventTypes().get(0)).isEqualTo(PRISON_COURT_REGISTER_GENERATED);
+        assertThat(entities.getFirst().getEventTypes().getFirst()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
     }
 }

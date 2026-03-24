@@ -4,7 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +24,7 @@ class SubscriptionGetControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void get_subscription_should_return_expected() throws Exception {
-        ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
+        ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of("PRISON_COURT_REGISTER_GENERATED"));
         mockMvc.perform(get("/client-subscriptions/{id}", entity.getId())
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())

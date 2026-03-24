@@ -12,7 +12,7 @@ import lombok.Getter;
 @Builder
 public class Subscriber {
     private final UUID id;
-    private final List<EntityEventType> eventTypes;
+    private final List<String> eventTypes;
     private final String notificationEndpoint;
     private final UUID clientId;
 }
