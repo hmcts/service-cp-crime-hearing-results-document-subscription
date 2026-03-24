@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.servicebus.services;
 
-import com.azure.json.implementation.JsonUtils;
 import com.azure.messaging.servicebus.ServiceBusErrorContext;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
@@ -84,20 +83,18 @@ public class ServiceBusProcessorService {
     public void handleMessage(final String queueName, final ServiceBusReceivedMessageContext context) {
         final String wrappedMessageString = context.getMessage().getBody().toString();
         final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
-        log.info("Processing {} with targetUrl:{}", queueName, queueMessage.getTargetUrl());
+        log.info("handleMessage processing {} with targetUrl:{}", queueName, queueMessage.getTargetUrl());
         try {
             MDC.put(CORRELATION_ID_KEY, queueMessage.getCorrelationId().toString());
             serviceBusHandlers.handleMessage(queueName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
-            log.info("COLING id:{}", context.getMessage().getMessageId());
             log.error("handleMessage failureCount:{} of {} tries with exception.", failureCount, configService.getMaxTries(), exception);
             if (failureCount >= configService.getMaxTries()) {
-                log.error("handleMessage failed finally");
+                log.error("handleMessage FAILED FINALLY");
                 throw exception;
             }
             clientService.queueMessage(queueName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
-            log.info("COLING we should drop message:{}", context.getMessage().getMessageId());
             // Because we added a new message and swallowed the error then the current message will be dropped
         } finally {
             MDC.remove(CORRELATION_ID_KEY);

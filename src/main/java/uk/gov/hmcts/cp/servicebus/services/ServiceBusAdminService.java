@@ -38,13 +38,8 @@ public class ServiceBusAdminService {
         } else {
             log.info("Creating queue {}", queueName);
             final CreateQueueOptions createQueueOptions = new CreateQueueOptions();
-            createQueueOptions.setDeadLetteringOnMessageExpiration(false);
             createQueueOptions.setDefaultMessageTimeToLive(Duration.ofHours(1));
-            createQueueOptions.setForwardDeadLetteredMessagesTo("");
-            createQueueOptions.setLockDuration(Duration.ofMinutes(1));
-            createQueueOptions.setMaxDeliveryCount(3);
-            createQueueOptions.setDeadLetteringOnMessageExpiration(true);
-            createQueueOptions.setDefaultMessageTimeToLive(Duration.ofHours(1));
+            createQueueOptions.setMaxDeliveryCount(1);
             adminClient.createQueue(queueName, createQueueOptions);
         }
     }
