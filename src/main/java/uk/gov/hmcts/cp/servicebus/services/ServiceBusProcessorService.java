@@ -49,7 +49,7 @@ public class ServiceBusProcessorService {
                 log.info("createServiceBusQueues creating service bus queues");
                 adminService.createQueue(PCR_INBOUND_QUEUE);
                 startMessageProcessor(PCR_INBOUND_QUEUE);
-                adminService.createQueue(PCR_INBOUND_QUEUE);
+                adminService.createQueue(PCR_OUTBOUND_QUEUE);
                 startMessageProcessor(PCR_OUTBOUND_QUEUE);
             } catch (Exception e) {
                 log.error("Failed to initialise serviceBus. {}", e.getMessage());
