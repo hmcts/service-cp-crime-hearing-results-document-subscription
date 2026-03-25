@@ -22,7 +22,9 @@ public class SecretService {
     @PostConstruct
     public void debugSecrets() {
         try {
-            final DefaultAzureCredential credential = defaultCredential();
+            final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder()
+                    .managedIdentityClientId(config.getVaultClientId().toString())
+                    .build();
             log.info("debugSecrets getting secret names from {}.", config.getVaultUri());
             final SecretClient secretClient = new SecretClientBuilder()
                     .vaultUrl(config.getVaultUri())

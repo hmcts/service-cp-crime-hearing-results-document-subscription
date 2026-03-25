@@ -45,7 +45,7 @@ hmac:
 
 vault:
   uri: ${AZURE_VAULT_URI:}
-
+  client-id: ${AZURE_CLIENT_ID:00000000-0000-0000-0000-000000000000}
 
 management:
   endpoints:
