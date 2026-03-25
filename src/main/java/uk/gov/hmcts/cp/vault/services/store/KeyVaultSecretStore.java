@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.vault.services.store;
 
 import com.azure.security.keyvault.secrets.SecretClient;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,6 +22,10 @@ public class KeyVaultSecretStore implements VaultSecretStore {
 
     @Override
     public String getSecret(final String secretName) {
-        return secretClient.getSecret(secretName).getValue();
+        final KeyVaultSecret secret = secretClient.getSecret(secretName);
+        if (secret == null) {
+            throw new IllegalStateException("Secret not found in vault: " + secretName);
+        }
+        return secret.getValue();
     }
 }
