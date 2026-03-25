@@ -1,23 +1,22 @@
 package uk.gov.hmcts.cp.vault;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
+import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@ContextConfiguration(initializers = TestContainersInitialise.class)
 class SecretServiceTest {
-    @Mock
-    VaultServiceConfig config;
 
-    @InjectMocks
+    @Autowired
     SecretService secretService;
 
     @Test
     void secrets_should_connect_and_be_listed() {
         secretService.debugSecrets();
 
-        // no assertions ... check logs in dev environment
+        // no assertions just run locally to check connection
     }
 }
