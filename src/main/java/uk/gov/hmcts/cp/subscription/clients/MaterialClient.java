@@ -4,11 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.springframework.http.HttpHeaders.ACCEPT;
@@ -50,7 +52,10 @@ public class MaterialClient {
         log.info("Getting content URL for materialId:{}", materialId);
         final HttpHeaders headers = new HttpHeaders();
         headers.set(CJSCPPUID_HEADER, cjscppuid);
-        headers.set(ACCEPT, "application/vnd.material.query.material+json");
+        // We want to set it to list including the custom type "material"
+        // We think it used to work with MediaType.ALL
+        // List<MediaType> acceptHeaders = List.of("application/vnd.material.query.material+json", "", "/");
+        headers.setAccept(List.of(MediaType.ALL));
         final HttpEntity<Void> req = new HttpEntity<>(headers);
         final ResponseEntity<String> response = restTemplate.exchange(
                 baseUrl + CONTENT_PATH, GET, req, String.class, materialId);

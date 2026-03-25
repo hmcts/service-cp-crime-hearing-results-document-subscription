@@ -3,6 +3,7 @@ package uk.gov.hmcts.cp.subscription.integration.controllers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
@@ -27,6 +28,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0)})
+@TestPropertySource(properties = {
+        "material-service.url=the-real-dev-one",
+        "material-client.cjscppuid=the-real-one"
+})
 class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     private static final String NOTIFICATION_URI = "/notifications";
@@ -83,6 +88,11 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
+    // COLING we can set the material-service.url above
+    // And material-client.cjscppuid above
+    // Then when we run this test we prove we can hit the real endpoin
+    // And we can reduce or play with the headers to ensure it still works.
+    // And then we can tighten our wire-mocks to enforce the same headers so we can never break it
     @Test
     void get_document_should_return_200_with_pdf_when_subscription_has_access() throws Exception {
         ClientSubscriptionEntity subscription = insertSubscription(
