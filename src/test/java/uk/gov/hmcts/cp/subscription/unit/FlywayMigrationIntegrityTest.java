@@ -44,7 +44,8 @@ class FlywayMigrationIntegrityTest {
         "V1.005__add_event_type_table.sql",                   "c233451d0cabd305fbd6fd640ac67b5ce2bcce3ea7961dd078db004e9dcc06cc",
         "V1.006__add_client_table.sql",                       "45f62b36b2574ba96b08fff58312580b61df92caf14e20224635b0130ccc96ac",
         "V1.007__add_client_events_table.sql",                "e473343cfd17fafb6a099f5ae6bd8551207f84a5caf9897e57043bd2f41ab175",
-        "V1.008__forward_fix_event_type.sql",                 "e8532eebb667c7ed413849dde905a7fc367ab7ba43d68be3dbad602d409e53aa"
+        "V1.008__forward_fix_event_type.sql",                 "e8532eebb667c7ed413849dde905a7fc367ab7ba43d68be3dbad602d409e53aa",
+        "V1.009__restore_event_type_data.sql",                "0ac839978f1efa8ae1c1dc956d561f75701102f7e2e16e2673147ac4d87dc2c9"
     );
 
     @Test
