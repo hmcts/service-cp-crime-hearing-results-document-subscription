@@ -9,6 +9,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -30,7 +32,7 @@ class MaterialDocumentClientTest {
     void get_material_document_should_return_response_from_rest_template() {
         byte[] documentBytes = "pdf-content".getBytes();
         ResponseEntity<byte[]> expected = ResponseEntity.ok(documentBytes);
-        when(restTemplate.exchange(eq(DOCUMENT_URL), eq(GET), any(HttpEntity.class), eq(byte[].class)))
+        when(restTemplate.exchange(eq(URI.create(DOCUMENT_URL)), eq(GET), any(HttpEntity.class), eq(byte[].class)))
                 .thenReturn(expected);
 
         ResponseEntity<byte[]> result = materialDocumentClient.getMaterialDocument(DOCUMENT_URL);

@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+
 import static org.springframework.http.HttpMethod.GET;
 
 /**
@@ -23,7 +25,7 @@ public class MaterialDocumentClient {
     private final RestTemplate restTemplate;
 
     public ResponseEntity<byte[]> getMaterialDocument(final String url) {
-        log.info("Getting material document");
-        return restTemplate.exchange(url, GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
+        log.info("Getting material document from url:{}", url);
+        return restTemplate.exchange(URI.create(url), GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
     }
 }

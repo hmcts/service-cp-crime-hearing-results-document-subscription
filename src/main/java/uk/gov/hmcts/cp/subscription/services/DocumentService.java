@@ -54,6 +54,7 @@ public class DocumentService {
         log.info("getDocumentContent documentId:{} resolved to materialId:{}", documentId, materialId);
         final MaterialMetadata metadata = materialClient.getMetadata(materialId);
         final String contentUrl = materialClient.getContentUrl(materialId);
+        log.info("contentUrl raw bytes length:{} value:[{}]", contentUrl.length(), contentUrl);
         log.info("fetching document bytes for materialId:{}", materialId);
         final ResponseEntity<byte[]> document = materialDocumentClient.getMaterialDocument(contentUrl);
         return DocumentContent.builder()
