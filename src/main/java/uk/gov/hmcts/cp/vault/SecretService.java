@@ -43,6 +43,8 @@ public class SecretService {
      * a) Using environment variables AZURE_CLIENT_ID, AZURE_TENANANT_ID, AZURE_CLIENT_SECRET, if set
      * b) Using az cli login credentials, if available
      */
+
+    @SuppressWarnings("unused")
     private DefaultAzureCredential defaultCredential() {
         log.info("Getting default azure credential");
         return new DefaultAzureCredentialBuilder().build();
