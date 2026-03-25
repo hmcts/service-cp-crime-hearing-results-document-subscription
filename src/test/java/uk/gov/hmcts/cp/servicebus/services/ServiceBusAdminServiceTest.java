@@ -37,8 +37,6 @@ class ServiceBusAdminServiceTest {
     @Mock
     PagedIterable<QueueProperties> queues;
     @Mock
-    PagedIterable<SubscriptionProperties> subscriptions;
-    @Mock
     QueueProperties queueProperties;
 
     @Captor
@@ -61,7 +59,7 @@ class ServiceBusAdminServiceTest {
     @Test
     void create_should_create_topic_and_subscription() {
         when(configService.adminClient()).thenReturn(serviceBusAdministrationClient);
-        when(serviceBusAdministrationClient.listQueues()).thenReturn(queues);
+        when(serviceBusAdministrationClient.getQueueExists("queue1")).thenReturn(false);
 
         adminService.createQueue("queue1");
 
@@ -74,9 +72,7 @@ class ServiceBusAdminServiceTest {
     @Test
     void create_should_skip_topic_and_subscription_if_exists() {
         when(configService.adminClient()).thenReturn(serviceBusAdministrationClient);
-        when(serviceBusAdministrationClient.listQueues()).thenReturn(queues);
-        when(queues.stream()).thenReturn(Stream.of(queueProperties));
-        when(queueProperties.getName()).thenReturn("queue1");
+        when(serviceBusAdministrationClient.getQueueExists("queue1")).thenReturn(true);
 
         adminService.createQueue("queue1");
 

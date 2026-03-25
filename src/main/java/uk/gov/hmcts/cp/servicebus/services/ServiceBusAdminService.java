@@ -32,8 +32,7 @@ public class ServiceBusAdminService {
 
     public void createQueue(final String queueName) {
         final ServiceBusAdministrationClient adminClient = configService.adminClient();
-        final List<String> queues = adminClient.listQueues().stream().map(QueueProperties::getName).toList();
-        if (queues.contains(queueName)) {
+        if (adminClient.getQueueExists(queueName)) {
             log.info("Queue {} already exists", queueName);
         } else {
             log.info("Creating queue {}", queueName);
