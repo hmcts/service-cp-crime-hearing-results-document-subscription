@@ -16,7 +16,7 @@ public class StubSecretService implements VaultSecretStore { //TODO - will be re
 
     @Override
     public void setSecret(final String secretName, final String secretValue) {
-        log.debug("Stub storing secret: name={}", secretName);
+        log.debug("Stub storing secret");
         store.put(secretName, secretValue);
     }
 

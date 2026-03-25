@@ -30,14 +30,14 @@ public class VaultKeyService {
         final byte[] secretBytes = new byte[SECRET_BYTES_LENGTH];
         secureRandom.nextBytes(secretBytes);
         final String secretName = toSecretName(subscriptionId);
-        log.info("Storing HMAC secret: name={}", secretName);
+        log.info("Storing vault secret for subscription {}", subscriptionId);
         secretService.setSecret(secretName, base64EncodingService.encodeWithBase64(secretBytes));
         return KeyPair.builder().keyId(keyId).secret(secretBytes).build();
     }
 
     public KeyPair getKeyPair(final UUID subscriptionId) {
         final String secretName = toSecretName(subscriptionId);
-        log.debug("Fetching HMAC secret: name={}", secretName);
+        log.debug("Fetching valut secret for subscription {}", subscriptionId);
         final String encoded = secretService.getSecret(secretName);
         return KeyPair.builder().keyId(KEY_PREFIX + subscriptionId).secret(base64EncodingService.decodeFromBase64(encoded)).build();
     }
