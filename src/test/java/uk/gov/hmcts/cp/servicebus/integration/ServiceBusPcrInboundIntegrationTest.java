@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
 
 @Slf4j
 @SpringBootTest
@@ -90,7 +91,7 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
                 .custodyEstablishmentDetails(custodyEstablishmentDetails)
                 .build();
         return EventPayload.builder()
-                .eventType(PRISON_COURT_REGISTER_GENERATED)
+                .eventType("PRISON_COURT_REGISTER_GENERATED")
                 .materialId(materialId)
                 .defendant(defendant)
                 .build();

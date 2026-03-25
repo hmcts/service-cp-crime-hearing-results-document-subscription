@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -32,7 +31,7 @@ class DocumentMappingRepositoryTest extends IntegrationTestBase {
         assertThat(found).isPresent();
         assertThat(found.get().getDocumentId()).isEqualTo(saved.getDocumentId());
         assertThat(found.get().getMaterialId()).isEqualTo(MATERIAL_ID);
-        assertThat(found.get().getEventType()).isEqualTo(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
+        assertThat(found.get().getEventType()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
         assertThat(found.get().getCreatedAt()).isNotNull();
     }
 }

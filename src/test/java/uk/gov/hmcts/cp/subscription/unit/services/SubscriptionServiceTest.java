@@ -16,6 +16,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
+import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.time.OffsetDateTime;
@@ -29,7 +30,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceTest {
@@ -42,13 +42,15 @@ class SubscriptionServiceTest {
     SubscriptionMapper mapper;
     @Mock
     HmacKeyService hmacKeyService;
+    @Mock
+    EventTypeService eventTypeService;
 
     @InjectMocks
     SubscriptionService subscriptionService;
 
     ClientSubscriptionRequest createRequest = ClientSubscriptionRequest.builder()
             .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
-            .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
+            .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
     ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
     UUID subscriptionId = UUID.fromString("2ca16eb5-3998-4bb7-adce-4bb9b3b7223c");
@@ -76,6 +78,7 @@ class SubscriptionServiceTest {
         when(mapper.mapCreateRequestToEntity(clientId, createRequest, now)).thenReturn(requestEntity);
         when(hmacKeyService.generateKey()).thenReturn(hmacKeyPair);
         when(mapper.mapEntityToResponse(requestEntity, hmacKeyPair)).thenReturn(response);
+        when(eventTypeService.eventExists("PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
 
         ClientSubscription result = subscriptionService.createSubscription(createRequest, clientId);
 
@@ -85,6 +88,7 @@ class SubscriptionServiceTest {
     @Test
     void create_request_should_throw_conflict_when_subscription_already_exists() {
         when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.of(savedEntity));
+        when(eventTypeService.eventExists("PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
 
         assertThatThrownBy(() -> subscriptionService.createSubscription(createRequest, clientId))
                 .isInstanceOf(ResponseStatusException.class)
@@ -92,6 +96,25 @@ class SubscriptionServiceTest {
                     ResponseStatusException ex = (ResponseStatusException) e;
                     assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
                     assertThat(ex.getReason()).isEqualTo("subscription already exist with " + subscriptionId);
+                });
+
+        verify(subscriptionRepository, never()).save(any());
+    }
+
+    @Test
+    void create_request_should_throw_bad_when_event_does_not_exists() {
+        ClientSubscriptionRequest createRequest = ClientSubscriptionRequest.builder()
+                .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
+                .eventTypes(List.of("BAD"))
+                .build();
+        when(eventTypeService.eventExists("BAD")).thenReturn(false);
+
+        assertThatThrownBy(() -> subscriptionService.createSubscription(createRequest, clientId))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(e -> {
+                    ResponseStatusException ex = (ResponseStatusException) e;
+                    assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(ex.getReason()).isEqualTo("Invalid event type: BAD");
                 });
 
         verify(subscriptionRepository, never()).save(any());

@@ -22,7 +22,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionControllerTest {
@@ -50,7 +49,7 @@ class SubscriptionControllerTest {
 
     ClientSubscriptionRequest createRequest = ClientSubscriptionRequest.builder()
             .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
-            .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
+            .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
     ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
     UUID subscriptionId = UUID.randomUUID();

@@ -13,7 +13,6 @@ import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.model.Subscriber;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
@@ -39,8 +38,8 @@ public class CallbackDeliveryService {
     private final HmacSigningService hmacSigningService;
 
     public void submitOutboundPcrEvents(final EventPayload eventPayload, final UUID documentId) {
-        final EntityEventType eventType = EntityEventType.valueOf(eventPayload.getEventType().name());
-        final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType.name());
+        final String eventType = eventPayload.getEventType();
+        final List<ClientSubscriptionEntity> entities = subscriptionRepository.findByEventType(eventType);
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);
         log.info("sending {} outbound notifications", entities.size());
         for (final ClientSubscriptionEntity entity : entities) {

@@ -6,7 +6,6 @@ import org.springframework.http.MediaType;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +24,7 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void delete_client_subscription_should_delete_subscription() throws Exception {
-        ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED));
+        ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of("PRISON_COURT_REGISTER_GENERATED"));
         mockMvc.perform(delete("/client-subscriptions/{id}", entity.getId())
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -46,7 +45,7 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
     void delete_subscription_belonging_to_different_client_should_return_404() throws Exception {
         UUID otherClientId = UUID.fromString("99999999-9999-9999-9999-999999999999");
         ClientSubscriptionEntity otherClientSubscription = insertSubscription(
-                otherClientId, List.of(EntityEventType.PRISON_COURT_REGISTER_GENERATED), "https://other-client.com/callback");
+                otherClientId, List.of("PRISON_COURT_REGISTER_GENERATED"), "https://other-client.com/callback");
 
         mockMvc.perform(delete("/client-subscriptions/{id}", otherClientSubscription.getId())
                         .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID.toString())))

@@ -15,7 +15,6 @@ import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventsRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
@@ -30,7 +29,6 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
@@ -71,7 +69,7 @@ public abstract class IntegrationTestBase {
             .build();
     protected ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
             .notificationEndpoint(notificationEndpoint)
-            .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
+            .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
 
     protected void clearClientSubscriptionTable() {
@@ -90,11 +88,11 @@ public abstract class IntegrationTestBase {
         documentMappingRepository.deleteAll();
     }
 
-    protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<EntityEventType> entityEventTypes) {
+    protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<String> entityEventTypes) {
         return insertSubscription(TEST_CLIENT_ID, entityEventTypes, notificationUri);
     }
 
-    protected ClientSubscriptionEntity insertSubscription(UUID clientId, List<EntityEventType> entityEventTypes, String notificationUri) {
+    protected ClientSubscriptionEntity insertSubscription(UUID clientId, List<String> entityEventTypes, String notificationUri) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         ClientSubscriptionEntity subscription = ClientSubscriptionEntity.builder()
                 .id(UUID.randomUUID())
@@ -108,10 +106,10 @@ public abstract class IntegrationTestBase {
     }
 
     protected DocumentMappingEntity insertDocument(UUID materialId) {
-        return insertDocument(materialId, EntityEventType.PRISON_COURT_REGISTER_GENERATED);
+        return insertDocument(materialId, "PRISON_COURT_REGISTER_GENERATED");
     }
 
-    protected DocumentMappingEntity insertDocument(UUID materialId, EntityEventType eventType) {
+    protected DocumentMappingEntity insertDocument(UUID materialId, String eventType) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         DocumentMappingEntity document = DocumentMappingEntity.builder()
                 .documentId(UUID.randomUUID())
