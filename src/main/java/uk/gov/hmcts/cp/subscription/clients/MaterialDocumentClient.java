@@ -13,8 +13,8 @@ import java.net.URI;
 import static org.springframework.http.HttpMethod.GET;
 
 /**
- * Fetches material document bytes from a URL supplied by material-service.
- * The URL originates from a trusted internal service (not user input), so the
+ * Fetches material document bytes from a pre-parsed URI supplied by material-service.
+ * The URI originates from a trusted internal service (not user input), so the
  * CodeQL SSRF alert for this class is suppressed via codeql-config.yml paths-ignore.
  */
 @Service
@@ -24,7 +24,7 @@ public class MaterialDocumentClient {
 
     private final RestTemplate restTemplate;
 
-    public ResponseEntity<byte[]> getMaterialDocument(final String url) {
-        return restTemplate.exchange(URI.create(url), GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
+    public ResponseEntity<byte[]> getMaterialDocument(final URI uri) {
+        return restTemplate.exchange(uri, GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
     }
 }

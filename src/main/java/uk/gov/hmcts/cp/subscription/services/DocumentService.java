@@ -16,6 +16,7 @@ import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 
+import java.net.URI;
 import java.util.UUID;
 
 @Service
@@ -55,7 +56,7 @@ public class DocumentService {
         final MaterialMetadata metadata = materialClient.getMetadata(materialId);
         final String contentUrl = materialClient.getContentUrl(materialId);
         log.info("fetching document bytes for materialId:{}", materialId);
-        final ResponseEntity<byte[]> document = materialDocumentClient.getMaterialDocument(contentUrl);
+        final ResponseEntity<byte[]> document = materialDocumentClient.getMaterialDocument(URI.create(contentUrl));
         return DocumentContent.builder()
                 .body(document.getBody())
                 .contentType(MediaType.APPLICATION_PDF)

@@ -20,7 +20,7 @@ import static org.springframework.http.HttpMethod.GET;
 @ExtendWith(MockitoExtension.class)
 class MaterialDocumentClientTest {
 
-    private static final String DOCUMENT_URL = "https://blob.core.windows.net/container/file.pdf?sig=abc";
+    private static final URI DOCUMENT_URI = URI.create("https://blob.core.windows.net/container/file.pdf?sig=abc");
 
     @Mock
     RestTemplate restTemplate;
@@ -32,10 +32,10 @@ class MaterialDocumentClientTest {
     void get_material_document_should_return_response_from_rest_template() {
         byte[] documentBytes = "pdf-content".getBytes();
         ResponseEntity<byte[]> expected = ResponseEntity.ok(documentBytes);
-        when(restTemplate.exchange(eq(URI.create(DOCUMENT_URL)), eq(GET), any(HttpEntity.class), eq(byte[].class)))
+        when(restTemplate.exchange(eq(DOCUMENT_URI), eq(GET), any(HttpEntity.class), eq(byte[].class)))
                 .thenReturn(expected);
 
-        ResponseEntity<byte[]> result = materialDocumentClient.getMaterialDocument(DOCUMENT_URL);
+        ResponseEntity<byte[]> result = materialDocumentClient.getMaterialDocument(DOCUMENT_URI);
 
         assertThat(result).isEqualTo(expected);
     }
