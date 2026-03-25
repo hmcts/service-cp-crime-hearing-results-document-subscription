@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import uk.gov.hmcts.cp.vault.config.VaultConfig;
 
 import java.time.LocalDateTime;
 
@@ -14,26 +15,27 @@ import java.time.LocalDateTime;
 @Component
 @AllArgsConstructor
 @ConditionalOnProperty(name = "hmac.vault-enabled", havingValue = "true")
-public class VaultStartupService { //TOOD - testing purpose only
+public class VaultStartupService { //TODO - testing purpose only
 
     private final SecretClient secretClient;
+    private final VaultConfig vaultConfig;
 
     @PostConstruct
     public void debugSecrets() {
+        log.info("VaultStartupService connecting to vault url:{}", vaultConfig.getVaultUrl());
         try {
-            log.info("debugSecrets getting secret names from vault.");
             secretClient.listPropertiesOfSecrets().forEach(s ->
-                    log.info("debugSecrets found secret:{}", s.getName()));
+                    log.info("VaultStartupService found secret:{}", s.getName()));
             updateTestSecret();
         } catch (Exception e) {
-            log.error("debugSecrets failed.", e);
+            log.error("VaultStartupService failed to connect to vault url:{}", vaultConfig.getVaultUrl(), e);
         }
     }
 
     private void updateTestSecret() {
         final String secretName = "subscription-delete-me";
         final String secretValue = "Secret set at " + LocalDateTime.now();
-        log.info("Setting secret {}", secretName);
+        log.info("VaultStartupService setting secret:{}", secretName);
         secretClient.setSecret(new KeyVaultSecret(secretName, secretValue));
     }
 }
