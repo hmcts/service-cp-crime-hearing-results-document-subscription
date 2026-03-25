@@ -122,7 +122,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
     }
 
-    //@Test - TODO
+    @Test
     void happy_path_should_return_pdf() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_i_have_a_callback_endpoint();
@@ -137,7 +137,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
 
-    //@Test - TOOD
+    @Test
     void callback_client_not_responding_should_try_3_times_in_4_seconds() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_callback_endpoint_returns_server_error();

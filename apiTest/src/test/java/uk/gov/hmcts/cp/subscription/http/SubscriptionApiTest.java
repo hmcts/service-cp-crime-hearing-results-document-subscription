@@ -22,7 +22,7 @@ public class SubscriptionApiTest extends BaseTest {
         }
     }
 
-    //@Test -- TODO
+    @Test
     void create_get_and_delete_subscription_should_work_ok() {
         UUID clientId = UUID.randomUUID();
         UUID subscriptionId = createOrGetSubscription(clientId);

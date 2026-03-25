@@ -9,7 +9,6 @@ import uk.gov.hmcts.cp.vault.services.store.VaultSecretStore;
 import java.security.SecureRandom;
 import java.util.UUID;
 
-import static java.util.UUID.randomUUID;
 
 @Slf4j
 @Service
@@ -26,7 +25,7 @@ public class VaultKeyService {
     private final Base64EncodingService base64EncodingService;
 
     public KeyPair generateAndStore(final UUID subscriptionId) {
-        final String keyId = KEY_PREFIX + randomUUID();
+        final String keyId = KEY_PREFIX + subscriptionId;
         final byte[] secretBytes = new byte[SECRET_BYTES_LENGTH];
         secureRandom.nextBytes(secretBytes);
         final String secretName = toSecretName(subscriptionId);
