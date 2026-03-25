@@ -22,6 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -36,7 +37,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     private static final String NOTIFICATION_URI = "/notifications";
     private static final String CALLBACK_URL = "https://callback.example.com";
-    private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
+    private static final UUID MATERIAL_ID = UUID.fromString("04325082-5203-4eaa-9f62-e153d6308631");
     private static final String DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @MockitoBean
@@ -88,11 +89,11 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
-    // COLING we can set the material-service.url above
-    // And material-client.cjscppuid above
-    // Then when we run this test we prove we can hit the real endpoin
-    // And we can reduce or play with the headers to ensure it still works.
-    // And then we can tighten our wire-mocks to enforce the same headers so we can never break it
+    // Reproduces the Azure Blob 403 "Signature fields not well formed" bug.
+    // Without URI.create(): RestTemplate re-encodes %2B -> %252B in the SAS query params,
+    // breaking the signature. WireMock simulates Azure's behaviour:
+    //   - stub - material-blob-large-file-mapping.json — exact URL with %2B preserved → returns 200
+    //   - stub - material-blob-auth-fail-mapping.json — any blob path → returns 403
     @Test
     void get_document_should_return_200_with_pdf_when_subscription_has_access() throws Exception {
         ClientSubscriptionEntity subscription = insertSubscription(
@@ -103,10 +104,11 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
         mockMvc.perform(get(DOCUMENT_URI,
                         subscription.getId(), document.getDocumentId())
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "application/pdf"))
                 .andExpect(header().string("Content-Disposition",
-                        "attachment; filename=\"PrisonCourtRegister_20251219083322.pdf\""))
+                        "attachment; filename=\"PrisonCourtRegister_20260325161340.pdf\""))
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
     }
 
