@@ -10,7 +10,9 @@ import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 
 import java.security.InvalidKeyException;
+import java.util.UUID;
 
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class HmacSigningServiceTest {
     @Mock
     HmacServiceConfig hmacServiceConfig;
-
     @InjectMocks
     HmacKeyService hmacKeyService;
     @InjectMocks
@@ -32,7 +33,7 @@ public class HmacSigningServiceTest {
     @Test
     void real_signature_and_message_should_match() throws InvalidKeyException {
         // Message sent at 14:30:07
-        KeyPair keyPair = hmacKeyService.generateKey();
+        KeyPair keyPair = hmacKeyService.generateAndStore(randomUUID());
         String message = "{\"cases\":[{\"urn\":\"AAA20713684\"}],\"masterDefendantId\":\"d5ad03d0-5f2d-477b-9aa8-e0beb68f46a3\",\"defendantName\":\"Sarogav Noem\",\"defendantDateOfBirth\":\"2008-12-08\",\"documentId\":\"6deab43e-70f2-4d8e-bc28-04ab39fbeff1\",\"documentGeneratedTimestamp\":\"2026-03-20T14:29:15.453071625Z\",\"prisonEmailAddress\":\"yoiashfield.premiercustody@premier-serco.cjsm.net\"}";
         String signature = hmacSigningService.sign(keyPair.getSecret(), message);
         hmacSigningService.validateSignature(keyPair.getSecret(), message, signature);
@@ -44,7 +45,7 @@ public class HmacSigningServiceTest {
 
     @Test
     void validate_should_verify_ok() throws InvalidKeyException {
-        KeyPair keyPair = hmacKeyService.generateKey();
+        KeyPair keyPair = hmacKeyService.generateAndStore(randomUUID());
         String signature = hmacSigningService.sign(keyPair.getSecret(), message);
         log.info("Signature:{}", signature);
         assertThat(signature).isEqualTo("TkkWx3X55YaWF5KB2BwSY4LcoDnFqZFOMrB43hkuFkE=");
@@ -54,13 +55,13 @@ public class HmacSigningServiceTest {
 
     @Test
     void validate_should_throw_if_bad_signature() throws InvalidKeyException {
-        KeyPair keyPair = hmacKeyService.generateKey();
+        KeyPair keyPair = hmacKeyService.generateAndStore(randomUUID());
         assertThrows(InvalidKeyException.class, () -> hmacSigningService.validateSignature(keyPair.getSecret(), message, "bad-signature"));
     }
 
     @Test
     void validate_should_throw_if_bad_secret() throws InvalidKeyException {
-        KeyPair keyPair = hmacKeyService.generateKey();
+        KeyPair keyPair = hmacKeyService.generateAndStore(randomUUID());
         String signature = hmacSigningService.sign(keyPair.getSecret(), message);
         assertThat(signature).isEqualTo("TkkWx3X55YaWF5KB2BwSY4LcoDnFqZFOMrB43hkuFkE=");
         assertThrows(InvalidKeyException.class, () -> hmacSigningService.validateSignature("bad-=secret".getBytes(), message, signature));

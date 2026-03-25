@@ -62,7 +62,7 @@ class CallbackDeliveryServiceTest {
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.generateKey()).thenReturn(keyPair);
+        when(hmacKeyService.getKeyPair(subscriptionEntity.getId())).thenReturn(keyPair);
         when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 

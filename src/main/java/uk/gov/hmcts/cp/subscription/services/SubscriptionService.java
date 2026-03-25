@@ -37,7 +37,7 @@ public class SubscriptionService {
         });
         final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, clockService.nowOffsetUTC());
         subscriptionRepository.save(entity);
-        final KeyPair keyPair = hmacKeyService.generateKey();
+        final KeyPair keyPair = hmacKeyService.generateAndStore(entity.getId());
         return mapper.mapEntityToResponse(entity, keyPair);
     }
 

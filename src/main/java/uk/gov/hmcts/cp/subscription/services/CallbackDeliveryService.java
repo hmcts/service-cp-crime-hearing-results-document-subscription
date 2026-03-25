@@ -44,7 +44,7 @@ public class CallbackDeliveryService {
         log.info("sending {} outbound notifications", entities.size());
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
-            final KeyPair keyPair = hmacKeyService.generateKey();
+            final KeyPair keyPair = hmacKeyService.getKeyPair(entity.getId());
             final String signature = hmacSigningService.sign(keyPair.getSecret(), jsonMapper.toJson(eventNotificationPayload));
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, keyPair.getKeyId(), signature);
             if (serviceBusConfig.isEnabled()) {

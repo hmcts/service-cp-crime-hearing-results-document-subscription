@@ -42,6 +42,8 @@ subscription:
 
 hmac:
   vault-enabled: ${HMAC_VAULT_ENABLED:false}
+  vault-url: ${HMAC_VAULT_URL:}
+  vault-client-id: ${HMAC_VAULT_CLIENT_ID:00000000-0000-0000-0000-000000000000}
 
 management:
   endpoints:

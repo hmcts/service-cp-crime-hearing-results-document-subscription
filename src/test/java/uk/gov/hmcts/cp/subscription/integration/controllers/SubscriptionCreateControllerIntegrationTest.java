@@ -10,6 +10,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,7 +35,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
     @Test
     void create_subscription_should_save_subscription_with_hmac() throws Exception {
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
-        String expectedSecret = encodingService.encodeWithBase64(hmacKeyService.generateKey().getSecret());
+        String expectedSecret = encodingService.encodeWithBase64(hmacKeyService.generateAndStore(UUID.randomUUID()).getSecret());
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)

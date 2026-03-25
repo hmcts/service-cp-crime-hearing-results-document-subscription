@@ -76,7 +76,7 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.empty());
         when(clockService.nowOffsetUTC()).thenReturn(now);
         when(mapper.mapCreateRequestToEntity(clientId, createRequest, now)).thenReturn(requestEntity);
-        when(hmacKeyService.generateKey()).thenReturn(hmacKeyPair);
+        when(hmacKeyService.generateAndStore(subscriptionId)).thenReturn(hmacKeyPair);
         when(mapper.mapEntityToResponse(requestEntity, hmacKeyPair)).thenReturn(response);
         when(eventTypeService.eventExists("PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
 
