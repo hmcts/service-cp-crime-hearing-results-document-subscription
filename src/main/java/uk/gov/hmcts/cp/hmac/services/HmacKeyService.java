@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.UUID.randomUUID;
 
 @Slf4j
 @Service
@@ -30,12 +31,13 @@ public class HmacKeyService {
     private final Optional<SecretClient> secretClient;
     private final EncodingService encodingService;
 
+    @SuppressWarnings("PMD.OnlyOneReturn")
     public KeyPair generateAndStore(final UUID subscriptionId) {
         if (!config.isVaultEnabled()) {
             log.debug("Returning STUB keyPair");
             return KeyPair.builder().keyId(STUB_KEY_ID).secret(STUB_SECRET_STRING.getBytes(UTF_8)).build();
         }
-        final String keyId = KEY_PREFIX + UUID.randomUUID();
+        final String keyId = KEY_PREFIX + randomUUID();
         final byte[] secretBytes = new byte[SECRET_BYTES_LENGTH];
         secureRandom.nextBytes(secretBytes);
         final String vaultName = toVaultName(subscriptionId);
@@ -44,6 +46,7 @@ public class HmacKeyService {
         return KeyPair.builder().keyId(keyId).secret(secretBytes).build();
     }
 
+    @SuppressWarnings("PMD.OnlyOneReturn")
     public KeyPair getKeyPair(final UUID subscriptionId) {
         if (!config.isVaultEnabled()) {
             return KeyPair.builder().keyId(STUB_KEY_ID).secret(STUB_SECRET_STRING.getBytes(UTF_8)).build();

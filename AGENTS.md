@@ -103,7 +103,7 @@ curl http://localhost:4550/actuator/health
 ### External Services (HTTP Clients)
 
 | Service | Config | Use Case | Retry Strategy |
-|---------  |--------|----------|-----------------|
+|---------|--------|----------|-----------------|
 | Material API | `MATERIAL_CLIENT_URL` (default: `http://localhost:8081`) | Fetch material metadata when PCR event arrives | `MaterialService.waitForMaterialMetadata()` uses awaitility (interval: `MATERIAL_CLIENT_INTERVAL_MSECS`, timeout: `MATERIAL_CLIENT_TIMEOUT_MSECS`) |
 | Document Service | `DOCUMENT_SERVICE_URL` (default: `http://localhost:8082`) | Retrieve document content for subscribers | Configured via `DocumentService` |
 | Callback URLs | `ClientSubscriptionEntity.notificationEndpoint` | Deliver notifications to subscribers | Configurable retry in `callback-client.retry` (interval/timeout milliseconds) |
@@ -112,8 +112,8 @@ curl http://localhost:4550/actuator/health
 
 Each subscription has a unique HMAC secret (`HmacSHA256`) used to sign outbound notification payloads, allowing subscribers to verify authenticity. Key classes are in `uk.gov.hmcts.cp.hmac`.
 
-- **On subscription create**: `HmacKeyService.generateAndStore()` generates a `KeyPair` (keyId + 32-byte secret), writes it to Azure Key Vault (`amp-{subscriptionId}`), and caches it in memory. The `keyId` and `secret` are returned to the caller in the subscription response.
-- **On callback delivery**: `HmacKeyService.getKeyPair()` returns from the in-memory cache (or fetches from vault on cache miss). `HmacSigningService.sign()` computes `HmacSHA256(secret, payload)` and includes the signature and `keyId` in the outbound wrapper.
+- **On subscription create**: `HmacKeyService.generateAndStore()` generates a `KeyPair` (keyId + 32-byte secret), writes it to Azure Key Vault (`amp-{subscriptionId}`). The `keyId` and `secret` are returned to the caller in the subscription response.
+- **On callback delivery**: `HmacKeyService.getKeyPair()` fetches from vault. `HmacSigningService.sign()` computes `HmacSHA256(secret, payload)` and includes the signature and `keyId` in the outbound wrapper.
 - **Local dev** (`hmac.vault-enabled=false`, default): a hardcoded stub `KeyPair` is returned — no vault connection made.
 - **Production** (`hmac.vault-enabled=true`): uses `DefaultAzureCredential` with `HMAC_VAULT_URL` and `HMAC_VAULT_CLIENT_ID`.
 - **Integration tests**: add `@MockitoBean SecretClient secretClient` and `@TestPropertySource(properties = {"hmac.vault-enabled=true", "hmac.vault-url=https://test-vault"})` to mock the vault.
@@ -126,7 +126,7 @@ Each subscription has a unique HMAC secret (`HmacSHA256`) used to sign outbound 
 | `hmac.vault-url` | `HMAC_VAULT_URL` | _(empty)_ | Full vault URL, e.g. `https://<vault-name>.vault.azure.net/` |
 | `hmac.vault-client-id` | `HMAC_VAULT_CLIENT_ID` | `00000000-0000-0000-0000-000000000000` | Managed Identity client ID passed to `DefaultAzureCredential` |
 
-Secret naming convention in the vault: `amp-hmac-{subscriptionId}`. The `SecretClient` bean is only created when `hmac.vault-enabled=true` (via `@ConditionalOnProperty`). Authentication uses `DefaultAzureCredential` — in AKS this resolves to the pod's Managed Identity; locally it falls back to `az login` / environment credentials.
+Secret naming convention in the vault: `amp-{subscriptionId}`. The `SecretClient` bean is only created when `hmac.vault-enabled=true`. Authentication uses `DefaultAzureCredential` — in AKS this resolves to the pod's Managed Identity.
 
 ### Azure Service Bus (Optional)
 
