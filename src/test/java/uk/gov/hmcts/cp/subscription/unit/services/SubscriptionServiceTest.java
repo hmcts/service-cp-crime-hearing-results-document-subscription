@@ -7,8 +7,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
-import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import uk.gov.hmcts.cp.vault.model.KeyPair;
+import uk.gov.hmcts.cp.vault.services.VaultKeyService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -41,7 +41,7 @@ class SubscriptionServiceTest {
     @Mock
     SubscriptionMapper mapper;
     @Mock
-    HmacKeyService hmacKeyService;
+    VaultKeyService vaultKeyService;
     @Mock
     EventTypeService eventTypeService;
 
@@ -76,7 +76,7 @@ class SubscriptionServiceTest {
         when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.empty());
         when(clockService.nowOffsetUTC()).thenReturn(now);
         when(mapper.mapCreateRequestToEntity(clientId, createRequest, now)).thenReturn(requestEntity);
-        when(hmacKeyService.generateAndStore(subscriptionId)).thenReturn(hmacKeyPair);
+        when(vaultKeyService.generateAndStore(subscriptionId)).thenReturn(hmacKeyPair);
         when(mapper.mapEntityToResponse(requestEntity, hmacKeyPair)).thenReturn(response);
         when(eventTypeService.eventExists("PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
 

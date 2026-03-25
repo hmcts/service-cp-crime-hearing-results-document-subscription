@@ -5,9 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
+import uk.gov.hmcts.cp.vault.model.KeyPair;
+import uk.gov.hmcts.cp.vault.services.VaultKeyService;
+import uk.gov.hmcts.cp.vault.services.VaultSigningService;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
@@ -40,9 +40,9 @@ class CallbackDeliveryServiceTest {
     @Mock
     CallbackService callbackService;
     @Mock
-    HmacKeyService hmacKeyService;
+    VaultKeyService vaultKeyService;
     @Mock
-    HmacSigningService hmacSigningService;
+    VaultSigningService vaultSigningService;
 
     @InjectMocks
     private CallbackDeliveryService callbackDeliveryService;
@@ -62,8 +62,8 @@ class CallbackDeliveryServiceTest {
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.getKeyPair(subscriptionEntity.getId())).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
+        when(vaultKeyService.getKeyPair(subscriptionEntity.getId())).thenReturn(keyPair);
+        when(vaultSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);

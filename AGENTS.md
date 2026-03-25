@@ -112,11 +112,14 @@ curl http://localhost:4550/actuator/health
 
 Each subscription has a unique HMAC secret (`HmacSHA256`) used to sign outbound notification payloads, allowing subscribers to verify authenticity. Key classes are in `uk.gov.hmcts.cp.hmac`.
 
-- **On subscription create**: `HmacKeyService.generateAndStore()` generates a `KeyPair` (keyId + 32-byte secret), writes it to Azure Key Vault (`amp-{subscriptionId}`). The `keyId` and `secret` are returned to the caller in the subscription response.
-- **On callback delivery**: `HmacKeyService.getKeyPair()` fetches from vault. `HmacSigningService.sign()` computes `HmacSHA256(secret, payload)` and includes the signature and `keyId` in the outbound wrapper.
-- **Local dev** (`hmac.vault-enabled=false`, default): a hardcoded stub `KeyPair` is returned — no vault connection made.
-- **Production** (`hmac.vault-enabled=true`): uses `DefaultAzureCredential` with `HMAC_VAULT_URL` and `HMAC_VAULT_CLIENT_ID`.
-- **Integration tests**: add `@MockitoBean SecretClient secretClient` and `@TestPropertySource(properties = {"hmac.vault-enabled=true", "hmac.vault-url=https://test-vault"})` to mock the vault.
+- **On subscription create**: `HmacKeyService.generateAndStore()` generates a `KeyPair` (keyId + 32-byte secret), stores it via `SecretService` under `amp-{subscriptionId}`. The `keyId` and `secret` are returned to the caller in the subscription response.
+- **On callback delivery**: `HmacKeyService.getKeyPair()` fetches from `SecretService`. `HmacSigningService.sign()` computes `HmacSHA256(secret, payload)` and includes the signature and `keyId` in the outbound wrapper.
+- **`HmacKeyService`** has no knowledge of the underlying secret store — it only calls `SecretService`.
+- **`SecretService`** abstraction has two implementations, selected by `hmac.vault-enabled`:
+  - `StubSecretService` (`vault-enabled=false`, default): in-memory `ConcurrentHashMap` — each subscription gets its own generated key pair, no vault connection made.
+  - `VaultSecretService` (`vault-enabled=true`): delegates to Azure `SecretClient`.
+- **Production** (`hmac.vault-enabled=true`): `VaultConfig` builds `SecretClient` using `DefaultAzureCredential` with `HMAC_VAULT_URL` and `HMAC_VAULT_CLIENT_ID`.
+- **Integration tests**: either mock `SecretService` directly (`@MockitoBean SecretService secretService`), or mock the underlying vault (`@MockitoBean SecretClient secretClient` with `@TestPropertySource(properties = {"hmac.vault-enabled=true", "hmac.vault-url=https://test-vault"})`)
 
 #### Azure Key Vault Configuration
 

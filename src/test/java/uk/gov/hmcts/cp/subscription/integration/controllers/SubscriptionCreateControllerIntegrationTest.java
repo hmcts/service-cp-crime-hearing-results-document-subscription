@@ -6,13 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.filters.CorrelationIdService;
-import uk.gov.hmcts.cp.hmac.services.EncodingService;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import org.hamcrest.Matchers;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -28,11 +26,6 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
 
     @MockitoBean
     CorrelationIdService correlationIdService;
-    @Autowired
-    HmacKeyService hmacKeyService;
-    @Autowired
-    EncodingService encodingService;
-
     @BeforeEach
     void beforeEach() {
         clearClientSubscriptionTable();
@@ -44,7 +37,6 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
     void create_subscription_should_save_subscription_with_hmac() throws Exception {
         when(correlationIdService.randomString()).thenReturn(correlationId);
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
-        String expectedSecret = encodingService.encodeWithBase64(hmacKeyService.generateAndStore(UUID.randomUUID()).getSecret());
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -55,8 +47,8 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").exists())
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.createdAt").exists())
-                .andExpect(jsonPath("$.hmac.keyId").value("kid_f4f5dc10-d6d8-4e94-8b02-459c4121aad0"))
-                .andExpect(jsonPath("$.hmac.secret").value(expectedSecret));
+                .andExpect(jsonPath("$.hmac.keyId").value(Matchers.startsWith("kid_")))
+                .andExpect(jsonPath("$.hmac.secret").exists());
         assertThatEventTypesAreSortedInDatabase();
     }
 

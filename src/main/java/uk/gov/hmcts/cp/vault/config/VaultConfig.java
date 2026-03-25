@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.hmac.config;
+package uk.gov.hmcts.cp.vault.config;
 
 import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
@@ -14,19 +14,19 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 @Configuration
 @Getter
-public class HmacServiceConfig {
+public class VaultConfig {
 
     private final boolean vaultEnabled;
     private final String vaultUrl;
     private final String vaultClientId;
 
-    public HmacServiceConfig(
+    public VaultConfig(
             @Value("${hmac.vault-enabled:false}") final boolean vaultEnabled,
             @Value("${hmac.vault-url:}") final String vaultUrl,
             @Value("${hmac.vault-client-id:}") final String vaultClientId) {
-        log.info("Hmac initialised with vaultEnabled:{}", vaultEnabled);
-        log.info("Hmac initialised with vaultUrl:\"{}\"", vaultUrl);
-        log.info("Hmac initialised with vaultClientId:\"{}\"", vaultClientId.isBlank() ? "(not set)" : vaultClientId);
+        log.info("Vault initialised with vaultEnabled:{}", vaultEnabled);
+        log.info("Vault initialised with vaultUrl:\"{}\"", vaultUrl);
+        log.info("Vault initialised with vaultClientId:\"{}\"", vaultClientId.isBlank() ? "(not set)" : vaultClientId);
         this.vaultEnabled = vaultEnabled;
         this.vaultUrl = vaultUrl;
         this.vaultClientId = vaultClientId;
