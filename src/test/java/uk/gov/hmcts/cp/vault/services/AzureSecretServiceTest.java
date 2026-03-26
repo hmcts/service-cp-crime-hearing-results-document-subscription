@@ -13,7 +13,7 @@ class AzureSecretServiceTest {
     @Test
     void build_should_create_secret_client_for_valid_inputs() {
         SecretClient secretClient = azureSecretService.build(
-            "https://example.vault.azure.net/",
+            "https://localhost:8443/",
             "00000000-0000-0000-0000-000000000001"
         );
 

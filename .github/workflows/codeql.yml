@@ -98,17 +98,17 @@ jobs:
       - name: DAST - Build and run containerised app
         run: |
           cd apiTest
-          docker compose -f docker-compose.yml up -d
-          
-          echo "Waiting for health endpoint..."
-          for i in {1..30}; do
-            if curl -s http://localhost:8082/health > /dev/null; then
-              echo "App is healthy"
-              break
-            fi
-            echo "Waiting for app to be healthy ($i)..."
-            sleep 2
-          done
+          chmod +x ./setup-emulator-certs.sh
+          ./setup-emulator-certs.sh
+          docker compose -f docker-compose.yml up -d --wait --wait-timeout 600
+          curl -sf http://localhost:8082/actuator/health > /dev/null
+
+      - name: DAST - Debug container logs on failure
+        if: failure()
+        run: |
+          cd apiTest
+          docker compose -f docker-compose.yml ps
+          docker compose -f docker-compose.yml logs --no-color app1 app2 keyvault-emulator servicebus db wiremock || true
 
       - name: Run OWASP ZAP DAST Scan
         uses: zaproxy/action-baseline@v0.15.0
@@ -117,7 +117,9 @@ jobs:
           cmd_options: "-a -J zap_report.json -r zap_report.html"
 
       - name: Upload ZAP HTML Report
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: zap-html-report
           path: zap_report.html
+          if-no-files-found: ignore

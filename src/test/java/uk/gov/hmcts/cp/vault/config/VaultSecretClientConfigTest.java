@@ -45,19 +45,19 @@ class VaultSecretClientConfigTest {
     void secretClient_should_build_azure_client_when_vault_enabled() throws Exception {
         VaultServiceConfig vaultConfig = new VaultServiceConfig(
                 true,
-                "https://example.vault.azure.net/",
+                "https://localhost:8443/",
                 "00000000-0000-0000-0000-000000000001");
         VaultSecretClientConfig clientConfig = new VaultSecretClientConfig(vaultConfig, azureSecretService, emulatorSecretService);
         when(azureSecretService.build(
-                "https://example.vault.azure.net/",
+                "https://localhost:8443/",
                 "00000000-0000-0000-0000-000000000001")).thenReturn(emulatorSecretClient);
 
         SecretClient result = clientConfig.secretClient();
 
         assertThat(result).isSameAs(emulatorSecretClient);
         verify(azureSecretService).build(
-                "https://example.vault.azure.net/",
+                "https://localhost:8443/",
                 "00000000-0000-0000-0000-000000000001");
-        verify(emulatorSecretService, never()).build("https://example.vault.azure.net/");
+        verify(emulatorSecretService, never()).build("https://localhost:8443/");
     }
 }
