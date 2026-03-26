@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
                 .body(errorResponse(ERROR_NOT_FOUND, exception.getMessage()));
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class})
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(final MethodArgumentNotValidException exception) {
         final String message = exception.getBindingResult().getFieldErrors().stream()
                 .map(GlobalExceptionHandler::toMessage)
@@ -54,6 +54,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse(ERROR_INVALID_REQUEST, message));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(final IllegalArgumentException exception) {
+        log.error("NotFoundException {}", exception.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse(ERROR_INVALID_REQUEST, exception.getMessage()));
     }
 
     @SuppressWarnings("PMD.OnlyOneReturn")
