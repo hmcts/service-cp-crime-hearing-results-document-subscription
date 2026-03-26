@@ -1,7 +1,6 @@
 package uk.gov.hmcts.cp.servicebus.services;
 
 import com.azure.core.util.BinaryData;
-import com.azure.messaging.servicebus.ServiceBusClientBuilder;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
 import org.junit.jupiter.api.Test;
@@ -24,7 +23,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusProcessorServiceTest {
@@ -85,9 +84,9 @@ class ServiceBusProcessorServiceTest {
         when(wrappedMessage.getMessage()).thenReturn("message");
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context);
 
-        verify(serviceBusHandlers).handleMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "message");
+        verify(serviceBusHandlers).handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
     }
 
     @Test
@@ -101,13 +100,13 @@ class ServiceBusProcessorServiceTest {
         when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
-                .handleMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "message");
+                .handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
 
         when(configService.getMaxTries()).thenReturn(2);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context);
+        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context);
 
-        verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "wrapped-message", 1);
+        verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "wrapped-message", 1);
     }
 
     @Test
@@ -119,9 +118,9 @@ class ServiceBusProcessorServiceTest {
         when(wrappedMessage.getMessage()).thenReturn("message");
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
-                .handleMessage(PCR_OUTBOUND_TOPIC, callbackUrl, "message");
+                .handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
         when(configService.getMaxTries()).thenReturn(1);
 
-        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_TOPIC, context));
+        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context));
     }
 }

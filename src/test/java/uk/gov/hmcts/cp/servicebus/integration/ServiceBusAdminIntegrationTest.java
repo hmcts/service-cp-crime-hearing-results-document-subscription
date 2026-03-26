@@ -1,7 +1,6 @@
 package uk.gov.hmcts.cp.servicebus.integration;
 
-import com.azure.messaging.servicebus.administration.models.SubscriptionProperties;
-import com.azure.messaging.servicebus.administration.models.TopicProperties;
+import com.azure.messaging.servicebus.administration.models.QueueProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,16 +35,14 @@ public class ServiceBusAdminIntegrationTest {
     }
 
     @Test
-    void admin_client_should_create_new_topic_and_subscription_and_delete() {
-        String queueName = "pcr-inbound";
-        testService.dropTopicIfExists(queueName);
-        adminService.createTopicAndSubscription(queueName);
-        List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
-        assertThat(topics.contains(queueName));
-        List<String> subscriptions = configService.adminClient().listSubscriptions(queueName).stream().map(SubscriptionProperties::getSubscriptionName).toList();
-        assertThat(subscriptions.contains(queueName));
+    void admin_client_should_create_new_queue_and_delete() {
+        String queueName = "pcr.inbound";
+        testService.dropQueueIfExists(queueName);
+        adminService.createQueue(queueName);
+        List<String> queues = configService.adminClient().listQueues().stream().map(QueueProperties::getName).toList();
+        assertThat(queues.contains(queueName));
 
-        adminService.createTopicAndSubscription(queueName);
-        testService.dropTopicIfExists(queueName);
+        adminService.createQueue(queueName);
+        testService.dropQueueIfExists(queueName);
     }
 }

@@ -17,10 +17,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
-import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.servicebus.integration.ServiceBusTestService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
+import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
@@ -41,8 +41,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
@@ -91,15 +91,15 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
-        testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
-        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
-        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
+        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
+        testService.dropQueueIfExists(PCR_INBOUND_QUEUE);
+        adminService.createQueue(PCR_INBOUND_QUEUE);
+        processorService.startMessageProcessor(PCR_INBOUND_QUEUE);
 
-        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
-        testService.dropTopicIfExists(PCR_OUTBOUND_TOPIC);
-        adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
-        processorService.startMessageProcessor(PCR_OUTBOUND_TOPIC);
+        processorService.stopMessageProcessor(PCR_OUTBOUND_QUEUE);
+        testService.dropQueueIfExists(PCR_OUTBOUND_QUEUE);
+        adminService.createQueue(PCR_OUTBOUND_QUEUE);
+        processorService.startMessageProcessor(PCR_OUTBOUND_QUEUE);
 
         WireMock.reset();
         if (nonNull(callbackWireMock)) {
@@ -110,8 +110,8 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @AfterEach
     void afterEach() {
-        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
-        processorService.stopMessageProcessor(PCR_OUTBOUND_TOPIC);
+        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
+        processorService.stopMessageProcessor(PCR_OUTBOUND_QUEUE);
     }
 
     @Test
