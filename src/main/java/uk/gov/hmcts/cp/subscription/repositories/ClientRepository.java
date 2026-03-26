@@ -22,5 +22,4 @@ public interface ClientRepository extends JpaRepository<ClientEntity, UUID> {
     int updateCallbackUrl(@Param("clientId") UUID clientId,
                            @Param("callbackUrl") String callbackUrl,
                            @Param("updatedAt") OffsetDateTime updatedAt);
-
 }
