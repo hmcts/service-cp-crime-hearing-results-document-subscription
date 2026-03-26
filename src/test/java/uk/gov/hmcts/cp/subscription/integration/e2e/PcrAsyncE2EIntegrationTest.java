@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.integration.e2e;
 
+import com.azure.security.keyvault.secrets.SecretClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
@@ -35,6 +36,7 @@ import static java.util.Objects.nonNull;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -60,7 +62,9 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
         "servicebus.enabled=true",
         "service-bus.retry.msecs=0,500,1000,5000",
         "material-client.retry.intervalMilliSecs=100",
-        "material-client.retry.timeoutMilliSecs=500"
+        "material-client.retry.timeoutMilliSecs=500",
+        "vault.enabled=false",
+        "vault.uri=https://test-vault"
 })
 @Slf4j
 class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
@@ -84,6 +88,9 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @Value("${callback-client.url}")
     private String callbackBaseUrl;
+
+    @Autowired
+    private SecretClient secretClient;
 
     @MockitoSpyBean
     private MaterialClient materialClient;
@@ -125,7 +132,9 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
         then_the_subscriber_receives_a_callback();
         then_the_subscriber_can_retrieve_the_document();
+        then_vault_secret_was_stored(); //TODO
     }
+
 
     @Test
     void callback_client_not_responding_should_try_3_times_in_4_seconds() throws Exception {
@@ -203,5 +212,9 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     private void createSubscription() throws Exception {
         subscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+    }
+
+    private void then_vault_secret_was_stored() {
+        verify(secretClient, atLeastOnce()).setSecret(anyString(), anyString());
     }
 }

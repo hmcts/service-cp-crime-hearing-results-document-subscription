@@ -10,6 +10,9 @@ echo "STARTED project ${projectname} at $(date)"
 
 ./build-docker.sh
 
+chmod +x ./setup-emulator-certs.sh
+./setup-emulator-certs.sh
+
 echo "Running docker compose up --wait ... (waits for all healthchecks to pass, timeout 10 min)"
 export DOCKER_IMAGE=$projectname
 

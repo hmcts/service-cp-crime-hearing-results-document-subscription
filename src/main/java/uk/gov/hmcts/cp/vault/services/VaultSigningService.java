@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.hmac.services;
+package uk.gov.hmcts.cp.vault.services;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ import java.util.Base64;
 
 @Slf4j
 @Service
-public class HmacSigningService {
+public class VaultSigningService {
 
     private static final String HMAC_SHA_256 = "HmacSHA256";
 

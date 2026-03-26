@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.EncodingService;
+import uk.gov.hmcts.cp.vault.model.KeyPair;
+import uk.gov.hmcts.cp.vault.services.Base64EncodingService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -90,7 +90,7 @@ class SubscriptionMapperTest {
         assertThat(subscription.getCreatedAt()).isEqualTo(createdAt.toInstant());
         assertThat(subscription.getUpdatedAt()).isEqualTo(updatedAt.toInstant());
         assertThat(subscription.getHmac().getKeyId()).isEqualTo(hmac.getKeyId());
-        String expectedSecretString = new EncodingService().encodeWithBase64(hmac.getSecret());
+        String expectedSecretString = new Base64EncodingService().encodeWithBase64(hmac.getSecret());
         assertThat(subscription.getHmac().getSecret()).isEqualTo(expectedSecretString);
     }
 

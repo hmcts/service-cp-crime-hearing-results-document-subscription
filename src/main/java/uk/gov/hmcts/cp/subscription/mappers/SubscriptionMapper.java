@@ -4,8 +4,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import org.mapstruct.NullValueMappingStrategy;
-import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.EncodingService;
+import uk.gov.hmcts.cp.vault.model.KeyPair;
+import uk.gov.hmcts.cp.vault.services.Base64EncodingService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -56,7 +56,7 @@ public interface SubscriptionMapper {
 
     @Named("encodeToBase64")
     static String encodeToBase64(final byte[] bytes) {
-        return new EncodingService().encodeWithBase64(bytes);
+        return new Base64EncodingService().encodeWithBase64(bytes);
     }
 
     static NotificationEndpoint mapToNotificationEndpoint(final String endpointUrl) {

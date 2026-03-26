@@ -5,12 +5,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
+import uk.gov.hmcts.cp.vault.model.KeyPair;
+import uk.gov.hmcts.cp.vault.services.VaultKeyService;
+import uk.gov.hmcts.cp.vault.services.VaultSigningService;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
@@ -33,6 +34,8 @@ class CallbackDeliveryServiceTest {
     @Mock
     ServiceBusConfigService serviceBusConfigService;
     @Mock
+    ServiceBusClientService serviceBusClientService;
+    @Mock
     JsonMapper jsonMapper;
     @Mock
     SubscriptionRepository subscriptionRepository;
@@ -43,9 +46,9 @@ class CallbackDeliveryServiceTest {
     @Mock
     CallbackService callbackService;
     @Mock
-    HmacKeyService hmacKeyService;
+    VaultKeyService vaultKeyService;
     @Mock
-    HmacSigningService hmacSigningService;
+    VaultSigningService vaultSigningService;
 
     @InjectMocks
     private CallbackDeliveryService callbackDeliveryService;
@@ -61,12 +64,13 @@ class CallbackDeliveryServiceTest {
 
     @Test
     void submit_should_send_when_servicebus_disabled() {
+        when(serviceBusConfigService.isEnabled()).thenReturn(false);
         when(subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(subscriptionEntity));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.generateKey()).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
+        when(vaultKeyService.getKeyPair(subscriptionEntity.getId())).thenReturn(keyPair);
+        when(vaultSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
@@ -82,8 +86,8 @@ class CallbackDeliveryServiceTest {
         Subscriber exampleSubscriber = Subscriber.builder().notificationEndpoint(exampleCallbackUrl).build();
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(exampleSubscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.generateKey()).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
+        when(vaultKeyService.getKeyPair(subscriptionEntity.getId())).thenReturn(keyPair);
+        when(vaultSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
