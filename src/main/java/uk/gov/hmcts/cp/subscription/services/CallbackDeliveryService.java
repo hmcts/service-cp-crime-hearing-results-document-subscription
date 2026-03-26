@@ -27,6 +27,8 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
 @Slf4j
 public class CallbackDeliveryService {
 
+    private static final String EXAMPLE_ENDPOINT = "https://example.com";
+
     private final SubscriptionRepository subscriptionRepository;
     private final SubscriberMapper subscriberMapper;
     private final NotificationMapper notificationMapper;
@@ -47,7 +49,9 @@ public class CallbackDeliveryService {
             final KeyPair keyPair = hmacKeyService.generateKey();
             final String signature = hmacSigningService.sign(keyPair.getSecret(), jsonMapper.toJson(eventNotificationPayload));
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, keyPair.getKeyId(), signature);
-            if (serviceBusConfig.isEnabled()) {
+            if (subscriber.getNotificationEndpoint().startsWith(EXAMPLE_ENDPOINT)) {
+                log.info("Skipping notification for EXAMPLE callback endpoint:{}", subscriber.getNotificationEndpoint());
+            } else if (serviceBusConfig.isEnabled()) {
                 final String payload = jsonMapper.toJson(payloadWrapper);
                 clientService.queueMessage(PCR_OUTBOUND_TOPIC, subscriber.getNotificationEndpoint(), payload, 0);
             } else {

@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -71,9 +74,20 @@ class CallbackDeliveryServiceTest {
         verify(callbackService).sendToSubscriber(callbackUrl, payloadWrapper);
     }
 
-    void submit_should_send_when_servicebus_enabled() {
-        when(serviceBusConfigService.isEnabled()).thenReturn(true);
+    @Test
+    void submit_should_skip_when_example_endpoint() {
+        when(subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(subscriptionEntity));
+        when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
+        String exampleCallbackUrl = "https://example.com/demo";
+        Subscriber exampleSubscriber = Subscriber.builder().notificationEndpoint(exampleCallbackUrl).build();
+        when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(exampleSubscriber);
+        when(jsonMapper.toJson(payload)).thenReturn("{payload}");
+        when(hmacKeyService.generateKey()).thenReturn(keyPair);
+        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
+        when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
+
+        verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));
     }
 }
