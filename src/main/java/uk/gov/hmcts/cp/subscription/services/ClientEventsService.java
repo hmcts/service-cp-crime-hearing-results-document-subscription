@@ -40,6 +40,21 @@ public class ClientEventsService {
         clientEventsRepository.saveAll(clientEventEntityList);
     }
 
+    public void updateClientInfo(final ClientSubscription clientSubscription, final UUID clientId) {
+        clientRepository.updateCallbackUrl(clientId,
+                clientSubscription.getNotificationEndpoint().getCallbackUrl(),
+                clockService.nowOffsetUTC());
+        clientEventsRepository.deleteBySubscriptionId(clientSubscription.getClientSubscriptionId());
+        final List<ClientEventEntity> clientEventEntityList = clientEventMapper.mapToClientEventEntityList(
+                clientSubscription.getClientSubscriptionId(), getEventTypes(clientSubscription));
+        clientEventsRepository.saveAll(clientEventEntityList);
+    }
+
+    public void deleteClientInfo(final UUID clientSubscriptionId, final UUID clientId) {
+        clientEventsRepository.deleteBySubscriptionId(clientSubscriptionId);
+        clientRepository.deleteById(clientId);
+    }
+
     /* package */
     Set<EventTypeEntity> getEventTypes(final ClientSubscription clientSubscription) {
         final List<EventTypeEntity> eventTypeEntities = eventTypeRepository.findAll();

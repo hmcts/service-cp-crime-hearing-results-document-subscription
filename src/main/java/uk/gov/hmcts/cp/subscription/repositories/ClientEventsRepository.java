@@ -25,4 +25,6 @@ public interface ClientEventsRepository extends JpaRepository<ClientEventEntity,
            "WHERE c.id = :clientId " +
            "ORDER BY et.eventName ASC")
     List<ClientEventEntity> findClientEventsWithEventTypes(@Param("clientId") UUID clientId);
+
+    void deleteBySubscriptionId(UUID subscriptionId);
 }

@@ -34,7 +34,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {
-        clearClientSubscriptionTable();
+        clearAllTables();
     }
 
     String correlationId = "7fb1372b-a701-4e3c-840d-e22cac5af69f";

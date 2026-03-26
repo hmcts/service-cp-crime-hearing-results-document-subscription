@@ -21,7 +21,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -64,8 +66,6 @@ class ClientEventsServiceTest {
         assertThat(result).containsExactly(eventType);
     }
 
-    // TODO : write a test for multiple events and invalid event types in next commit AMP-197
-
     @Test
     void getEventTypes_should_handle_duplicate_event_types_in_subscription() {
         EventTypeEntity eventType = getEventTypeEntity();
@@ -81,6 +81,19 @@ class ClientEventsServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result).contains(eventType);
+    }
+
+    @Test
+    void getEventTypes_should_throw_for_unknown_event_type() {
+        ClientSubscription clientSubscription = getClientSubscription(UUID.randomUUID(), List.of(
+                "PRISON_COURT_REGISTER_GENERATED"
+        ));
+
+        when(eventTypeRepository.findAll()).thenReturn(List.of());
+
+        assertThatThrownBy(() -> clientEventsService.getEventTypes(clientSubscription))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid event type");
     }
 
     @Test
@@ -114,6 +127,41 @@ class ClientEventsServiceTest {
         verify(eventTypeRepository).findAll();
         verify(clientRepository).save(clientEntity);
         verify(clientEventsRepository).saveAll(any());
+    }
+
+    @Test
+    void updateClientInfo_should_update_callback_url_and_replace_events() {
+        UUID clientId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
+
+        EventTypeEntity eventType = getEventTypeEntity();
+        ClientEventEntity clientEventEntity = ClientEventEntity.builder()
+                .eventTypeId(1L)
+                .subscriptionId(subscriptionId)
+                .build();
+        ClientSubscription clientSubscription = getClientSubscription(subscriptionId, List.of(
+                "PRISON_COURT_REGISTER_GENERATED"
+        ));
+
+        when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
+        when(clientEventMapper.mapToClientEventEntityList(subscriptionId, Set.of(eventType))).thenReturn(List.of(clientEventEntity));
+
+        clientEventsService.updateClientInfo(clientSubscription, clientId);
+
+        verify(clientRepository).updateCallbackUrl(eq(clientId), eq("https://example.com/callback"), any());
+        verify(clientEventsRepository).deleteBySubscriptionId(subscriptionId);
+        verify(clientEventsRepository).saveAll(any());
+    }
+
+    @Test
+    void deleteClientInfo_should_delete_events_and_client() {
+        UUID clientSubscriptionId = UUID.randomUUID();
+        UUID clientId = UUID.randomUUID();
+
+        clientEventsService.deleteClientInfo(clientSubscriptionId, clientId);
+
+        verify(clientEventsRepository).deleteBySubscriptionId(clientSubscriptionId);
+        verify(clientRepository).deleteById(clientId);
     }
 
     private static EventTypeEntity getEventTypeEntity() {

@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
+import uk.gov.hmcts.cp.subscription.services.ClientEventsService;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
@@ -44,6 +45,8 @@ class SubscriptionServiceTest {
     HmacKeyService hmacKeyService;
     @Mock
     EventTypeService eventTypeService;
+    @Mock
+    ClientEventsService clientEventsService;
 
     @InjectMocks
     SubscriptionService subscriptionService;
@@ -83,6 +86,7 @@ class SubscriptionServiceTest {
         ClientSubscription result = subscriptionService.createSubscription(createRequest, clientId);
 
         assertThat(result).isEqualTo(response);
+        verify(clientEventsService).saveClientInfo(response, clientId);
     }
 
     @Test
@@ -131,6 +135,7 @@ class SubscriptionServiceTest {
         ClientSubscription result = subscriptionService.updateSubscription(subscriptionId, updateRequest, clientId);
 
         assertThat(result).isEqualTo(response);
+        verify(clientEventsService).updateClientInfo(response, clientId);
     }
 
     @Test
@@ -151,5 +156,6 @@ class SubscriptionServiceTest {
 
         verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
         verify(subscriptionRepository).delete(savedEntity);
+        verify(clientEventsService).deleteClientInfo(subscriptionId, clientId);
     }
 }
