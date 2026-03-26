@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.hmac.services;
+package uk.gov.hmcts.cp.vault.services;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,13 +13,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EncodingServiceTest {
 
     @InjectMocks
-    EncodingService encodingService;
+    Base64EncodingService base64EncodingService;
 
     @Test
     void bytes_should_encode_and_decode() {
         byte[] bytes = "A secret".getBytes(StandardCharsets.UTF_8);
-        String encoded = encodingService.encodeWithBase64(bytes);
-        byte[] bytesAgain = encodingService.decodeFromBase64(encoded);
+        String encoded = base64EncodingService.encodeWithBase64(bytes);
+        byte[] bytesAgain = base64EncodingService.decodeFromBase64(encoded);
         assertThat(bytesAgain).isEqualTo(bytes);
     }
 }

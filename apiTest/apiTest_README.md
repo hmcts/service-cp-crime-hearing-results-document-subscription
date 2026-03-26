@@ -48,13 +48,15 @@ cd apiTest
 
 1. **Builds the root project's bootJar** - The application JAR is built first
 2. **Builds Docker images** - Creates the application Docker image
-3. **Starts Docker containers**:
+3. **Generates Key Vault emulator certs** - Creates `apiTest/certs/*` via `setup-emulator-certs.sh`
+4. **Starts Docker containers**:
    - PostgreSQL database (port 5432)
    - Application server (port 8082)
    - WireMock server (port 9999)
    - Service Bus
-4. **Runs tests** - Executes all test classes
-5. **Stops and removes containers** - Cleanup after tests complete
+   - Azure Key Vault emulator (port 4997)
+5. **Runs tests** - Executes all test classes
+6. **Stops and removes containers** - Cleanup after tests complete
 
 ## Test Reports
 
@@ -107,5 +109,6 @@ Tests use the following default configuration:
 - Application base URL: `http://localhost:8082` (can be overridden with `app.baseUrl` system property)
 - Database: PostgreSQL on port 5432
 - WireMock: Port 9999
+- Vault mode: emulator (`VAULT_ENABLED=false`, `AZURE_VAULT_URI=https://keyvault-emulator:4997`)
 
 

@@ -108,6 +108,30 @@ curl http://localhost:4550/actuator/health
 | Document Service | `DOCUMENT_SERVICE_URL` (default: `http://localhost:8082`) | Retrieve document content for subscribers | Configured via `DocumentService` |
 | Callback URLs | `ClientSubscriptionEntity.notificationEndpoint` | Deliver notifications to subscribers | Configurable retry in `callback-client.retry` (interval/timeout milliseconds) |
 
+### HMAC Key Management & Signing
+
+Each subscription has a unique HMAC secret (`HmacSHA256`) used to sign outbound notification payloads, allowing subscribers to verify authenticity. Key classes are in `uk.gov.hmcts.cp.hmac`.
+
+- **On subscription create**: `HmacKeyService.generateAndStore()` generates a `KeyPair` (keyId + 32-byte secret), stores it via `SecretService` under `amp-subscriptions-{subscriptionId}`. The `keyId` and `secret` are returned to the caller in the subscription response.
+- **On callback delivery**: `HmacKeyService.getKeyPair()` fetches from `SecretService`. `HmacSigningService.sign()` computes `HmacSHA256(secret, payload)` and includes the signature and `keyId` in the outbound wrapper.
+- **`HmacKeyService`** has no knowledge of the underlying secret store — it only calls `SecretService`.
+- **`VaultSecretStore`** abstraction is implemented by `KeyVaultSecretStore`, backed by `SecretClient`.
+- **SecretClient source** is selected by `vault.enabled`:
+  - `true` (default): Azure Key Vault via `DefaultAzureCredential`.
+  - `false`: local Key Vault emulator client.
+- **Production**: keep `vault.enabled=true` so Azure `SecretClient` is used.
+- **Integration tests**: either mock `SecretService` directly (`@MockitoBean SecretService secretService`), or mock the underlying vault (`@MockitoBean SecretClient secretClient` with `@TestPropertySource(properties = {"vault.enabled=false", "vault.uri=https://test-vault"})`)
+
+#### Azure Key Vault Configuration
+
+| Property | Env var | Default | Description |
+|----------|---------|---------|-------------|
+| `vault.enabled` | `VAULT_ENABLED` | `true` | `true` = Azure Key Vault client, `false` = local emulator client |
+| `vault.uri` | `AZURE_VAULT_URI` | _(empty)_ | Full vault URL, e.g. `https://<vault-name>.vault.azure.net/` |
+| `vault.client-id` | `AZURE_CLIENT_ID` | `00000000-0000-0000-0000-000000000000` | Managed Identity client ID passed to `DefaultAzureCredential` |
+
+Secret naming convention in the vault: `amp-subscriptions-{subscriptionId}`. `KeyPair.keyId` uses `kid-{subscriptionId}`. `SecretClient` selection is based on `vault.enabled`. Authentication for Azure mode uses `DefaultAzureCredential` — in AKS this resolves to the pod's Managed Identity.
+
 ### Azure Service Bus (Optional)
 
 - **Enable**: Set `SERVICE_BUS_ENABLED=true`
@@ -161,7 +185,7 @@ curl http://localhost:4550/actuator/health
 
 - **Client ID resolution**: `ClientIdResolutionFilter` extracts client from request, stores in MDC under key `ClientIdResolutionFilter.MDC_CLIENT_ID`
 - **All queries must filter by client ID**: `subscriptionRepository.findByIdAndClientId(id, clientId)`
-- **HMAC authentication** (optional): `SubscriptionService.saveSubscription()` generates HMAC credentials; see `HmacKeyStore`
+- **HMAC authentication**: See dedicated section below
 - **Correlation ID**: `TracingFilter` adds `X-Correlation-Id` to MDC (key: `CORRELATION_ID_KEY`) for request tracing
 
 ### 5. **Error Handling**

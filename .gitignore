@@ -4,6 +4,7 @@ bin/*
 /build/
 apiTest/build/
 apiTest/.gradle/
+apiTest/certs/
 /gradlew.bat
 !gradle/wrapper/gradle-wrapper.properties
 *.class

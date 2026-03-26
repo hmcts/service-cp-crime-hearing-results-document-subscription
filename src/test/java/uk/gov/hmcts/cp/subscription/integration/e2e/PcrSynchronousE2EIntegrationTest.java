@@ -58,7 +58,9 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
         "subscription.oauth-enabled=true",
         "service-bus.enabled=false",
         "material-client.retry.intervalMilliSecs=100",
-        "material-client.retry.timeoutMilliSecs=500"
+        "material-client.retry.timeoutMilliSecs=500",
+        "vault.enabled=false",
+        "vault.uri=https://test-vault"
 })
 class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 

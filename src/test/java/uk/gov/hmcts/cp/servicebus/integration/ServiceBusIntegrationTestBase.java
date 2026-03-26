@@ -1,9 +1,11 @@
 package uk.gov.hmcts.cp.servicebus.integration;
 
+import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
@@ -12,6 +14,9 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 @Slf4j
 @SpringBootTest
 public class ServiceBusIntegrationTestBase {
+
+    @MockitoBean
+    protected SecretClient secretClient;
 
     @Autowired
     protected ServiceBusAdminService adminService;

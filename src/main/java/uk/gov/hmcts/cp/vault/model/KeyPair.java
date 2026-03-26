@@ -1,4 +1,4 @@
-package uk.gov.hmcts.cp.hmac.model;
+package uk.gov.hmcts.cp.vault.model;
 
 import lombok.Builder;
 import lombok.Getter;
