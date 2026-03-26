@@ -8,6 +8,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.filters.CorrelationIdService;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
@@ -56,7 +58,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.createdAt").exists())
                 .andExpect(jsonPath("$.hmac.keyId").value("kid_f4f5dc10-d6d8-4e94-8b02-459c4121aad0"))
                 .andExpect(jsonPath("$.hmac.secret").value(expectedSecret));
-        assertThatEventTypesAreSortedInDatabase();
+        assertDatabaseState();
     }
 
     @Test
@@ -68,9 +70,12 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                         .content(body))
                 .andExpect(status().isCreated());
 
-        List<ClientSubscriptionEntity> saved = subscriptionRepository.findAll();
-        assertThat(saved).hasSize(1);
-        String existingId = saved.get(0).getId().toString();
+        List<ClientSubscriptionEntity> savedSubscriptions = subscriptionRepository.findAll();
+        assertThat(savedSubscriptions).hasSize(1);
+        String existingId = savedSubscriptions.getFirst().getId().toString();
+        List<ClientEventEntity> clientEventEntityList = clientEventsRepository.findAll();
+        assertThat(clientEventEntityList).hasSize(1);
+        assertThat(clientEventEntityList.getFirst().getSubscriptionId().toString()).isEqualTo(existingId);
 
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
@@ -82,9 +87,18 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").value("subscription already exist with " + existingId));
     }
 
-    private void assertThatEventTypesAreSortedInDatabase() {
+    private void assertDatabaseState() {
         List<ClientSubscriptionEntity> entities = subscriptionRepository.findAll();
         assertThat(entities).hasSize(1);
         assertThat(entities.getFirst().getEventTypes().getFirst()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
+
+        List<ClientEventEntity> clientEventEntityList = clientEventsRepository.findAll();
+        assertThat(clientEventEntityList).hasSize(1);
+        assertThat(clientEventEntityList.getFirst().getSubscriptionId().toString()).isEqualTo(entities.getFirst().getId().toString());
+
+        List<ClientEntity> clientEvents = clientRepository.findAll();
+        assertThat(clientEvents).hasSize(1);
+        assertThat(clientEvents.getFirst().getId()).isEqualTo(entities.getFirst().getClientId());
+
     }
 }

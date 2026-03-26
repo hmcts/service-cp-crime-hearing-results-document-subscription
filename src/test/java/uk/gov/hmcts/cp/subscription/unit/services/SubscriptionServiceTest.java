@@ -156,6 +156,6 @@ class SubscriptionServiceTest {
 
         verify(subscriptionRepository).findByIdAndClientId(subscriptionId, clientId);
         verify(subscriptionRepository).delete(savedEntity);
-        verify(clientEventsService).deleteClientInfo(subscriptionId, clientId);
+        verify(clientEventsService).deleteClientSubscription(subscriptionId, clientId);
     }
 }

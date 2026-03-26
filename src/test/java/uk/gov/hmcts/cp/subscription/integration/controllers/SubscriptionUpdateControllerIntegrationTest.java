@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
@@ -42,6 +44,7 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").value(existing.getId().toString()))
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
+        verifyClientEntitiesInDb(existing);
         verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(existing.getId(), existing.getCreatedAt());
     }
 
@@ -69,6 +72,18 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                         .content(body))
                 .andDo(print())
                 .andExpect(status().isNotFound());
+    }
+
+    private void verifyClientEntitiesInDb(ClientSubscriptionEntity existing) {
+        List<ClientEventEntity> clientEventEntityList = clientEventsRepository.findAll();
+        assertThat(clientEventEntityList).hasSize(1);
+        assertThat(clientEventEntityList.getFirst().getSubscriptionId().toString()).isEqualTo(existing.getId().toString());
+        assertThat(clientEventEntityList.getFirst().getEventTypeId()).isEqualTo(1);
+
+        List<ClientEntity> clientEvents = clientRepository.findAll();
+        assertThat(clientEvents).hasSize(1);
+        assertThat(clientEvents.getFirst().getId()).isEqualTo(existing.getClientId());
+        assertThat(clientEvents.getFirst().getCallbackUrl()).isEqualTo("https://my-callback-url");
     }
 
     // Pipeline fails because expected is nanoSecs and actual is microSecs

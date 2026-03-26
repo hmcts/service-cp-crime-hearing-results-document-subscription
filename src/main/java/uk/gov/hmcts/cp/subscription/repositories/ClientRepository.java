@@ -13,9 +13,9 @@ import java.util.UUID;
 @Repository
 public interface ClientRepository extends JpaRepository<ClientEntity, UUID> {
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE ClientEntity c SET c.callbackUrl = :callbackUrl, c.updatedAt = :updatedAt WHERE c.id = :clientId")
-    void updateCallbackUrl(@Param("clientId") UUID clientId,
+    int updateCallbackUrl(@Param("clientId") UUID clientId,
                            @Param("callbackUrl") String callbackUrl,
                            @Param("updatedAt") OffsetDateTime updatedAt);
 

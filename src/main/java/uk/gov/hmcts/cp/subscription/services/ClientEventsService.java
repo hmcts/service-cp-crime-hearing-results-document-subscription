@@ -3,6 +3,7 @@ package uk.gov.hmcts.cp.subscription.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
@@ -32,6 +33,7 @@ public class ClientEventsService {
 
     private final ClockService clockService;
 
+    @Transactional
     public void saveClientInfo(final ClientSubscription clientSubscription, final UUID clientId) {
         final ClientEntity clientEntity = clientMapper.mapToClientEntity(clockService, clientSubscription, clientId);
         clientRepository.save(clientEntity);
@@ -40,17 +42,23 @@ public class ClientEventsService {
         clientEventsRepository.saveAll(clientEventEntityList);
     }
 
+    @Transactional
     public void updateClientInfo(final ClientSubscription clientSubscription, final UUID clientId) {
-        clientRepository.updateCallbackUrl(clientId,
+        int updatedRows = clientRepository.updateCallbackUrl(clientId,
                 clientSubscription.getNotificationEndpoint().getCallbackUrl(),
                 clockService.nowOffsetUTC());
+
+        if (updatedRows == 0) {
+            throw new IllegalStateException("No client found to update for id: " + clientId);
+        }
         clientEventsRepository.deleteBySubscriptionId(clientSubscription.getClientSubscriptionId());
         final List<ClientEventEntity> clientEventEntityList = clientEventMapper.mapToClientEventEntityList(
                 clientSubscription.getClientSubscriptionId(), getEventTypes(clientSubscription));
         clientEventsRepository.saveAll(clientEventEntityList);
     }
 
-    public void deleteClientInfo(final UUID clientSubscriptionId, final UUID clientId) {
+    @Transactional
+    public void deleteClientSubscription(final UUID clientSubscriptionId, final UUID clientId) {
         clientEventsRepository.deleteBySubscriptionId(clientSubscriptionId);
         clientRepository.deleteById(clientId);
     }

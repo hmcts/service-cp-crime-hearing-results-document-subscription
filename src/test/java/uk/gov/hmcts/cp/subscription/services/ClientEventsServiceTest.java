@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.subscription.services;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,7 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -144,6 +147,7 @@ class ClientEventsServiceTest {
         ));
 
         when(eventTypeRepository.findAll()).thenReturn(List.of(eventType));
+        when(clientRepository.updateCallbackUrl(eq(clientId), eq("https://example.com/callback"), any())).thenReturn(1);
         when(clientEventMapper.mapToClientEventEntityList(subscriptionId, Set.of(eventType))).thenReturn(List.of(clientEventEntity));
 
         clientEventsService.updateClientInfo(clientSubscription, clientId);
@@ -154,14 +158,35 @@ class ClientEventsServiceTest {
     }
 
     @Test
+    void updateClientInfo_throws_error_when_db_update_failed() {
+        UUID clientId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
+
+        ClientSubscription clientSubscription = getClientSubscription(subscriptionId, List.of(
+                "PRISON_COURT_REGISTER_GENERATED"
+        ));
+
+        when(clientRepository.updateCallbackUrl(eq(clientId), eq("https://example.com/callback"), any())).thenReturn(0);
+
+        assertThatThrownBy(() -> clientEventsService.updateClientInfo(clientSubscription, clientId))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No client found to update for id: " + clientId);
+
+        verify(clientRepository).updateCallbackUrl(eq(clientId), eq("https://example.com/callback"), any());
+        verifyNoInteractions(clientEventsRepository);
+    }
+
+    @Test
     void deleteClientInfo_should_delete_events_and_client() {
         UUID clientSubscriptionId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();
 
-        clientEventsService.deleteClientInfo(clientSubscriptionId, clientId);
+        clientEventsService.deleteClientSubscription(clientSubscriptionId, clientId);
 
-        verify(clientEventsRepository).deleteBySubscriptionId(clientSubscriptionId);
-        verify(clientRepository).deleteById(clientId);
+        InOrder inOrder = inOrder(clientEventsRepository, clientRepository);
+        inOrder.verify(clientEventsRepository).deleteBySubscriptionId(clientSubscriptionId);
+        inOrder.verify(clientRepository).deleteById(clientId);
+        inOrder.verifyNoMoreInteractions();
     }
 
     private static EventTypeEntity getEventTypeEntity() {

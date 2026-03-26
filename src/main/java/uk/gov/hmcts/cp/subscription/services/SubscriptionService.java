@@ -65,7 +65,7 @@ public class SubscriptionService {
     public void deleteSubscription(final UUID clientSubscriptionId, final UUID clientId) {
         final ClientSubscriptionEntity entity = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        clientEventsService.deleteClientInfo(clientSubscriptionId, clientId);
+        clientEventsService.deleteClientSubscription(clientSubscriptionId, clientId);
         subscriptionRepository.delete(entity);
     }
 
