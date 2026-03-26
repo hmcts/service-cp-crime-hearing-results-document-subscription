@@ -21,8 +21,8 @@ import java.net.URL;
 @Getter
 public class ServiceBusConfigService {
     public static final int ADMIN_CONNECTION_PORT = 5300;
-    public static final String PCR_INBOUND_TOPIC = "pcr-inbound";
-    public static final String PCR_OUTBOUND_TOPIC = "pcr-outbound";
+    public static final String PCR_INBOUND_QUEUE = "notifications.inbound";
+    public static final String PCR_OUTBOUND_QUEUE = "notifications.outbound";
 
     private boolean enabled;
     private String adminConnectionString;
@@ -67,18 +67,17 @@ public class ServiceBusConfigService {
                 .buildClient();
     }
 
-    public ServiceBusSenderClient senderClient(final String topicName) {
+    public ServiceBusSenderClient senderClient(final String queueName) {
         return clientBuilder()
                 .sender()
-                .topicName(topicName)
+                .queueName(queueName)
                 .buildClient();
     }
 
-    public ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder(final String topicName, final String subscriptionName) {
+    public ServiceBusClientBuilder.ServiceBusProcessorClientBuilder processorClientBuilder(final String queueName) {
         return clientBuilder()
                 .processor()
-                .topicName(topicName)
-                .subscriptionName(subscriptionName);
+                .queueName(queueName);
     }
 
     private ServiceBusClientBuilder clientBuilder() {

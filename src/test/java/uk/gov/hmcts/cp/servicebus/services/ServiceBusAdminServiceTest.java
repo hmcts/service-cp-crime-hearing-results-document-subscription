@@ -2,10 +2,9 @@ package uk.gov.hmcts.cp.servicebus.services;
 
 import com.azure.core.http.rest.PagedIterable;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
-import com.azure.messaging.servicebus.administration.models.CreateSubscriptionOptions;
-import com.azure.messaging.servicebus.administration.models.CreateTopicOptions;
+import com.azure.messaging.servicebus.administration.models.CreateQueueOptions;
+import com.azure.messaging.servicebus.administration.models.QueueProperties;
 import com.azure.messaging.servicebus.administration.models.SubscriptionProperties;
-import com.azure.messaging.servicebus.administration.models.TopicProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,23 +35,17 @@ class ServiceBusAdminServiceTest {
     @Mock
     ServiceBusAdministrationClient serviceBusAdministrationClient;
     @Mock
-    PagedIterable<TopicProperties> topics;
+    PagedIterable<QueueProperties> queues;
     @Mock
-    PagedIterable<SubscriptionProperties> subscriptions;
-    @Mock
-    TopicProperties topicProperties;
-    @Mock
-    SubscriptionProperties subscriptionProperties;
+    QueueProperties queueProperties;
 
     @Captor
-    ArgumentCaptor<CreateTopicOptions> topicCaptor;
-    @Captor
-    ArgumentCaptor<CreateSubscriptionOptions> subscriptionCaptor;
+    ArgumentCaptor<CreateQueueOptions> queueOptionCaptor;
 
     @Test
     void service_bus_started_should_return_true() {
         when(configService.adminClient()).thenReturn(serviceBusAdministrationClient);
-        when(serviceBusAdministrationClient.listTopics()).thenReturn(topics);
+        when(serviceBusAdministrationClient.listQueues()).thenReturn(queues);
 
         assertThat(adminService.isServiceBusReady()).isTrue();
     }
@@ -66,33 +59,23 @@ class ServiceBusAdminServiceTest {
     @Test
     void create_should_create_topic_and_subscription() {
         when(configService.adminClient()).thenReturn(serviceBusAdministrationClient);
-        when(serviceBusAdministrationClient.listTopics()).thenReturn(topics);
-        when(serviceBusAdministrationClient.listSubscriptions("topic1")).thenReturn(subscriptions);
+        when(serviceBusAdministrationClient.getQueueExists("queue1")).thenReturn(false);
 
-        adminService.createTopicAndSubscription("topic1");
+        adminService.createQueue("queue1");
 
-        verify(serviceBusAdministrationClient).createTopic(eq("topic1"), topicCaptor.capture());
-        assertThat(topicCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
-
-        verify(serviceBusAdministrationClient).createSubscription(eq("topic1"), eq("topic1"), subscriptionCaptor.capture());
-        assertThat(subscriptionCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
-        assertThat(subscriptionCaptor.getValue().getLockDuration()).isEqualTo(Duration.ofMinutes(1));
-        assertThat(subscriptionCaptor.getValue().getMaxDeliveryCount()).isEqualTo(1);
+        verify(serviceBusAdministrationClient).createQueue(eq("queue1"), queueOptionCaptor.capture());
+        assertThat(queueOptionCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
+        assertThat(queueOptionCaptor.getValue().getLockDuration()).isEqualTo(Duration.ofMinutes(1));
+        assertThat(queueOptionCaptor.getValue().getMaxDeliveryCount()).isEqualTo(1);
     }
 
     @Test
     void create_should_skip_topic_and_subscription_if_exists() {
         when(configService.adminClient()).thenReturn(serviceBusAdministrationClient);
-        when(serviceBusAdministrationClient.listTopics()).thenReturn(topics);
-        when(topics.stream()).thenReturn(Stream.of(topicProperties));
-        when(topicProperties.getName()).thenReturn("topic1");
-        when(serviceBusAdministrationClient.listSubscriptions("topic1")).thenReturn(subscriptions);
-        when(subscriptions.stream()).thenReturn(Stream.of(subscriptionProperties));
-        when(subscriptionProperties.getSubscriptionName()).thenReturn("topic1");
+        when(serviceBusAdministrationClient.getQueueExists("queue1")).thenReturn(true);
 
-        adminService.createTopicAndSubscription("topic1");
+        adminService.createQueue("queue1");
 
-        verify(serviceBusAdministrationClient, never()).createTopic(eq("topic1"), topicCaptor.capture());
-        verify(serviceBusAdministrationClient, never()).createSubscription(eq("topic1"), eq("topic1"), subscriptionCaptor.capture());
+        verify(serviceBusAdministrationClient, never()).createQueue(eq("queue1"), queueOptionCaptor.capture());
     }
 }
