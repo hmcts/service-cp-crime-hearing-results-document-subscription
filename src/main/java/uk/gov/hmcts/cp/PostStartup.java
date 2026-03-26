@@ -13,10 +13,10 @@ import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 @Service
 @AllArgsConstructor
 public class PostStartup {
-    EventTypeRepository eventTypeRepository;
+    private EventTypeRepository eventTypeRepository;
 
     @PostConstruct
-    void postStartupLogging() {
+    public void postStartupLogging() {
         log.info("Database contains {} eventTypes", eventTypeRepository.count());
     }
 }
