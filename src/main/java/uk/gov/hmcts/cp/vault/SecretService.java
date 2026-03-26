@@ -22,7 +22,9 @@ public class SecretService {
     @PostConstruct
     public void debugSecrets() {
         try {
-            final DefaultAzureCredential credential = defaultCredential();
+            final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder()
+                    .managedIdentityClientId(config.getVaultClientId().toString())
+                    .build();
             log.info("debugSecrets getting secret names from {}.", config.getVaultUri());
             final SecretClient secretClient = new SecretClientBuilder()
                     .vaultUrl(config.getVaultUri())
@@ -41,6 +43,8 @@ public class SecretService {
      * a) Using environment variables AZURE_CLIENT_ID, AZURE_TENANANT_ID, AZURE_CLIENT_SECRET, if set
      * b) Using az cli login credentials, if available
      */
+
+    @SuppressWarnings("unused")
     private DefaultAzureCredential defaultCredential() {
         log.info("Getting default azure credential");
         return new DefaultAzureCredentialBuilder().build();
