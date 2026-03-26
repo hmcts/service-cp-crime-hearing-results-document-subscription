@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
                 .body(errorResponse(ERROR_NOT_FOUND, exception.getMessage()));
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, IllegalArgumentException.class})
+    @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(final MethodArgumentNotValidException exception) {
         final String message = exception.getBindingResult().getFieldErrors().stream()
                 .map(GlobalExceptionHandler::toMessage)
