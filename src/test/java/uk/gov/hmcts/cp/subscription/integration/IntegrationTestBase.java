@@ -17,7 +17,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
-import uk.gov.hmcts.cp.subscription.repositories.ClientEventsRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
@@ -61,7 +61,7 @@ public abstract class IntegrationTestBase {
     protected ClientRepository clientRepository;
 
     @Autowired
-    protected ClientEventsRepository clientEventsRepository;
+    protected ClientEventRepository clientEventsRepository;
 
     @Autowired
     protected ClockService clockService;

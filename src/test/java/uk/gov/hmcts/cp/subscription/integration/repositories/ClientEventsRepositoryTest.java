@@ -17,78 +17,41 @@ class ClientEventsRepositoryTest extends IntegrationTestBase {
 
     @Transactional
     @Test
-    void findClientEventsWithEventTypes_should_return_events_for_client() {
-        UUID clientId = UUID.randomUUID();
-        UUID subscriptionId = UUID.randomUUID();
-        Long eventTypeId = 1L; // Assuming this exists in the database
-
-        ClientEntity client = getClientEntity(clientId, "https://example.com/callback", subscriptionId);
-        clientRepository.save(client);
-
-        ClientEventEntity clientEvent = ClientEventEntity.builder()
-                .subscriptionId(subscriptionId)
-                .eventTypeId(eventTypeId)
-                .build();
-        clientEventsRepository.save(clientEvent);
-
-        List<ClientEventEntity> result = clientEventsRepository.findClientEventsWithEventTypes(clientId);
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getSubscriptionId()).isEqualTo(subscriptionId);
-        assertThat(result.get(0).getEventTypeId()).isEqualTo(eventTypeId);
-    }
-
-    @Transactional
-    @Test
-    void findClientEventsWithEventTypes_should_return_empty_list_when_no_client_found() {
-        UUID nonExistentClientId = UUID.randomUUID();
-
-        List<ClientEventEntity> result = clientEventsRepository.findClientEventsWithEventTypes(nonExistentClientId);
-
-        assertThat(result).isNotNull();
-        assertThat(result).isEmpty();
-    }
-
-    @Transactional
-    @Test
-    void findClientEventsWithEventTypes_should_return_empty_when_client_exists_but_no_events() {
+    void findClientEventsWithEventTypes_should_return_events_ordered_by_event_name() {
         UUID clientId = UUID.randomUUID();
         UUID subscriptionId = UUID.randomUUID();
 
         ClientEntity client = getClientEntity(clientId, "https://example.com/callback", subscriptionId);
         clientRepository.save(client);
 
-        List<ClientEventEntity> result = clientEventsRepository.findClientEventsWithEventTypes(clientId);
-        assertThat(result).isEmpty();
-    }
-
-    @Transactional
-    @Test
-    void findClientEventsWithEventTypes_should_return_multiple_events_ordered_by_event_name() {
-        UUID clientId = UUID.randomUUID();
-        UUID subscriptionId = UUID.randomUUID();
-
-        ClientEntity client = getClientEntity(clientId, "https://example.com/callback", subscriptionId);
-        clientRepository.save(client);
-
-        ClientEventEntity event1 = ClientEventEntity.builder()
-                .subscriptionId(subscriptionId)
-                .eventTypeId(1L)
-                .build();
-
-        ClientEventEntity event2 = ClientEventEntity.builder()
-                .subscriptionId(subscriptionId)
-                .eventTypeId(2L)
-                .build();
+        ClientEventEntity event1 = getClientEventEntity(subscriptionId, 1L);
+        ClientEventEntity event2 = getClientEventEntity(subscriptionId, 2L);
 
         clientEventsRepository.save(event1);
         clientEventsRepository.save(event2);
 
-        List<ClientEventEntity> result = clientEventsRepository.findClientEventsWithEventTypes(clientId);
+        List<String> result = clientEventsRepository.findEventNamesForClient(clientId, subscriptionId);
 
         assertThat(result).hasSize(2);
-        assertThat(result.get(0).getSubscriptionId()).isEqualTo(subscriptionId);
-        assertThat(result.get(1).getSubscriptionId()).isEqualTo(subscriptionId);
+        assertThat(result.getFirst()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
+        assertThat(result.getLast()).isEqualTo("WEE_Layout5");
+    }
+
+    @Transactional
+    @Test
+    void countByClientSubscriptionAndEventName_should_return_count_if_event_exists() {
+        UUID clientId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
+
+        ClientEntity client = getClientEntity(clientId, "https://example.com/callback", subscriptionId);
+        clientRepository.save(client);
+
+        ClientEventEntity event = getClientEventEntity(subscriptionId, 1L);
+
+        clientEventsRepository.save(event);
+
+        long result = clientEventsRepository.countByClientSubscriptionAndEventName(clientId, subscriptionId, "PRISON_COURT_REGISTER_GENERATED");
+        assertThat(result).isEqualTo(1);
     }
 
     @Transactional
@@ -102,16 +65,40 @@ class ClientEventsRepositoryTest extends IntegrationTestBase {
         ClientEntity client = getClientEntity(clientId, "https://example.com/callback", subscriptionId);
         clientRepository.save(client);
 
-        ClientEventEntity clientEvent = ClientEventEntity.builder()
-                .subscriptionId(subscriptionId)
-                .eventTypeId(eventTypeId)
-                .build();
+        ClientEventEntity clientEvent = getClientEventEntity(subscriptionId, 1L);
 
         ClientEventEntity saved = clientEventsRepository.save(clientEvent);
         assertThat(saved).isNotNull();
         assertThat(saved.getId()).isGreaterThan(0);
         assertThat(saved.getSubscriptionId()).isEqualTo(subscriptionId);
         assertThat(saved.getEventTypeId()).isEqualTo(eventTypeId);
+    }
+
+    @Transactional
+    @Test
+    void deleteBySubscriptionId_should_delete_client_event_entity() {
+        UUID subscriptionId1 = UUID.randomUUID();
+        UUID subscriptionId2 = UUID.randomUUID();
+        UUID clientId1 = UUID.randomUUID();
+        UUID clientId2 = UUID.randomUUID();
+
+        ClientEntity client1 = getClientEntity(clientId1, "https://example.com/callback", subscriptionId1);
+        clientRepository.save(client1);
+
+        ClientEntity client2 = getClientEntity(clientId2, "https://example.com/callback", subscriptionId2);
+        clientRepository.save(client2);
+
+        ClientEventEntity clientEvent1 = getClientEventEntity(subscriptionId1, 1L);
+        ClientEventEntity clientEvent2 = getClientEventEntity(subscriptionId2, 2L);
+
+        clientEventsRepository.save(clientEvent1);
+        clientEventsRepository.save(clientEvent2);
+
+        clientEventsRepository.deleteBySubscriptionId(subscriptionId1);
+
+        List<ClientEventEntity> result = clientEventsRepository.findAll();
+        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getFirst().getSubscriptionId()).isEqualTo(subscriptionId2);
     }
 
     private static ClientEntity getClientEntity(UUID clientId, String callbackUrl, UUID subscriptionId) {
@@ -121,6 +108,13 @@ class ClientEventsRepositoryTest extends IntegrationTestBase {
                 .callbackUrl(callbackUrl)
                 .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
                 .updatedAt(OffsetDateTime.now(ZoneOffset.UTC))
+                .build();
+    }
+
+    private static ClientEventEntity getClientEventEntity(UUID subscriptionId, long eventId) {
+        return ClientEventEntity.builder()
+                .subscriptionId(subscriptionId)
+                .eventTypeId(eventId)
                 .build();
     }
 }

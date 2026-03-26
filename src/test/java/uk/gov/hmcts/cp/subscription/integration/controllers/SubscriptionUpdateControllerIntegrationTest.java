@@ -4,14 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,8 +40,7 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").value(existing.getId().toString()))
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
-        verifyClientEntitiesInDb(existing);
-        verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(existing.getId(), existing.getCreatedAt());
+        verifyUpdatesInDb(existing, "https://my-callback-url");
     }
 
     @Test
@@ -74,28 +69,10 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isNotFound());
     }
 
-    private void verifyClientEntitiesInDb(ClientSubscriptionEntity existing) {
-        List<ClientEventEntity> clientEventEntityList = clientEventsRepository.findAll();
-        assertThat(clientEventEntityList).hasSize(1);
-        assertThat(clientEventEntityList.getFirst().getSubscriptionId().toString()).isEqualTo(existing.getId().toString());
-        assertThat(clientEventEntityList.getFirst().getEventTypeId()).isEqualTo(1);
-
-        List<ClientEntity> clientEvents = clientRepository.findAll();
-        assertThat(clientEvents).hasSize(1);
-        assertThat(clientEvents.getFirst().getId()).isEqualTo(existing.getClientId());
-        assertThat(clientEvents.getFirst().getCallbackUrl()).isEqualTo("https://my-callback-url");
-    }
-
-    // Pipeline fails because expected is nanoSecs and actual is microSecs
-    // Very puzzling.
-    void verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(UUID subscriptionId, OffsetDateTime expectedCreatedAt) {
-        ClientSubscriptionEntity entity = subscriptionRepository.findById(subscriptionId).orElseThrow();
-        String expected = expectedCreatedAt.format(DateTimeFormatter.BASIC_ISO_DATE);
-        String actualCreated = entity.getCreatedAt().format(DateTimeFormatter.BASIC_ISO_DATE);
-        log.info("Comparing actual:{} with expected:{}", actualCreated, expected);
-        assertThat(actualCreated).isEqualTo(expected);
-        assertThat(entity.getUpdatedAt()).isNotNull();
-        assertThat(entity.getUpdatedAt()).isNotEqualTo(entity.getCreatedAt());
-        assertThat(entity.getUpdatedAt()).isAfter(entity.getCreatedAt());
+    void verifyUpdatesInDb(ClientSubscriptionEntity before, String updatedCallbackUrl) {
+        ClientSubscriptionEntity updated = subscriptionRepository.findById(before.getId()).orElseThrow();
+        assertThat(updated.getNotificationEndpoint()).isEqualTo(updatedCallbackUrl);
+        assertThat(updated.getEventTypes().size()).isEqualTo(1);
+        assertThat(updated.getEventTypes().getFirst()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
     }
 }

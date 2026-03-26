@@ -39,10 +39,9 @@ class ClientRepositoryTest extends IntegrationTestBase {
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
 
         ClientEntity client = getClientEntity(clientId, subscriptionId, "https://test.com/webhook", now);
-
         clientRepository.save(client);
 
-        Optional<ClientEntity> found = clientRepository.findById(clientId);
+        Optional<ClientEntity> found = clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId);
         assertThat(found.isPresent()).isTrue();
         assertThat(found.get().getId()).isEqualTo(clientId);
         assertThat(found.get().getSubscriptionId()).isEqualTo(subscriptionId);
@@ -52,8 +51,15 @@ class ClientRepositoryTest extends IntegrationTestBase {
     @Transactional
     @Test
     void findById_should_return_empty_when_client_not_found() {
+        UUID clientId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         UUID nonExistentId = UUID.randomUUID();
-        Optional<ClientEntity> found = clientRepository.findById(nonExistentId);
+
+        ClientEntity client = getClientEntity(clientId, subscriptionId, "https://test.com/webhook", now);
+        clientRepository.save(client);
+
+        Optional<ClientEntity> found = clientRepository.findByIdAndSubscriptionId(nonExistentId, subscriptionId);
         assertThat(found).isEmpty();
     }
 
@@ -78,6 +84,45 @@ class ClientRepositoryTest extends IntegrationTestBase {
         assertThat(saved.getCallbackUrl()).isEqualTo("https://updated.com/callback");
         assertThat(saved.getUpdatedAt()).isEqualTo(updatedTime);
         assertThat(saved.getCreatedAt()).isEqualTo(originalTime);
+    }
+
+    @Transactional
+    @Test
+    void delete_should_delete_entity() {
+        UUID clientId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+
+        ClientEntity client = getClientEntity(clientId, subscriptionId, "https://test.com/webhook", now);
+        clientRepository.save(client);
+
+        clientRepository.delete(client);
+
+        Optional<ClientEntity> found = clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId);
+        assertThat(found).isEmpty();
+    }
+
+    @Transactional
+    @Test
+    void exists_should_return_true() {
+        UUID clientId = UUID.randomUUID();
+        UUID subscriptionId = UUID.randomUUID();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+
+        ClientEntity client = getClientEntity(clientId, subscriptionId, "https://test.com/webhook", now);
+        clientRepository.save(client);
+
+        boolean exists = clientRepository.existsById(clientId);
+        assertThat(exists).isTrue();
+    }
+
+    @Transactional
+    @Test
+    void exists_should_return_false() {
+        UUID clientId = UUID.randomUUID();
+
+        boolean exists = clientRepository.existsById(clientId);
+        assertThat(exists).isFalse();
     }
 
     private static ClientEntity getClientEntity(UUID clientId, UUID subscriptionId, String callbackUrl, OffsetDateTime originalTime) {

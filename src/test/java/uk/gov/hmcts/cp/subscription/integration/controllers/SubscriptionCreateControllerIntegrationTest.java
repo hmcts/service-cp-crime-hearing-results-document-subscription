@@ -8,8 +8,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.filters.CorrelationIdService;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
@@ -73,9 +71,6 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
         List<ClientSubscriptionEntity> savedSubscriptions = subscriptionRepository.findAll();
         assertThat(savedSubscriptions).hasSize(1);
         String existingId = savedSubscriptions.getFirst().getId().toString();
-        List<ClientEventEntity> clientEventEntityList = clientEventsRepository.findAll();
-        assertThat(clientEventEntityList).hasSize(1);
-        assertThat(clientEventEntityList.getFirst().getSubscriptionId().toString()).isEqualTo(existingId);
 
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
@@ -91,14 +86,5 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
         List<ClientSubscriptionEntity> entities = subscriptionRepository.findAll();
         assertThat(entities).hasSize(1);
         assertThat(entities.getFirst().getEventTypes().getFirst()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
-
-        List<ClientEventEntity> clientEventEntityList = clientEventsRepository.findAll();
-        assertThat(clientEventEntityList).hasSize(1);
-        assertThat(clientEventEntityList.getFirst().getSubscriptionId().toString()).isEqualTo(entities.getFirst().getId().toString());
-
-        List<ClientEntity> clientEvents = clientRepository.findAll();
-        assertThat(clientEvents).hasSize(1);
-        assertThat(clientEvents.getFirst().getId()).isEqualTo(entities.getFirst().getClientId());
-
     }
 }

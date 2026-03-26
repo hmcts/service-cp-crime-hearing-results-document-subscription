@@ -25,7 +25,6 @@ public class SubscriptionService {
     private final ClockService clockService;
     private final SubscriptionRepository subscriptionRepository;
     private final EventTypeService eventTypeService;
-    private final ClientEventsService clientEventsService;
     private final SubscriptionMapper mapper;
     private final HmacKeyService hmacKeyService;
 
@@ -39,9 +38,7 @@ public class SubscriptionService {
         final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, clockService.nowOffsetUTC());
         subscriptionRepository.save(entity);
         final KeyPair keyPair = hmacKeyService.generateKey();
-        final ClientSubscription response = mapper.mapEntityToResponse(entity, keyPair);
-        clientEventsService.saveClientInfo(response, clientId);
-        return response;
+        return mapper.mapEntityToResponse(entity, keyPair);
     }
 
     @Transactional
@@ -49,9 +46,7 @@ public class SubscriptionService {
         final ClientSubscriptionEntity existing = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
         final ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, clockService.nowOffsetUTC());
-        final ClientSubscription response = mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
-        clientEventsService.updateClientInfo(response, clientId);
-        return response;
+        return mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
     }
 
     @Transactional
@@ -65,7 +60,6 @@ public class SubscriptionService {
     public void deleteSubscription(final UUID clientSubscriptionId, final UUID clientId) {
         final ClientSubscriptionEntity entity = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        clientEventsService.deleteClientSubscription(clientSubscriptionId, clientId);
         subscriptionRepository.delete(entity);
     }
 
