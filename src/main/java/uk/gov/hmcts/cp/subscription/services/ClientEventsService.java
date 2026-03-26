@@ -44,7 +44,7 @@ public class ClientEventsService {
 
     @Transactional
     public void updateClientInfo(final ClientSubscription clientSubscription, final UUID clientId) {
-        int updatedRows = clientRepository.updateCallbackUrl(clientId,
+        final int updatedRows = clientRepository.updateCallbackUrl(clientId,
                 clientSubscription.getNotificationEndpoint().getCallbackUrl(),
                 clockService.nowOffsetUTC());
 
