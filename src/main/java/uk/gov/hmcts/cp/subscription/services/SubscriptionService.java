@@ -46,7 +46,8 @@ public class SubscriptionService {
         final ClientSubscriptionEntity existing = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
         final ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, clockService.nowOffsetUTC());
-        return mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
+        final ClientSubscription response = mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
+        return response;
     }
 
     @Transactional
