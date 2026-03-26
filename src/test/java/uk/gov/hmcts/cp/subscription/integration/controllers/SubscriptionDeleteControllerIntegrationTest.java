@@ -31,6 +31,7 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
                 .andDo(print())
                 .andExpect(status().isNoContent());
         assertThat(subscriptionRepository.findAll()).hasSize(0);
+        assertThat(clientEventsRepository.findClientEventsWithEventTypes(entity.getClientId())).isEmpty();
     }
 
     @Test
@@ -53,5 +54,6 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isNotFound());
 
         assertThat(subscriptionRepository.findById(otherClientSubscription.getId())).isPresent();
+        assertThat(clientEventsRepository.findClientEventsWithEventTypes(otherClientId)).isNotEmpty();
     }
 }
