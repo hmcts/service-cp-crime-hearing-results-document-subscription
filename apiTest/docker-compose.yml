@@ -44,6 +44,22 @@ services:
       - "--global-response-templating"
       - "--verbose"
 
+  keyvault-emulator:
+    image: jamesgoulddev/azure-keyvault-emulator:latest
+    platform: linux/amd64
+    ports:
+      - "4997:4997"
+    volumes:
+      - ./certs:/certs
+    environment:
+      Persist: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/4997' 2>/dev/null && echo ok || exit 1"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
   app1:
     image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
     build:
@@ -52,6 +68,8 @@ services:
       SERVER_PORT: 8082
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
       MATERIAL_CLIENT_URL: http://wiremock:8080
+      VAULT_ENABLED: false
+      AZURE_VAULT_URI: https://keyvault-emulator:4997
       SERVICE_BUS_ENABLED: true
       SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
@@ -60,6 +78,7 @@ services:
       - db
       - wiremock
       - servicebus
+      - keyvault-emulator
     ports:
       - "8082:8082"
     # The app @PostConstruct polls service bus for up to 120s before the HTTP server starts.
@@ -80,6 +99,8 @@ services:
       SERVER_PORT: 8083
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
       MATERIAL_CLIENT_URL: http://wiremock:8080
+      VAULT_ENABLED: false
+      AZURE_VAULT_URI: https://keyvault-emulator:4997
       SERVICE_BUS_ENABLED: true
       SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
@@ -88,6 +109,7 @@ services:
       - db
       - wiremock
       - servicebus
+      - keyvault-emulator
     ports:
       - "8083:8083"
     healthcheck:

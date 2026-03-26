@@ -40,14 +40,10 @@ document-service:
 subscription:
   oauth-enabled: ${SUBSCRIPTION_OAUTH_ENABLED:true}
 
-hmac:
-  vault-enabled: ${VAULT_ENABLED:false}
-  vault-url: ${AZURE_VAULT_URI:}
-  vault-client-id: ${AZURE_CLIENT_ID:00000000-0000-0000-0000-000000000000}
-
 vault:
+  enabled: ${VAULT_ENABLED:true}
   uri: ${AZURE_VAULT_URI:}
-
+  client-id: ${AZURE_CLIENT_ID:00000000-0000-0000-0000-000000000000}
 
 management:
   endpoints:

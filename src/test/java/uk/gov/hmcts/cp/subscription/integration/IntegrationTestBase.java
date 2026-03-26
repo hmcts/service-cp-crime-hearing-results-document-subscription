@@ -1,12 +1,17 @@
 package uk.gov.hmcts.cp.subscription.integration;
 
+import com.azure.security.keyvault.secrets.SecretClient;
+import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
@@ -26,15 +31,26 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @AutoConfigureMockMvc
+@TestPropertySource(properties = {
+        "vault.uri=https://test-vault"
+})
 @Slf4j
 public abstract class IntegrationTestBase {
+
+    @MockitoBean
+    protected SecretClient secretClient;
 
     protected static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
     protected static final String NOTIFICATIONS_URI = "/notifications";
@@ -64,6 +80,8 @@ public abstract class IntegrationTestBase {
     @Autowired
     protected ClockService clockService;
 
+    private final Map<String, String> secretStore = new HashMap<>();
+
     protected NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
             .callbackUrl("https://my-callback-url")
             .build();
@@ -71,6 +89,23 @@ public abstract class IntegrationTestBase {
             .notificationEndpoint(notificationEndpoint)
             .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
+
+    @BeforeEach
+    void setUpSecretClientMock() {
+        secretStore.clear();
+        doAnswer(invocation -> {
+            final String name = invocation.getArgument(0);
+            final String value = invocation.getArgument(1);
+            secretStore.put(name, value);
+            return new KeyVaultSecret(name, value);
+        }).when(secretClient).setSecret(anyString(), anyString());
+
+        when(secretClient.getSecret(anyString())).thenAnswer(invocation -> {
+            final String name = invocation.getArgument(0);
+            final String value = secretStore.get(name);
+            return value == null ? null : new KeyVaultSecret(name, value);
+        });
+    }
 
     protected void clearClientSubscriptionTable() {
         log.info("Clearing client_subscription table");

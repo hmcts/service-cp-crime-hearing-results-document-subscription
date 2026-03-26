@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
@@ -64,8 +63,8 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
         "service-bus.retry.msecs=0,500,1000,5000",
         "material-client.retry.intervalMilliSecs=100",
         "material-client.retry.timeoutMilliSecs=500",
-        "hmac.vault-enabled=true",
-        "hmac.vault-url=https://test-vault"
+        "vault.enabled=false",
+        "vault.uri=https://test-vault"
 })
 @Slf4j
 class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
@@ -90,7 +89,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @Value("${callback-client.url}")
     private String callbackBaseUrl;
 
-    @MockitoBean
+    @Autowired
     private SecretClient secretClient;
 
     @MockitoSpyBean

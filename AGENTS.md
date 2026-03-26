@@ -115,21 +115,22 @@ Each subscription has a unique HMAC secret (`HmacSHA256`) used to sign outbound 
 - **On subscription create**: `HmacKeyService.generateAndStore()` generates a `KeyPair` (keyId + 32-byte secret), stores it via `SecretService` under `amp-{subscriptionId}`. The `keyId` and `secret` are returned to the caller in the subscription response.
 - **On callback delivery**: `HmacKeyService.getKeyPair()` fetches from `SecretService`. `HmacSigningService.sign()` computes `HmacSHA256(secret, payload)` and includes the signature and `keyId` in the outbound wrapper.
 - **`HmacKeyService`** has no knowledge of the underlying secret store — it only calls `SecretService`.
-- **`SecretService`** abstraction has two implementations, selected by `hmac.vault-enabled`:
-  - `StubSecretService` (`vault-enabled=false`, default): in-memory `ConcurrentHashMap` — each subscription gets its own generated key pair, no vault connection made.
-  - `VaultSecretService` (`vault-enabled=true`): delegates to Azure `SecretClient`.
-- **Production** (`hmac.vault-enabled=true`): `VaultConfig` builds `SecretClient` using `DefaultAzureCredential` with `HMAC_VAULT_URL` and `HMAC_VAULT_CLIENT_ID`.
-- **Integration tests**: either mock `SecretService` directly (`@MockitoBean SecretService secretService`), or mock the underlying vault (`@MockitoBean SecretClient secretClient` with `@TestPropertySource(properties = {"hmac.vault-enabled=true", "hmac.vault-url=https://test-vault"})`)
+- **`VaultSecretStore`** abstraction is implemented by `KeyVaultSecretStore`, backed by `SecretClient`.
+- **SecretClient source** is selected by `vault.enabled`:
+  - `true` (default): Azure Key Vault via `DefaultAzureCredential`.
+  - `false`: local Key Vault emulator client.
+- **Production**: keep `vault.enabled=true` so Azure `SecretClient` is used.
+- **Integration tests**: either mock `SecretService` directly (`@MockitoBean SecretService secretService`), or mock the underlying vault (`@MockitoBean SecretClient secretClient` with `@TestPropertySource(properties = {"vault.enabled=false", "vault.uri=https://test-vault"})`)
 
 #### Azure Key Vault Configuration
 
 | Property | Env var | Default | Description |
 |----------|---------|---------|-------------|
-| `hmac.vault-enabled` | `HMAC_VAULT_ENABLED` | `false` | `false` = stub (local dev), `true` = real Azure Key Vault |
-| `hmac.vault-url` | `HMAC_VAULT_URL` | _(empty)_ | Full vault URL, e.g. `https://<vault-name>.vault.azure.net/` |
-| `hmac.vault-client-id` | `HMAC_VAULT_CLIENT_ID` | `00000000-0000-0000-0000-000000000000` | Managed Identity client ID passed to `DefaultAzureCredential` |
+| `vault.enabled` | `VAULT_ENABLED` | `true` | `true` = Azure Key Vault client, `false` = local emulator client |
+| `vault.uri` | `AZURE_VAULT_URI` | _(empty)_ | Full vault URL, e.g. `https://<vault-name>.vault.azure.net/` |
+| `vault.client-id` | `AZURE_CLIENT_ID` | `00000000-0000-0000-0000-000000000000` | Managed Identity client ID passed to `DefaultAzureCredential` |
 
-Secret naming convention in the vault: `amp-{subscriptionId}`. The `SecretClient` bean is only created when `hmac.vault-enabled=true`. Authentication uses `DefaultAzureCredential` — in AKS this resolves to the pod's Managed Identity.
+Secret naming convention in the vault: `amp-{subscriptionId}`. `SecretClient` selection is based on `vault.enabled`. Authentication for Azure mode uses `DefaultAzureCredential` — in AKS this resolves to the pod's Managed Identity.
 
 ### Azure Service Bus (Optional)
 
