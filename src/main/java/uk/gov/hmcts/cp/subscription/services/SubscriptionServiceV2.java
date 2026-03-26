@@ -43,9 +43,9 @@ public class SubscriptionServiceV2 {
     @Transactional
     public ClientSubscription createClientSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
         validateClientDoesNotExistsOrThrowError(clientId);
-        List<Long> eventIds = fetchEventsOrThrowError(request);
+        final List<Long> eventIds = fetchEventsOrThrowError(request);
 
-        ClientEntity client = saveClientForCreateRequest(request, clientId);
+        final ClientEntity client = saveClientForCreateRequest(request, clientId);
         saveClientEvents(eventIds, client.getSubscriptionId());
 
         final KeyPair keyPair = hmacKeyService.generateKey();
@@ -56,10 +56,10 @@ public class SubscriptionServiceV2 {
     public ClientSubscription updateClientSubscription(final ClientSubscriptionRequest request,
                                                        final UUID clientId,
                                                        final UUID subscriptionId) {
-        ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
-        List<Long> eventIds = fetchEventsOrThrowError(request);
+        final ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
+        final List<Long> eventIds = fetchEventsOrThrowError(request);
 
-        ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
+        final ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
         saveClientEvents(eventIds, subscriptionId);
 
@@ -68,14 +68,14 @@ public class SubscriptionServiceV2 {
 
     @Transactional(readOnly = true)
     public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
-        ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
+        final ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
         final List<String> eventNames = clientEventRepository.findEventNamesForClient(clientId, subscriptionId);
         return clientSubscriptionMapper.toDto(client, eventNames, null);
     }
 
     @Transactional
     public void deleteClientSubscription(final UUID clientId, final UUID subscriptionId) {
-        ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
+        final ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
         clientRepository.delete(client);
     }
@@ -110,19 +110,19 @@ public class SubscriptionServiceV2 {
     }
 
     private void saveClientEvents(final List<Long> eventIds, final UUID subscriptionId) {
-        List<ClientEventEntity> eventEntities = eventIds.stream()
+        final List<ClientEventEntity> eventEntities = eventIds.stream()
                 .map(id -> clientEventEntityMapper.toEntity(subscriptionId, id))
                 .toList();
         clientEventRepository.saveAll(eventEntities);
     }
 
     private ClientEntity saveClientForCreateRequest(final ClientSubscriptionRequest request, final UUID clientId) {
-        ClientEntity client = clientEntityMapper.toEntity(clockService, request, clientId);
+        final ClientEntity client = clientEntityMapper.toEntity(clockService, request, clientId);
         return clientRepository.save(client);
     }
 
     private ClientEntity saveClientForUpdateRequest(final ClientSubscriptionRequest request, final ClientEntity client) {
-        ClientEntity updatedClient = clientEntityMapper.mapUpdateRequestToEntity(client, clockService, request);
+        final ClientEntity updatedClient = clientEntityMapper.mapUpdateRequestToEntity(client, clockService, request);
         return clientRepository.save(updatedClient);
     }
 }
