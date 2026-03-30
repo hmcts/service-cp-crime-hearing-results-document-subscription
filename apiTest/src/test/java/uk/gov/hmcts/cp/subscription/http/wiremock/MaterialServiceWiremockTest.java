@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
    endpoints we expose, it also services to document our mocked endpoints
  */
 @Slf4j
-class MaterialServiceTest {
+class MaterialServiceWiremockTest {
     private String wiremockRequestsUrl = "http://localhost:8090/__admin/requests";
     private String baseUrl = "http://localhost:8090";
     private String CORRELATION_ID_KEY = "X-Correlation-Id";
@@ -40,20 +40,21 @@ class MaterialServiceTest {
                 .header(CORRELATION_ID_KEY, correlationId.toString())
                 .retrieve()
                 .toEntity(String.class);
-        log.info("material metadata:{}", response.getBody());
+        log.info("material metadata response:{}", response.getBody());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
     void material_metadata_should_timeout() {
-        UUID timeoutId = UUID.fromString("11111111-1111-1111-1111-111111111112");
+        // We use 0-8 uuids as regular response so use all the 9s for timeout
+        UUID timeoutMaterialId = UUID.fromString("99999999-9999-9999-9999-999999999999");
         ResponseEntity<String> response = restClient
                 .get()
-                .uri(metaDataUrl(timeoutId))
+                .uri(metaDataUrl(timeoutMaterialId))
                 .header(CORRELATION_ID_KEY, correlationId.toString())
                 .retrieve()
                 .toEntity(String.class);
-        log.info("material metadata timeout:{}", response.getBody());
+        log.info("material metadata timeout response:{}", response.getBody());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
     }
 
@@ -65,7 +66,7 @@ class MaterialServiceTest {
                 .header(CORRELATION_ID_KEY, correlationId.toString())
                 .retrieve()
                 .toEntity(String.class);
-        log.info("material content:{}", response.getBody());
+        log.info("material content response:{}", response.getBody());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         JsonNode jsonNode = jsonMapper.toJsonNode(response.getBody());
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
