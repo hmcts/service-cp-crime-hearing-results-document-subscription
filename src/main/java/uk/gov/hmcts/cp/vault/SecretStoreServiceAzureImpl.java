@@ -38,7 +38,7 @@ public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface 
             final KeyVaultSecret secret = secretClient.getSecret(fullName);
             return Optional.of(secret.getValue());
         } catch (ResourceNotFoundException e) {
-            log.error("Secret {} not found", fullName);
+            log.error("Secret {} not found", secretName);
             return Optional.empty();
         }
     }
