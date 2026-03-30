@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
+import uk.gov.hmcts.cp.vault.VaultServiceProperties;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -25,7 +25,7 @@ import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_SECRET_STRING;
 class HmacKeyServiceTest {
 
     @Mock
-    private HmacServiceConfig config;
+    private VaultServiceProperties vaultServiceProperties;
 
     @InjectMocks
     private HmacKeyService service;
@@ -34,7 +34,7 @@ class HmacKeyServiceTest {
 
     @Test
     void generateKey_should_generate_random_when_vault_enabled() {
-        given(config.isVaultEnabled()).willReturn(true);
+        given(vaultServiceProperties.isVaultEnabled()).willReturn(true);
         KeyPair keyPair = service.generateKey();
         assertThat(keyPair.getKeyId()).matches("^kid_([a-z0-9\\-]{36})$");
         assertThat(keyPair.getSecret()).hasSize(32);
@@ -44,7 +44,7 @@ class HmacKeyServiceTest {
     void generateKey_should_return_distinct_when_vault_enabled() {
         PrintStream originalStdOut = System.out;
         captureStdOut();
-        given(config.isVaultEnabled()).willReturn(true);
+        given(vaultServiceProperties.isVaultEnabled()).willReturn(true);
         Set<String> keyIds = new HashSet<>();
         Set<String> secrets = new HashSet<>();
         for (int n = 0; n < KEY_PAIR_ATTEMPTS; n++) {

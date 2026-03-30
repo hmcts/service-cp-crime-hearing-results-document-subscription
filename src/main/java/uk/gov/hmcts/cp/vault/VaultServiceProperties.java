@@ -10,15 +10,20 @@ import java.util.UUID;
 @Slf4j
 @Service
 @Getter
-public class VaultServiceConfig {
+public class VaultServiceProperties {
 
+    private boolean vaultEnabled;
     private final String vaultUri;
     private final UUID vaultClientId;
 
-    public VaultServiceConfig(@Value("${vault.uri}") final String vaultUri,
-                              @Value("${vault.client-id:}") final UUID vaultClientId) {
+    public VaultServiceProperties(
+            @Value("${vault.enabled}") final boolean vaultEnabled,
+            @Value("${vault.uri}") final String vaultUri,
+            @Value("${vault.client-id:}") final UUID vaultClientId) {
+        log.info("Vault initialised with vaultEnabled:{}", vaultEnabled);
         log.info("Vault initialised with vaultUri:{}", vaultUri);
         log.info("Vault initialised with vaultClientId:{}", vaultClientId);
+        this.vaultEnabled = vaultEnabled;
         this.vaultUri = vaultUri;
         this.vaultClientId = vaultClientId;
     }

@@ -3,9 +3,7 @@ package uk.gov.hmcts.cp.subscription.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
+import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
@@ -36,8 +34,7 @@ public class CallbackDeliveryService {
     private final ServiceBusConfigService serviceBusConfig;
     private final ServiceBusClientService clientService;
     private final CallbackService callbackService;
-    private final HmacKeyService hmacKeyService;
-    private final HmacSigningService hmacSigningService;
+    private final HmacManager hmacManager;
 
     public void submitOutboundPcrEvents(final EventPayload eventPayload, final UUID documentId) {
         final String eventType = eventPayload.getEventType();
@@ -46,9 +43,9 @@ public class CallbackDeliveryService {
         log.info("sending {} outbound notifications", entities.size());
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
-            final KeyPair keyPair = hmacKeyService.generateKey();
-            final String signature = hmacSigningService.sign(keyPair.getSecret(), jsonMapper.toJson(eventNotificationPayload));
-            final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, keyPair.getKeyId(), signature);
+            final String keyId = hmacManager.getKeyId(entity.getId());
+            final String signature = hmacManager.getSignature(entity.getId(), jsonMapper.toJson(eventNotificationPayload));
+            final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, keyId, signature);
             if (subscriber.getNotificationEndpoint().startsWith(EXAMPLE_ENDPOINT)) {
                 log.info("Skipping notification for EXAMPLE callback endpoint:{}", subscriber.getNotificationEndpoint());
             } else if (serviceBusConfig.isEnabled()) {

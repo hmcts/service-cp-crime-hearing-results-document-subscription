@@ -3,8 +3,8 @@ package uk.gov.hmcts.cp.hmac.services;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
+import uk.gov.hmcts.cp.vault.VaultServiceProperties;
 
 import java.security.SecureRandom;
 import java.util.UUID;
@@ -22,11 +22,11 @@ public class HmacKeyService {
 
     private final SecureRandom secureRandom = new SecureRandom();
 
-    private final HmacServiceConfig config;
+    private final VaultServiceProperties vaultServiceProperties;
 
     @SuppressWarnings("PMD.OnlyOneReturn")
     public KeyPair generateKey() {
-        if (config.isVaultEnabled()) {
+        if (vaultServiceProperties.isVaultEnabled()) {
             final String keyId = "kid_" + UUID.randomUUID();
             log.info("Generating new keyPair for keyId:{}", keyId);
             final byte[] secretBytes = new byte[SECRET_BYTES_LENGTH];

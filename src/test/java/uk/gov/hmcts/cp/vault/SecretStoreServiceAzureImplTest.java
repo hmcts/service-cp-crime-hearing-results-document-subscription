@@ -8,10 +8,10 @@ import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
-class SecretServiceTest {
+class SecretStoreServiceAzureImplTest {
 
     @Autowired
-    SecretService secretService;
+    SecretStoreServiceDebug secretService;
 
     @Test
     void secrets_should_connect_and_be_listed() {
