@@ -24,7 +24,6 @@ public class HmacKeyService {
 
     private final VaultServiceProperties vaultServiceProperties;
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     public KeyPair generateKey() {
         if (vaultServiceProperties.isVaultEnabled()) {
             final String keyId = "kid_" + UUID.randomUUID();

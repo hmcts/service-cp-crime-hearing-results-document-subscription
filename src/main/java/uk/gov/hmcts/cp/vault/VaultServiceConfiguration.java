@@ -11,7 +11,6 @@ public class VaultServiceConfiguration {
     private EncodingService encodingService;
     private VaultServiceProperties vaultServiceProperties;
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     @Bean
     public SecretStoreServiceInterface secretStoreService() {
         if (vaultServiceProperties.isVaultEnabled()) {

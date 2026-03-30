@@ -34,7 +34,6 @@ public class MaterialService {
         return materialResponse.get();
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     public boolean pollMaterialMetadata(final UUID materialId, final Map<String, String> mdcContext,
                                         final AtomicReference<MaterialMetadata> materialResponse) {
         if (mdcContext != null) {

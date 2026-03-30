@@ -31,14 +31,13 @@ public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface 
         }
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     public Optional<String> getSecret(final String secretName) {
         final String fullName = String.format("%s.%s", SECRET_PREFIX, secretName);
         try {
             final KeyVaultSecret secret = secretClient.getSecret(fullName);
             return Optional.of(secret.getValue());
         } catch (ResourceNotFoundException e) {
-            log.error("Secret {} not found", secretName);
+            log.error("Secret not found");
             return Optional.empty();
         }
     }

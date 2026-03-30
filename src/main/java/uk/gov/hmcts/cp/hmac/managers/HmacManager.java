@@ -33,7 +33,6 @@ public class HmacManager {
         return keyPair;
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     public String getKeyId(final UUID subscriptionId) {
         if (vaultServiceProperties.isVaultEnabled()) {
             return KEY_PREFIX + subscriptionId;
