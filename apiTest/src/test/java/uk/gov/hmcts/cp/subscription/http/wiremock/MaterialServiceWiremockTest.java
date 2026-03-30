@@ -46,7 +46,6 @@ class MaterialServiceWiremockTest {
 
     @Test
     void material_metadata_should_timeout() {
-        // We use 0-8 uuids as regular response so use all the 9s for timeout
         UUID timeoutMaterialId = UUID.fromString("99999999-9999-9999-9999-999999999999");
         ResponseEntity<String> response = restClient
                 .get()
