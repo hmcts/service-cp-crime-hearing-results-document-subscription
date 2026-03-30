@@ -34,6 +34,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
+        "vault.enabled=false",
         "service-bus.max-tries=2",
         "service-bus.retry-msecs=0"
 })
