@@ -15,11 +15,13 @@ import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
+@TestPropertySource(properties = {
+        "vault.enabled=false"
+})
 public class ServiceBusAdminIntegrationTest {
 
     @Autowired
@@ -31,7 +33,7 @@ public class ServiceBusAdminIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        assertThat(adminService.isServiceBusReady()).isTrue();
         log.info("ServiceBus is up and running");
     }
 

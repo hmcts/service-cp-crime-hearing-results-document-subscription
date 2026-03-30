@@ -52,7 +52,7 @@ public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface 
 
     @SneakyThrows
     @Override
-    public String getFullSecretName(String secretName) {
+    public String getFullSecretName(final String secretName) {
         if (secretName.matches("^[a-zA-Z0-9\\-]+$")) {
             return String.format("%s-%s-%s", SECRET_PREFIX, secretName, SECRET_SUFFIX);
         }
