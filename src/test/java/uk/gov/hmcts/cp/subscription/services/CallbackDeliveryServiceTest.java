@@ -5,9 +5,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
@@ -43,16 +42,15 @@ class CallbackDeliveryServiceTest {
     @Mock
     CallbackService callbackService;
     @Mock
-    HmacKeyService hmacKeyService;
-    @Mock
-    HmacSigningService hmacSigningService;
+    HmacManager hmacManager;
 
     @InjectMocks
     private CallbackDeliveryService callbackDeliveryService;
 
     private UUID documentId = randomUUID();
     private String callbackUrl = "https://callback.example.com";
-    private ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().build();
+    private UUID subscriptionId = randomUUID();
+    private ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().id(subscriptionId).build();
     private EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").build();
     private Subscriber subscriber = Subscriber.builder().notificationEndpoint(callbackUrl).build();
     private EventNotificationPayload payload = EventNotificationPayload.builder().build();
@@ -65,8 +63,8 @@ class CallbackDeliveryServiceTest {
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.generateKey()).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
+        when(hmacManager.getKeyId(subscriptionId)).thenReturn("keyId");
+        when(hmacManager.getSignature(subscriptionId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
@@ -82,8 +80,8 @@ class CallbackDeliveryServiceTest {
         Subscriber exampleSubscriber = Subscriber.builder().notificationEndpoint(exampleCallbackUrl).build();
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(exampleSubscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.generateKey()).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
+        when(hmacManager.getKeyId(subscriptionId)).thenReturn("keyId");
+        when(hmacManager.getSignature(subscriptionId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
