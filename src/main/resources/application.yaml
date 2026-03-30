@@ -41,7 +41,7 @@ subscription:
   oauth-enabled: ${SUBSCRIPTION_OAUTH_ENABLED:true}
 
 vault:
-  enabled: ${AZURE_VAULT_ENABLED:false}
+  enabled: ${AZURE_VAULT_ENABLED:true}
   uri: ${AZURE_VAULT_URI:}
   client-id: ${AZURE_CLIENT_ID:00000000-0000-0000-0000-000000000000}
 

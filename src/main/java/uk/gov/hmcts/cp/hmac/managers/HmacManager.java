@@ -9,7 +9,6 @@ import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
 import uk.gov.hmcts.cp.vault.SecretStoreServiceInterface;
-import uk.gov.hmcts.cp.vault.VaultServiceProperties;
 
 import java.util.UUID;
 
@@ -20,7 +19,6 @@ public class HmacManager {
 
     public static final String KEY_PREFIX = "kid_";
 
-    private VaultServiceProperties vaultServiceProperties;
     private HmacKeyService hmacKeyService;
     private SecretStoreServiceInterface secretStoreService;
     private HmacSigningService hmacSigningService;
@@ -34,11 +32,7 @@ public class HmacManager {
     }
 
     public String getKeyId(final UUID subscriptionId) {
-        if (vaultServiceProperties.isVaultEnabled()) {
-            return KEY_PREFIX + subscriptionId;
-        } else {
-            return KEY_PREFIX + "f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
-        }
+        return KEY_PREFIX + subscriptionId;
     }
 
     public String getSignature(final UUID subscriptionId, final String payload) {

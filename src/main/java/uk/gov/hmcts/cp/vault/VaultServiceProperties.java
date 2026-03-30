@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.vault;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@Builder
 @Getter
 public class VaultServiceProperties {
 

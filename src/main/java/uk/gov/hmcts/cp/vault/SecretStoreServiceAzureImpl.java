@@ -6,16 +6,18 @@ import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.security.InvalidKeyException;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface {
 
-    private static final String SECRET_PREFIX = "amp.subscription";
+    public static final String SECRET_PREFIX = "amp-subscription";
 
     private SecretClient secretClient;
 
@@ -31,10 +33,10 @@ public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface 
         }
     }
 
+    @Override
     public Optional<String> getSecret(final String secretName) {
-        final String fullName = String.format("%s.%s", SECRET_PREFIX, secretName);
         try {
-            final KeyVaultSecret secret = secretClient.getSecret(fullName);
+            final KeyVaultSecret secret = secretClient.getSecret(getFullSecretName(secretName));
             return Optional.of(secret.getValue());
         } catch (ResourceNotFoundException e) {
             log.error("Secret not found");
@@ -42,8 +44,17 @@ public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface 
         }
     }
 
+    @Override
     public void setSecret(final String secretName, final String secretValue) {
-        final String fullName = String.format("%s.%s", SECRET_PREFIX, secretName);
-        secretClient.setSecret(new KeyVaultSecret(fullName, secretValue));
+        secretClient.setSecret(new KeyVaultSecret(getFullSecretName(secretName), secretValue));
+    }
+
+    @SneakyThrows
+    @Override
+    public String getFullSecretName(String secretName) {
+        if (secretName.matches("^[a-zA-Z0-9\\-]+$")) {
+            return String.format("%s-%s", SECRET_PREFIX, secretName);
+        }
+        throw new InvalidKeyException("Secret name can only contain alphanumerics plus \"-\"");
     }
 }
