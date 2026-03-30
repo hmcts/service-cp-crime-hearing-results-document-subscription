@@ -51,7 +51,7 @@ class SubscriptionMapperTest {
                 .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
                 .build();
 
-        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, createdAt);
+        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, "kid-v1", request, createdAt);
 
         assertThat(entity.getId()).isNotNull();
         assertThat(entity.getClientId()).isEqualTo(clientId);
@@ -59,6 +59,7 @@ class SubscriptionMapperTest {
         assertThat(entity.getEventTypes().toString()).isEqualTo("[PRISON_COURT_REGISTER_GENERATED]");
         assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
         assertThat(entity.getUpdatedAt()).isEqualTo(createdAt);
+        assertThat(entity.getHmacKeyId()).isEqualTo("kid-v1");
     }
 
     @Test

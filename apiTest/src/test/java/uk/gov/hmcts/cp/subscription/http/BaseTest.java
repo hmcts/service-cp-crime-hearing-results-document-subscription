@@ -54,7 +54,7 @@ public class BaseTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         String hmacKeyId = jsonMapper.getStringAtPath(response.getBody(), "/hmac/keyId");
-        assertThat(hmacKeyId).isEqualTo("kid_f4f5dc10-d6d8-4e94-8b02-459c4121aad0");
+        assertThat(hmacKeyId).matches("kid-[a-zA-Z0-9\\-]*");
         String hmacSecret = jsonMapper.getStringAtPath(response.getBody(), "/hmac/secret");
         assertThat(hmacSecret).isEqualTo("U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==");
         return jsonMapper.getUUIDAtPath(response.getBody(), "/clientSubscriptionId");

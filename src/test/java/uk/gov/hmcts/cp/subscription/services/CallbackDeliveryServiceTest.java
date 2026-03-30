@@ -5,9 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
-import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
+import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
@@ -43,21 +41,20 @@ class CallbackDeliveryServiceTest {
     @Mock
     CallbackService callbackService;
     @Mock
-    HmacKeyService hmacKeyService;
-    @Mock
-    HmacSigningService hmacSigningService;
+    HmacManager hmacManager;
 
     @InjectMocks
     private CallbackDeliveryService callbackDeliveryService;
 
     private UUID documentId = randomUUID();
     private String callbackUrl = "https://callback.example.com";
-    private ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().build();
+    private UUID subscriptionId = randomUUID();
+    private String hmacKeyId = "kid-v1";
+    private ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().id(subscriptionId).build();
     private EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").build();
-    private Subscriber subscriber = Subscriber.builder().notificationEndpoint(callbackUrl).build();
+    private Subscriber subscriber = Subscriber.builder().hmacKeyId(hmacKeyId).notificationEndpoint(callbackUrl).build();
     private EventNotificationPayload payload = EventNotificationPayload.builder().build();
     private EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
-    private KeyPair keyPair = KeyPair.builder().keyId("keyId").secret("secret".getBytes()).build();
 
     @Test
     void submit_should_send_when_servicebus_disabled() {
@@ -65,9 +62,8 @@ class CallbackDeliveryServiceTest {
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.generateKey()).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
-        when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
+        when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
+        when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
 
@@ -79,12 +75,11 @@ class CallbackDeliveryServiceTest {
         when(subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(subscriptionEntity));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         String exampleCallbackUrl = "https://example.com/demo";
-        Subscriber exampleSubscriber = Subscriber.builder().notificationEndpoint(exampleCallbackUrl).build();
+        Subscriber exampleSubscriber = Subscriber.builder().hmacKeyId(hmacKeyId).notificationEndpoint(exampleCallbackUrl).build();
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(exampleSubscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacKeyService.generateKey()).thenReturn(keyPair);
-        when(hmacSigningService.sign("secret".getBytes(), "{payload}")).thenReturn("signature");
-        when(notificationMapper.mapToWrapper(payload, "keyId", "signature")).thenReturn(payloadWrapper);
+        when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
+        when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
 

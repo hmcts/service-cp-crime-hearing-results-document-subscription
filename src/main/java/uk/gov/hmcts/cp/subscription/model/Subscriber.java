@@ -1,11 +1,11 @@
 package uk.gov.hmcts.cp.subscription.model;
 
-import java.util.List;
-import java.util.UUID;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @AllArgsConstructor
@@ -15,4 +15,5 @@ public class Subscriber {
     private final List<String> eventTypes;
     private final String notificationEndpoint;
     private final UUID clientId;
+    private final String hmacKeyId;
 }
