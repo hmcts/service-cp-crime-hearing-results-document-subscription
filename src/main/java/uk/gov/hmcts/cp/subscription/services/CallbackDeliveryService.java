@@ -43,9 +43,8 @@ public class CallbackDeliveryService {
         log.info("sending {} outbound notifications", entities.size());
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
-            final String keyId = hmacManager.getKeyId(entity.getId());
-            final String signature = hmacManager.getSignature(entity.getId(), jsonMapper.toJson(eventNotificationPayload));
-            final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, keyId, signature);
+            final String signature = hmacManager.getSignature(subscriber.getHmacKeyId(), jsonMapper.toJson(eventNotificationPayload));
+            final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, subscriber.getHmacKeyId(), signature);
             if (subscriber.getNotificationEndpoint().startsWith(EXAMPLE_ENDPOINT)) {
                 log.info("Skipping notification for EXAMPLE callback endpoint:{}", subscriber.getNotificationEndpoint());
             } else if (serviceBusConfig.isEnabled()) {

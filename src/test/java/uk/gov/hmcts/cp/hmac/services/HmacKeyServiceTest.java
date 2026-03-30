@@ -17,6 +17,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_KEY_ID;
 import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_SECRET_STRING;
 
@@ -34,9 +35,9 @@ class HmacKeyServiceTest {
 
     @Test
     void generateKey_should_generate_random_when_vault_enabled() {
-        given(vaultServiceProperties.isVaultEnabled()).willReturn(true);
+        when(vaultServiceProperties.isVaultEnabled()).thenReturn(true);
         KeyPair keyPair = service.generateKey();
-        assertThat(keyPair.getKeyId()).matches("^kid_([a-z0-9\\-]{36})$");
+        assertThat(keyPair.getKeyId()).matches("^kid-v1-([a-z0-9\\-]{36})$");
         assertThat(keyPair.getSecret()).hasSize(32);
     }
 

@@ -17,7 +17,8 @@ import java.util.Optional;
 @Service
 public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface {
 
-    public static final String SECRET_PREFIX = "amp-subscription";
+    public static final String SECRET_PREFIX = "hces";
+    public static final String SECRET_SUFFIX = "hmac";
 
     private SecretClient secretClient;
 
@@ -53,7 +54,7 @@ public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface 
     @Override
     public String getFullSecretName(String secretName) {
         if (secretName.matches("^[a-zA-Z0-9\\-]+$")) {
-            return String.format("%s-%s", SECRET_PREFIX, secretName);
+            return String.format("%s-%s-%s", SECRET_PREFIX, secretName, SECRET_SUFFIX);
         }
         throw new InvalidKeyException("Secret name can only contain alphanumerics plus \"-\"");
     }

@@ -27,7 +27,8 @@ public interface SubscriptionMapper {
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(source = "now", target = "createdAt")
     @Mapping(source = "now", target = "updatedAt")
-    ClientSubscriptionEntity mapCreateRequestToEntity(UUID clientId, ClientSubscriptionRequest request, OffsetDateTime now);
+    @Mapping(source = "hmacKeyId", target = "hmacKeyId")
+    ClientSubscriptionEntity mapCreateRequestToEntity(UUID clientId, String hmacKeyId, ClientSubscriptionRequest request, OffsetDateTime now);
 
     @Mapping(source = "existing.id", target = "id")
     @Mapping(source = "existing.clientId", target = "clientId")

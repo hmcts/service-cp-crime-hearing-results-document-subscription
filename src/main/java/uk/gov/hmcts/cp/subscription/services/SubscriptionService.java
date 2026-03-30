@@ -35,9 +35,9 @@ public class SubscriptionService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist with " + existing.getId());
         });
-        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, clockService.nowOffsetUTC());
+        final KeyPair keyPair = hmacManager.createAndStoreNewKey();
+        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, keyPair.getKeyId(), request, clockService.nowOffsetUTC());
         subscriptionRepository.save(entity);
-        final KeyPair keyPair = hmacManager.createAndStoreNewKey(entity.getId());
         return mapper.mapEntityToResponse(entity, keyPair);
     }
 
