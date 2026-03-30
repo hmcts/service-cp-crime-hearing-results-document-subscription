@@ -66,10 +66,10 @@ class NotificationMapperTest {
     @Test
     void mapper_should_return_populated_wrapper() {
         EventNotificationPayload payload = EventNotificationPayload.builder().build();
-        EventNotificationPayloadWrapper response = notificationMapper.mapToWrapper(payload, "key-id", "signature");
+        EventNotificationPayloadWrapper response = notificationMapper.mapToWrapper(payload, "kid", "signature");
 
         assertThat(response.getPayload()).isEqualTo(payload);
-        assertThat(response.getKeyId()).isEqualTo("key-id");
+        assertThat(response.getKeyId()).isEqualTo("kid");
         assertThat(response.getSignature()).isEqualTo("signature");
     }
 }

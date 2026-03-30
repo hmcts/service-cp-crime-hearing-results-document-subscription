@@ -24,6 +24,7 @@
         <exclude name="AtLeastOneConstructor"/>
         <exclude name="CallSuperInConstructor"/>
         <exclude name="LongVariable"/>
+        <exclude name="OnlyOneReturn"/>
         <exclude name="ShortVariable"/>
         <exclude name="TooManyStaticImports"/>
     </rule>

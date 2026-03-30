@@ -18,7 +18,6 @@ public class ServiceBusAdminService {
 
     private final ServiceBusConfigService configService;
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     public boolean isServiceBusReady() {
         try {
             final List<String> queues = configService.adminClient().listQueues().stream().map(QueueProperties::getName).toList();

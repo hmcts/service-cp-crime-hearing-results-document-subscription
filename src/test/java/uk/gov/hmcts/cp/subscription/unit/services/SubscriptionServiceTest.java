@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
@@ -43,6 +44,8 @@ class SubscriptionServiceTest {
     @Mock
     HmacKeyService hmacKeyService;
     @Mock
+    HmacManager hmacManager;
+    @Mock
     EventTypeService eventTypeService;
 
     @InjectMocks
@@ -69,14 +72,15 @@ class SubscriptionServiceTest {
             .clientId(clientId)
             .build();
     ClientSubscription response = ClientSubscription.builder().build();
-    KeyPair hmacKeyPair = KeyPair.builder().keyId("kid-1").secret("secret-1".getBytes()).build();
+    KeyPair hmacKeyPair = KeyPair.builder().keyId("kid-v1").secret("secret-1".getBytes()).build();
+
 
     @Test
     void create_request_should_save_new_entity() {
         when(subscriptionRepository.findFirstByClientId(clientId)).thenReturn(Optional.empty());
         when(clockService.nowOffsetUTC()).thenReturn(now);
-        when(mapper.mapCreateRequestToEntity(clientId, createRequest, now)).thenReturn(requestEntity);
-        when(hmacKeyService.generateKey()).thenReturn(hmacKeyPair);
+        when(mapper.mapCreateRequestToEntity(clientId, "kid-v1", createRequest, now)).thenReturn(requestEntity);
+        when(hmacManager.createAndStoreNewKey()).thenReturn(hmacKeyPair);
         when(mapper.mapEntityToResponse(requestEntity, hmacKeyPair)).thenReturn(response);
         when(eventTypeService.eventExists("PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
 

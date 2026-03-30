@@ -54,7 +54,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").exists())
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.createdAt").exists())
-                .andExpect(jsonPath("$.hmac.keyId").value("kid_f4f5dc10-d6d8-4e94-8b02-459c4121aad0"))
+                .andExpect(jsonPath("$.hmac.keyId").value("kid-f4f5dc10-d6d8-4e94-8b02-459c4121aad0"))
                 .andExpect(jsonPath("$.hmac.secret").value(expectedSecret));
         assertThatEventTypesAreSortedInDatabase();
     }

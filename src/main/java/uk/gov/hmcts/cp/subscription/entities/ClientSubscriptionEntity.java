@@ -31,4 +31,7 @@ public class ClientSubscriptionEntity {
     private List<String> eventTypes;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+
+    // Temp added till we switch to Client / ClientHmac
+    private String hmacKeyId;
 }
