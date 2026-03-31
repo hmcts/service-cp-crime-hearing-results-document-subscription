@@ -122,7 +122,7 @@ public class SubscriptionServiceV2 {
         return clientRepository.save(updatedClient);
     }
 
-    private void updateClientEvents(UUID subscriptionId, List<Long> eventIds) {
+    private void updateClientEvents(final UUID subscriptionId, final List<Long> eventIds) {
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
         saveClientEvents(subscriptionId, eventIds);
     }
