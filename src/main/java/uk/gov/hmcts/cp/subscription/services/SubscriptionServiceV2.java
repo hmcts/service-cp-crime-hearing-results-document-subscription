@@ -42,8 +42,8 @@ public class SubscriptionServiceV2 {
 
     @Transactional
     public ClientSubscription createClientSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
-        validateClientDoesNotExistsOrThrowError(clientId);
-        final List<Long> eventIds = fetchEventsOrThrowError(request);
+        validateClientDoesNotExists(clientId);
+        final List<Long> eventIds = validateAndfetchEvents(request);
 
         final ClientEntity client = saveClientForCreateRequest(request, clientId);
         saveClientEvents(client.getSubscriptionId(), eventIds);
@@ -57,8 +57,8 @@ public class SubscriptionServiceV2 {
     public ClientSubscription updateClientSubscription(final ClientSubscriptionRequest request,
                                                        final UUID clientId,
                                                        final UUID subscriptionId) {
-        final ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
-        final List<Long> eventIds = fetchEventsOrThrowError(request);
+        final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
+        final List<Long> eventIds = validateAndFetchEvents(request);
 
         final ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
@@ -68,14 +68,14 @@ public class SubscriptionServiceV2 {
     }
 
     public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
-        final ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
+        final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
         final List<String> eventNames = clientEventRepository.findEventNamesForClient(clientId, subscriptionId);
         return clientSubscriptionMapper.toDto(client, eventNames, null);
     }
 
     @Transactional
     public void deleteClientSubscription(final UUID clientId, final UUID subscriptionId) {
-        final ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
+        final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
         clientRepository.delete(client);
     }
@@ -85,20 +85,20 @@ public class SubscriptionServiceV2 {
         return clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, eventType) > 0;
     }
 
-    private void validateClientDoesNotExistsOrThrowError(final UUID clientId) {
+    private void validateClientDoesNotExists(final UUID clientId) {
         if (clientRepository.existsById(clientId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist for client " + clientId.toString());
         }
     }
 
-    private ClientEntity fetchClientOrThrowError(final UUID clientId, final UUID subscriptionId) {
+    private ClientEntity validateAndFetchClient(final UUID clientId, final UUID subscriptionId) {
         return clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
     }
 
-    private List<Long> fetchEventsOrThrowError(final ClientSubscriptionRequest request) {
+    private List<Long> validateAndFetchEvents(final ClientSubscriptionRequest request) {
         return request.getEventTypes().stream()
                 .map(name -> eventTypeRepository.findByEventName(name)
                         .orElseThrow(() -> new IllegalArgumentException("Invalid event type: " + name)))
