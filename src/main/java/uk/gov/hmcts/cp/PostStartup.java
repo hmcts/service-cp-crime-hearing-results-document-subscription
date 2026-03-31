@@ -38,21 +38,25 @@ public class PostStartup {
             final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder()
                     .build();
             log.info("PostStartup service bus connecting for admin client");
+
+            // BUG: Do not use both connectionString() and credential() on the same builder.
+            // A connection string already contains a SAS key and is self-sufficient for auth.
+            // Adding DefaultAzureCredential on top forces the Azure SDK to attempt token-based
+            // authentication via its credential chain (env vars → managed identity → Azure CLI → etc.).
+            // In pipelines or environments without a managed identity attached, the managed identity
+            // probe issues HTTP requests that have long timeouts and no fast-fail — this is why the
+            // pipeline hangs.
+            //
+            // FIX: Use one auth mechanism, not both:
+            //   - Pipeline / local / DEV  → .connectionString(...) only, remove .credential(...)
+            //   - Production Azure (MI)   → .fullyQualifiedNamespace(...) + .credential(...), no connectionString
+            //
+            // Also check ServiceBusAdminService for the same pattern.
             new ServiceBusAdministrationClientBuilder()
                     .connectionString(configService.getConnectionString())
                     .credential(credential)
                     .buildClient();
             log.info("SKIPPING PostStartup service bus listing queues");
-            // COLING temp removed this as it hangs in pipelines
-            // We see the Azure auth trying but failing
-            //
-//            final List<String> queues = adminClient.listQueues().stream().map(QueueProperties::getName).toList();
-//            log.info("PostStartup service bus has queues:{}", queues);
-//            for (final String queue : queues) {
-//                log.info("PostStartup found service bus queue {}", queue);
-//            }
-//            log.info("PostStartup service bus creating queue");
-//            createQueue(adminClient, "hces.notifications.inbound");
         } catch (Exception e) {
             log.error("PostStartup service bus error.", e);
         }
