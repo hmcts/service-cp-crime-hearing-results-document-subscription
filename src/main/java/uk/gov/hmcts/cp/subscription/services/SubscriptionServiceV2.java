@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
@@ -38,7 +39,7 @@ public class SubscriptionServiceV2 {
     private final ClientSubscriptionMapper clientSubscriptionMapper;
 
     private final ClockService clockService;
-    private final HmacKeyService hmacKeyService;
+    private final HmacManager hmacManager;
 
     @Transactional
     public ClientSubscription createClientSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
@@ -48,7 +49,7 @@ public class SubscriptionServiceV2 {
         final ClientEntity client = saveClientForCreateRequest(request, clientId);
         saveClientEvents(eventIds, client.getSubscriptionId());
 
-        final KeyPair keyPair = hmacKeyService.generateKey();
+        final KeyPair keyPair = hmacManager.createAndStoreNewKey();
         return clientSubscriptionMapper.toDto(client, request.getEventTypes(), keyPair);
     }
 
