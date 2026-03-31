@@ -64,7 +64,6 @@ public class GlobalExceptionHandler {
                 .body(errorResponse(ERROR_INVALID_REQUEST, exception.getMessage()));
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     private static String toMessage(final FieldError fieldError) {
         final String field = fieldError.getField();
         final String code = fieldError.getCode();
