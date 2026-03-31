@@ -1,7 +1,5 @@
 package uk.gov.hmcts.cp;
 
-import com.azure.identity.DefaultAzureCredential;
-import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClientBuilder;
 import com.azure.messaging.servicebus.administration.models.CreateQueueOptions;
@@ -34,29 +32,14 @@ public class PostStartup {
 
     private void logServiceBusStatus() {
         try {
-            log.info("PostStartup service bus getting credentials");
-            final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder()
-                    .build();
             log.info("PostStartup service bus connecting for admin client");
-
-            // BUG: Do not use both connectionString() and credential() on the same builder.
-            // A connection string already contains a SAS key and is self-sufficient for auth.
-            // Adding DefaultAzureCredential on top forces the Azure SDK to attempt token-based
-            // authentication via its credential chain (env vars → managed identity → Azure CLI → etc.).
-            // In pipelines or environments without a managed identity attached, the managed identity
-            // probe issues HTTP requests that have long timeouts and no fast-fail — this is why the
-            // pipeline hangs.
-            //
-            // FIX: Use one auth mechanism, not both:
-            //   - Pipeline / local / DEV  → .connectionString(...) only, remove .credential(...)
-            //   - Production Azure (MI)   → .fullyQualifiedNamespace(...) + .credential(...), no connectionString
-            //
-            // Also check ServiceBusAdminService for the same pattern.
+            // Using connectionString only — it contains the SAS key and is self-sufficient.
+            // Do not add .credential() here: mixing connectionString with DefaultAzureCredential
+            // causes the SDK to probe managed identity endpoints which hang in pipelines.
             new ServiceBusAdministrationClientBuilder()
                     .connectionString(configService.getConnectionString())
-                    .credential(credential)
                     .buildClient();
-            log.info("SKIPPING PostStartup service bus listing queues");
+            log.info("PostStartup service bus admin client connected successfully");
         } catch (Exception e) {
             log.error("PostStartup service bus error.", e);
         }

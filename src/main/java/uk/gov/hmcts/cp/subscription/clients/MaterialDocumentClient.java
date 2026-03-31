@@ -2,7 +2,7 @@ package uk.gov.hmcts.cp.subscription.clients;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.StringEscapeUtils;
+import org.owasp.encoder.Encode;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -26,14 +26,7 @@ public class MaterialDocumentClient {
     private final RestTemplate restTemplate;
 
     public ResponseEntity<byte[]> getMaterialDocument(final URI uri) {
-        log.info("getMaterialDocument uri:{}", sanitizeUri(uri));
+        log.info("getMaterialDocument uri:{}", Encode.forJava(uri.toString()));
         return restTemplate.exchange(uri, GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
-    }
-
-    private static String sanitizeUri(final URI uri) {
-        if (uri == null) {
-            return null;
-        }
-        return StringEscapeUtils.escapeHtml4(uri.toString());
     }
 }
