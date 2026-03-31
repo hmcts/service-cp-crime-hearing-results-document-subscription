@@ -81,7 +81,6 @@ public class SubscriptionServiceV2 {
         clientRepository.delete(client);
     }
 
-    @Transactional
     public boolean hasAccess(final UUID clientId,
                              final UUID subscriptionId,
                              final String eventType) {
