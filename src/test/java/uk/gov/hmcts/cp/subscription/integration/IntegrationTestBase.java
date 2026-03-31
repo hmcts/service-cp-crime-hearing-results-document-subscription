@@ -11,12 +11,14 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
-import uk.gov.hmcts.cp.subscription.repositories.ClientEventsRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
@@ -129,18 +131,6 @@ public abstract class IntegrationTestBase {
                                 .build())));
 
         return subscription;
-    }
-
-    protected ClientEntity insertClient(UUID clientId) {
-        OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
-        ClientEntity client = ClientEntity.builder()
-                .id(clientId)
-                .subscriptionId(UUID.randomUUID())
-                .callbackUrl("https://callback")
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
-        return clientRepository.save(client);
     }
 
     protected ClientEntity insertClient(UUID clientId) {
