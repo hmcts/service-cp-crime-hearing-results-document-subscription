@@ -9,6 +9,6 @@
       "Content-Type": "application/pdf",
       "Content-Disposition": "inline; filename=\"material-content.pdf\""
     },
-    "bodyFileName": "material-content.pdf"
+    "base64Body": "cGRm"
   }
 }

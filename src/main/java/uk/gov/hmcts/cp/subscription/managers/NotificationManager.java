@@ -29,13 +29,17 @@ public class NotificationManager {
     private final CallbackDeliveryService callbackDeliveryService;
 
     public void processPcrNotification(final EventPayload eventPayload) {
+        log.info("processPcrNotification eventId:{} materialId:{}", eventPayload.getEventId(), eventPayload.getMaterialId());
         final UUID documentId = notificationService.processInboundEvent(eventPayload);
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
+        log.info("processPcrNotification complete eventId:{} documentId:{}", eventPayload.getEventId(), documentId);
     }
 
     public DocumentContent getPcrDocumentContent(final UUID clientSubscriptionId, final UUID clientId, final UUID documentId) {
+        log.info("getPcrDocumentContent clientSubscriptionId:{} clientId:{} documentId:{}", clientSubscriptionId, clientId, documentId);
         final String eventType = documentService.getEventTypeForDocument(documentId);
         if (!subscriptionService.hasAccess(clientSubscriptionId, clientId, eventType)) {
+            log.warn("getPcrDocumentContent access denied clientSubscriptionId:{} clientId:{} eventType:{}", clientSubscriptionId, clientId, eventType);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
         return documentService.getDocumentContent(documentId);

@@ -36,6 +36,7 @@ public class CallbackService {
                 .until(() -> {
                     try {
                         callbackClient.sendNotification(url, payloadWrapper);
+                        log.info("Callback delivery succeeded for {}", url);
                         return true;
                     } catch (RestClientException e) {
                         log.warn("Callback delivery failed for {}, retrying: {}", url, e.getMessage());

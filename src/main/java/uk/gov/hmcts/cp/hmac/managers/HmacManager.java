@@ -24,12 +24,14 @@ public class HmacManager {
 
     public KeyPair createAndStoreNewKey() {
         final KeyPair keyPair = hmacKeyService.generateKey();
+        log.info("createAndStoreNewKey keyId:{}", keyPair.getKeyId());
         final String encodedSecret = encodingService.encodeWithBase64(keyPair.getSecret());
         secretStoreService.setSecret(keyPair.getKeyId(), encodedSecret);
         return keyPair;
     }
 
     public String getSignature(final String keyId, final String payload) {
+        log.debug("getSignature keyId:{}", keyId);
         final String encodedSecret = secretStoreService.getSecret(keyId).
                 orElseThrow(() -> new EntityNotFoundException("no existing secret for keyId:" + keyId));
         final byte[] secret = encodingService.decodeFromBase64(encodedSecret);

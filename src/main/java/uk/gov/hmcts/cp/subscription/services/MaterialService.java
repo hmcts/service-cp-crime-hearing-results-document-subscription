@@ -50,6 +50,7 @@ public class MaterialService {
     }
 
     public MaterialMetadata getMaterialMetadata(final UUID materialId) {
+        log.info("getMaterialMetadata materialId:{}", materialId);
         return materialClient.getMetadata(materialId);
     }
 }
