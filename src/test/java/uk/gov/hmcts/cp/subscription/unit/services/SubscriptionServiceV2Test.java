@@ -180,10 +180,9 @@ class SubscriptionServiceV2Test {
         UUID subscriptionId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();
 
-        when(clientEventRepository.countByClientSubscriptionAndEventName(
-                clientId, subscriptionId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(1L);
+        when(clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(1L);
 
-        boolean result = subscriptionService.hasAccess(clientId, subscriptionId, "PRISON_COURT_REGISTER_GENERATED");
+        boolean result = subscriptionService.hasAccess(subscriptionId, "PRISON_COURT_REGISTER_GENERATED");
         assertThat(result).isTrue();
     }
 
@@ -192,10 +191,9 @@ class SubscriptionServiceV2Test {
         UUID subscriptionId = UUID.randomUUID();
         UUID clientId = UUID.randomUUID();
 
-        when(clientEventRepository.countByClientSubscriptionAndEventName(
-                clientId, subscriptionId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(0L);
+        when(clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(0L);
 
-        boolean result = subscriptionService.hasAccess(clientId, subscriptionId, "PRISON_COURT_REGISTER_GENERATED");
+        boolean result = subscriptionService.hasAccess(subscriptionId, "PRISON_COURT_REGISTER_GENERATED");
         assertThat(result).isFalse();
     }
 }

@@ -9,12 +9,10 @@ import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.ClientSubscriptionMapperImpl;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,19 +31,10 @@ class ClientSubscriptionMapperTest {
     NotificationEndpoint notificationEndpoint = NotificationEndpoint.builder()
             .callbackUrl("https://example.com")
             .build();
-    UUID testClientUuid = UUID.fromString("11111111-2222-3333-4444-555555555555");
     ClientEntity clientEntity = ClientEntity.builder()
             .callbackUrl("https://example.com")
             .id(clientId)
             .subscriptionId(subscriptionId)
-            .createdAt(createdAt)
-            .updatedAt(updatedAt)
-            .build();
-    ClientSubscriptionEntity existing = ClientSubscriptionEntity.builder()
-            .id(subscriptionId)
-            .clientId(testClientUuid)
-            .notificationEndpoint(notificationEndpoint.getCallbackUrl().toString())
-            .eventTypes(mutableLisOfEventTypes())
             .createdAt(createdAt)
             .updatedAt(updatedAt)
             .build();
@@ -64,11 +53,5 @@ class ClientSubscriptionMapperTest {
         assertThat(clientSubscription.getHmac().getKeyId()).isEqualTo(hmac.getKeyId());
         String expectedSecretString = new EncodingService().encodeWithBase64(hmac.getSecret());
         assertThat(clientSubscription.getHmac().getSecret()).isEqualTo(expectedSecretString);
-    }
-
-    private List<String> mutableLisOfEventTypes() {
-        List<String> mutableList = new ArrayList<>();
-        mutableList.add("PRISON_COURT_REGISTER_GENERATED");
-        return mutableList;
     }
 }

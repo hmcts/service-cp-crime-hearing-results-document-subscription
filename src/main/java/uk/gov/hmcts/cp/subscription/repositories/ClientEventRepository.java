@@ -19,10 +19,9 @@ public interface ClientEventRepository extends JpaRepository<ClientEventEntity, 
     @Query("SELECT COUNT(ce) FROM ClientEventEntity ce " +
             "JOIN ClientEntity c ON ce.subscriptionId = c.subscriptionId " +
             "JOIN EventTypeEntity et ON ce.eventTypeId = et.id " +
-            "WHERE c.id = :clientId " +
-            "AND c.subscriptionId = :subscriptionId " +
+            "WHERE c.subscriptionId = :subscriptionId " +
             "AND et.eventName = :eventName")
-    long countByClientSubscriptionAndEventName(@Param("clientId") UUID clientId, @Param("subscriptionId") UUID subscriptionId,
+    long countByClientSubscriptionAndEventName(@Param("subscriptionId") UUID subscriptionId,
                                                @Param("eventName") String eventName);
 
     @Query("SELECT et.eventName FROM ClientEventEntity ce " +

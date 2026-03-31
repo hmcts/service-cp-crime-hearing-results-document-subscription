@@ -67,7 +67,6 @@ public class SubscriptionServiceV2 {
         return clientSubscriptionMapper.toDto(updatedClient, request.getEventTypes(), null);
     }
 
-    @Transactional(readOnly = true)
     public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
         final ClientEntity client = fetchClientOrThrowError(clientId, subscriptionId);
         final List<String> eventNames = clientEventRepository.findEventNamesForClient(clientId, subscriptionId);
@@ -81,11 +80,9 @@ public class SubscriptionServiceV2 {
         clientRepository.delete(client);
     }
 
-    public boolean hasAccess(final UUID clientId,
-                             final UUID subscriptionId,
+    public boolean hasAccess(final UUID subscriptionId,
                              final String eventType) {
-        return clientEventRepository.countByClientSubscriptionAndEventName(
-                clientId, subscriptionId, eventType) > 0;
+        return clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, eventType) > 0;
     }
 
     private void validateClientDoesNotExistsOrThrowError(final UUID clientId) {
