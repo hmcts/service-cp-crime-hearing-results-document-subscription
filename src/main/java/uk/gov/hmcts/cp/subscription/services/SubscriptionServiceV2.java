@@ -43,7 +43,7 @@ public class SubscriptionServiceV2 {
     @Transactional
     public ClientSubscription createClientSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
         validateClientDoesNotExists(clientId);
-        final List<Long> eventIds = validateAndfetchEvents(request);
+        final List<Long> eventIds = validateAndFetchEvents(request);
 
         final ClientEntity client = saveClientForCreateRequest(request, clientId);
         saveClientEvents(client.getSubscriptionId(), eventIds);
