@@ -61,8 +61,7 @@ public class SubscriptionServiceV2 {
         final List<Long> eventIds = validateAndFetchEvents(request);
 
         final ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
-        clientEventRepository.deleteBySubscriptionId(subscriptionId);
-        saveClientEvents(subscriptionId, eventIds);
+        updateClientEvents(subscriptionId, eventIds);
 
         return clientSubscriptionMapper.toDto(updatedClient, request.getEventTypes(), null);
     }
@@ -121,5 +120,10 @@ public class SubscriptionServiceV2 {
     private ClientEntity saveClientForUpdateRequest(final ClientSubscriptionRequest request, final ClientEntity client) {
         final ClientEntity updatedClient = clientEntityMapper.mapUpdateRequestToEntity(client, clockService, request);
         return clientRepository.save(updatedClient);
+    }
+
+    private void updateClientEvents(UUID subscriptionId, List<Long> eventIds) {
+        clientEventRepository.deleteBySubscriptionId(subscriptionId);
+        saveClientEvents(subscriptionId, eventIds);
     }
 }
