@@ -46,8 +46,9 @@ public class SubscriptionServiceV2 {
         final List<Long> eventIds = fetchEventsOrThrowError(request);
 
         final ClientEntity client = saveClientForCreateRequest(request, clientId);
-        saveClientEvents(eventIds, client.getSubscriptionId());
+        saveClientEvents(client.getSubscriptionId(), eventIds);
 
+        //TODO save the client hmacKeyId in the new table
         final KeyPair keyPair = hmacManager.createAndStoreNewKey();
         return clientSubscriptionMapper.toDto(client, request.getEventTypes(), keyPair);
     }
@@ -61,7 +62,7 @@ public class SubscriptionServiceV2 {
 
         final ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
-        saveClientEvents(eventIds, subscriptionId);
+        saveClientEvents(subscriptionId, eventIds);
 
         return clientSubscriptionMapper.toDto(updatedClient, request.getEventTypes(), null);
     }
@@ -108,7 +109,7 @@ public class SubscriptionServiceV2 {
                 .toList();
     }
 
-    private void saveClientEvents(final List<Long> eventIds, final UUID subscriptionId) {
+    private void saveClientEvents(final UUID subscriptionId, final List<Long> eventIds) {
         final List<ClientEventEntity> eventEntities = eventIds.stream()
                 .map(id -> clientEventEntityMapper.toEntity(subscriptionId, id))
                 .toList();
