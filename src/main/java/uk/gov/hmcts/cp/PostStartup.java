@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp;
 
-import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClientBuilder;
@@ -12,6 +11,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
+import uk.gov.hmcts.cp.vault.VaultServiceProperties;
 
 import java.time.Duration;
 
@@ -25,6 +25,7 @@ public class PostStartup {
     private EventTypeRepository eventTypeRepository;
     private ServiceBusConfigService configService;
     private ServiceBusAdminService adminService;
+    private VaultServiceProperties vaultServiceProperties;
 
     @PostConstruct
     public void postStartupLogging() {
@@ -34,13 +35,14 @@ public class PostStartup {
 
     private void logServiceBusStatus() {
         try {
-            log.info("PostStartup service bus getting credentials");
-            final DefaultAzureCredential credential = new DefaultAzureCredentialBuilder()
-                    .build();
-            log.info("PostStartup service bus connecting for admin client");
-            new ServiceBusAdministrationClientBuilder()
-                    .connectionString(configService.getConnectionString())
-                    .credential(credential)
+            final String endpoint = configService.getConnectionString();
+            log.info("PostStartup service bus connecting for admin client via Entra ID endpoint:{} clientId:{}",
+                    endpoint, vaultServiceProperties.getVaultClientId());
+             new ServiceBusAdministrationClientBuilder()
+                    .endpoint(endpoint)
+                    .credential(new DefaultAzureCredentialBuilder()
+                            .managedIdentityClientId(vaultServiceProperties.getVaultClientId().toString())
+                            .build())
                     .buildClient();
             log.info("SKIPPING PostStartup service bus listing queues");
             // COLING temp removed this as it hangs in pipelines
