@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
@@ -16,13 +18,20 @@ import static uk.gov.hmcts.cp.vault.SecretStoreServiceAzureImpl.SECRET_PREFIX;
 @Service
 @AllArgsConstructor
 public class SecretStoreServiceStubImpl implements SecretStoreServiceInterface {
-    public static final String STUB_KEY_ID = "kid-" + "f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
     public static final String STUB_SECRET_STRING = "Stub string used purely for development purposes. To be secured.";
 
+    HmacKeyService hmacKeyService;
+
+    public static byte[] secret;
     private EncodingService encodingService;
 
     public Optional<String> getSecret(final String secretName) {
-        final String encoded = encodingService.encodeWithBase64(STUB_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+        if (secret == null) {
+            KeyPair key = hmacKeyService.generateKey();
+            secret = key.getSecret();
+            log.info("COLING created new secret {}", encodingService.encodeWithBase64(secret));
+        }
+        final String encoded = encodingService.encodeWithBase64(secret);
         return Optional.of(encoded);
     }
 

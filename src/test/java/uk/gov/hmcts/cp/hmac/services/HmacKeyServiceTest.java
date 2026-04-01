@@ -18,8 +18,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_KEY_ID;
-import static uk.gov.hmcts.cp.hmac.services.HmacKeyService.STUB_SECRET_STRING;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -69,15 +67,6 @@ class HmacKeyServiceTest {
         }
         assertThat(keyIds).hasSize(1);
         assertThat(secrets).hasSize(1);
-    }
-
-    @Test
-    void generateKey_should_use_hardcoded_when_vault_disabled() {
-        KeyPair keyPair = service.generateKey();
-        assertThat(keyPair.getKeyId()).isEqualTo(STUB_KEY_ID);
-        assertThat(keyPair.getSecret()).isEqualTo(STUB_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
-        String encodedSecret = new EncodingService().encodeWithBase64(keyPair.getSecret());
-        assertThat(encodedSecret).isEqualTo("U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==");
     }
 
     private ByteArrayOutputStream captureStdOut() {

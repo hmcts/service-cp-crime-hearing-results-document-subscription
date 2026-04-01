@@ -4,10 +4,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 
 @Configuration
 @AllArgsConstructor
 public class VaultServiceConfiguration {
+    private HmacKeyService hmacKeyService;
     private EncodingService encodingService;
     private VaultServiceProperties vaultServiceProperties;
 
@@ -16,7 +18,7 @@ public class VaultServiceConfiguration {
         if (vaultServiceProperties.isVaultEnabled()) {
             return new SecretStoreServiceAzureImpl(vaultServiceProperties);
         } else {
-            return new SecretStoreServiceStubImpl(encodingService);
+            return new SecretStoreServiceStubImpl(hmacKeyService, encodingService);
         }
     }
 }

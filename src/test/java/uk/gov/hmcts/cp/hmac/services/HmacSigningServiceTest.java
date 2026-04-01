@@ -35,6 +35,7 @@ public class HmacSigningServiceTest {
         // Message extracted from E2E Synchronous Test
         // We get \"HqXPlq/I0oLx9ArUCwxjx5ZvLWl+x2o/JSZovxaGPE0=\" does not match calculated:\"TkkWx3X55YaWF5KB2BwSY4LcoDnFqZFOMrB43hkuFkE=\"
         String keyId = "kid-f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
+        // U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==
         String encodedSecret = "U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==";
         byte[] secret = encodingService.decodeFromBase64(encodedSecret);
         String messageJson = "{\"cases\":[{\"urn\":\"string\"}],\"masterDefendantId\":\"7c198796-08bb-4803-b456-fa0c29ca6022\",\"defendantName\":\"string\",\"defendantDateOfBirth\":\"1990-05-15\",\"documentId\":\"2c1b7ce5-af3a-4cec-bd9f-ac9aa939f86b\",\"documentGeneratedTimestamp\":\"2024-01-15T10:30:00Z\",\"prisonEmailAddress\":\"string@email.com\"}";
