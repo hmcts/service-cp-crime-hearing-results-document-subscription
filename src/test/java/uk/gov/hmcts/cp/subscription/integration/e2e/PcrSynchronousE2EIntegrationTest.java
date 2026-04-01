@@ -206,7 +206,11 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void given_i_create_a_new_subscription() throws Exception {
-        createSubscription();
+        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
+        hmacKeyId = jsonMapper.getStringAtPath(responseBody, "/hmac/keyId");
+        hmacSecret = jsonMapper.getStringAtPath(responseBody, "/hmac/secret");
+        log.info("WireMockDebug received keyId:{} secret:{}", hmacKeyId, hmacSecret);
     }
 
     private void given_i_have_a_callback_endpoint() throws IOException {
@@ -277,7 +281,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         callbackBody = getBodyFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
         callbackDocumentId = jsonMapper.getUUIDAtPath(callbackBody, "/documentId");
 
-        log.info("got signature:{} from callback header", callbackSignature);
+        log.info("WireMockDebug got callbackKeyId:{} callbackSignature:{} from callback header", callbackKeyId, callbackSignature);
     }
 
     private void and_the_callback_signature_is_correct() {
@@ -326,13 +330,6 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("PrisonCourtRegister")))
                 .andExpect(header().string(CORRELATION_ID_KEY, correlationId));
-    }
-
-    private void createSubscription() throws Exception {
-        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
-        subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
-        hmacKeyId = jsonMapper.getStringAtPath(responseBody, "/hmac/keyId");
-        hmacSecret = jsonMapper.getStringAtPath(responseBody, "/hmac/secret");
     }
 
     private void given_another_subscription_with_custodial_only() {

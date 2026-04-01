@@ -10,7 +10,6 @@ import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 @AllArgsConstructor
 public class VaultServiceConfiguration {
     private HmacKeyService hmacKeyService;
-    private EncodingService encodingService;
     private VaultServiceProperties vaultServiceProperties;
 
     @Bean
@@ -18,7 +17,7 @@ public class VaultServiceConfiguration {
         if (vaultServiceProperties.isVaultEnabled()) {
             return new SecretStoreServiceAzureImpl(vaultServiceProperties);
         } else {
-            return new SecretStoreServiceStubImpl(hmacKeyService, encodingService);
+            return new SecretStoreServiceStubImpl(hmacKeyService);
         }
     }
 }
