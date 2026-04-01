@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
@@ -92,7 +91,6 @@ class SubscriptionServiceV2Test {
 
     @Test
     void create_request_should_save_new_entity() {
-        when(clientRepository.existsById(clientId)).thenReturn(false);
         when(clientEntityMapper.toEntity(clockService, createRequest, clientId)).thenReturn(clientEntity);
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
         when(hmacManager.createAndStoreNewKey()).thenReturn(hmacKeyPair);
@@ -109,14 +107,14 @@ class SubscriptionServiceV2Test {
 
     @Test
     void create_request_should_throw_conflict_when_subscription_already_exists() {
-        when(clientRepository.existsById(clientId)).thenReturn(true);
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(clientEntity));
 
         assertThatThrownBy(() -> subscriptionService.createClientSubscription(createRequest, clientId))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(e -> {
                     ResponseStatusException ex = (ResponseStatusException) e;
                     assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-                    assertThat(ex.getReason()).isEqualTo("subscription already exist for client " + clientId);
+                    assertThat(ex.getReason()).isEqualTo("subscription already exist with " + subscriptionId);
                 });
 
         verify(clientRepository, never()).save(any());

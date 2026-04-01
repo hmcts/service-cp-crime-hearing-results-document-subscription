@@ -22,6 +22,7 @@ import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -85,16 +86,17 @@ public class SubscriptionServiceV2 {
     }
 
     private void validateClientDoesNotExists(final UUID clientId) {
-        if (clientRepository.existsById(clientId)) {
+        Optional<ClientEntity> existingClient = clientRepository.findById(clientId);
+        if (existingClient.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "subscription already exist for client " + clientId.toString());
+                    "subscription already exist with " + existingClient.get().getSubscriptionId());
         }
     }
 
     private ClientEntity validateAndFetchClient(final UUID clientId, final UUID subscriptionId) {
         return clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
+                        new EntityNotFoundException("Subscription not found"));
     }
 
     private List<Long> validateAndFetchEvents(final ClientSubscriptionRequest request) {

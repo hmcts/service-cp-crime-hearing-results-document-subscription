@@ -30,7 +30,8 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNoContent());
-        assertThat(subscriptionRepository.findAll()).hasSize(0);
+        assertThat(clientRepository.findAll()).hasSize(0);
+        assertThat(clientEventRepository.findAll()).hasSize(0);
     }
 
     @Test
@@ -52,6 +53,7 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
                 .andDo(print())
                 .andExpect(status().isNotFound());
 
-        assertThat(subscriptionRepository.findById(otherClientSubscription.getId())).isPresent();
+        assertThat(clientRepository.findByIdAndSubscriptionId(otherClientId, otherClientSubscription.getId())).isPresent();
+        assertThat(clientEventRepository.findBySubscriptionId(otherClientSubscription.getId())).isPresent();
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -32,4 +33,6 @@ public interface ClientEventRepository extends JpaRepository<ClientEventEntity, 
     List<String> findEventNamesForClient(@Param("clientId") UUID clientId, @Param("subscriptionId") UUID subscriptionId);
 
     void deleteBySubscriptionId(UUID subscriptionId);
+
+    Optional<ClientEventEntity> findBySubscriptionId(UUID id);
 }
