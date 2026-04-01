@@ -86,7 +86,7 @@ public class SubscriptionServiceV2 {
     }
 
     private void validateClientDoesNotExists(final UUID clientId) {
-        Optional<ClientEntity> existingClient = clientRepository.findById(clientId);
+        final Optional<ClientEntity> existingClient = clientRepository.findById(clientId);
         if (existingClient.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist with " + existingClient.get().getSubscriptionId());
