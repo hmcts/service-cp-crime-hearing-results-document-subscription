@@ -37,10 +37,9 @@ public class HmacSigningServiceTest {
         String keyId = "kid-f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
         String encodedSecret = "U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==";
         byte[] secret = encodingService.decodeFromBase64(encodedSecret);
-        String message0 = "{\"cases\":[{\"urn\":\"string\"}],\"masterDefendantId\":\"7c198796-08bb-4803-b456-fa0c29ca6022\",\"defendantName\":\"string\",\"defendantDateOfBirth\":\"1990-05-15\",\"documentId\":\"2c1b7ce5-af3a-4cec-bd9f-ac9aa939f86b\",\"documentGeneratedTimestamp\":\"2024-01-15T10:30:00Z\",\"prisonEmailAddress\":\"string@email.com\"}";
-        String message1 = "{\"cases\":[{\"urn\":\"string\"}],\"masterDefendantId\":\"7c198796-08bb-4803-b456-fa0c29ca6022\",\"defendantName\":\"string\",\"defendantDateOfBirth\":\"1990-05-15\",\"documentId\":\"2c1b7ce5-af3a-4cec-bd9f-ac9aa939f86b\",\"documentGeneratedTimestamp\":\"2024-01-15T10:30:00Z\",\"prisonEmailAddress\":\"string@email.com\"}";
-        String signature = hmacSigningService.sign(secret, message1);
-        hmacSigningService.validateSignature(secret, message, signature);
+        String messageJson = "{\"cases\":[{\"urn\":\"string\"}],\"masterDefendantId\":\"7c198796-08bb-4803-b456-fa0c29ca6022\",\"defendantName\":\"string\",\"defendantDateOfBirth\":\"1990-05-15\",\"documentId\":\"2c1b7ce5-af3a-4cec-bd9f-ac9aa939f86b\",\"documentGeneratedTimestamp\":\"2024-01-15T10:30:00Z\",\"prisonEmailAddress\":\"string@email.com\"}";
+        String signature = hmacSigningService.sign(secret, messageJson);
+        hmacSigningService.validateSignature(secret, messageJson, signature);
         assertThat(signature).isEqualTo("HqXPlq/I0oLx9ArUCwxjx5ZvLWl+x2o/JSZovxaGPE0=");
 
         String encodedSecretAgain = encodingService.encodeWithBase64(secret);
