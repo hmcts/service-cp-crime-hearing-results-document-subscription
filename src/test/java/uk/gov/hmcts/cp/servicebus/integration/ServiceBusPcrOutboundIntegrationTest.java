@@ -28,7 +28,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Slf4j
 @SpringBootTest

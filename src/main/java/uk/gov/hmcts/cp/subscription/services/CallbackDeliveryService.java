@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
@@ -18,7 +18,7 @@ import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 import java.util.List;
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class CallbackDeliveryService {
     private final SubscriberMapper subscriberMapper;
     private final NotificationMapper notificationMapper;
     private final JsonMapper jsonMapper;
-    private final ServiceBusConfigService serviceBusConfig;
+    private final ServiceBusProperties serviceBusConfig;
     private final ServiceBusClientService clientService;
     private final CallbackService callbackService;
     private final HmacManager hmacManager;

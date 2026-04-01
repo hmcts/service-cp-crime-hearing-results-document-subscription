@@ -9,7 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 import uk.gov.hmcts.cp.vault.VaultServiceProperties;
@@ -25,7 +25,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PostStartup {
     private EventTypeRepository eventTypeRepository;
-    private ServiceBusConfigService configService;
+    private ServiceBusProperties configService;
     private ServiceBusAdminService adminService;
     private VaultServiceProperties vaultServiceProperties;
 

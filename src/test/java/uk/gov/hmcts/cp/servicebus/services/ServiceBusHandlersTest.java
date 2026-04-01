@@ -14,8 +14,8 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_INBOUND_QUEUE;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusHandlersTest {

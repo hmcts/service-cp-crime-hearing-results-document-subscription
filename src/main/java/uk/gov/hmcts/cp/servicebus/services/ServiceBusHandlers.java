@@ -9,8 +9,8 @@ import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_INBOUND_QUEUE;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Service
 @AllArgsConstructor
