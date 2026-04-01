@@ -42,8 +42,9 @@ public class CallbackDeliveryService {
         final List<ClientEntity> clients = clientRepository.findClientsByEventType(eventType);
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);
         log.info("sending {} outbound notifications", clients.size());
+        ClientHmacEntity clientHmac = null;
         for (final ClientEntity client : clients) {
-            ClientHmacEntity clientHmac = clientHmacRepository.findBySubscriptionId(client.getSubscriptionId())
+            clientHmac = clientHmacRepository.findBySubscriptionId(client.getSubscriptionId())
                     .orElseThrow(() -> new EntityNotFoundException("Hmac not found for client subscriptionId"));
             final String signature = hmacManager.calculateSignature(clientHmac.getKeyId(), jsonMapper.toJson(eventNotificationPayload));
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, clientHmac.getKeyId(), signature);

@@ -11,5 +11,5 @@ public interface ClientHmacMapper {
 
 
     @Mapping(target = "id", ignore = true)
-    ClientHmacEntity toEntity(final UUID subscriptionId, final String keyId);
+    ClientHmacEntity toEntity(UUID subscriptionId, String keyId);
 }
