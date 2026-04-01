@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClient;
 
 import java.util.UUID;
 
@@ -19,18 +18,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  * But then not send any notifications
  */
 @Slf4j
-class ServiceBusQueueTest {
-    private static final String AUTHORIZATION = "Authorization";
-    private static final String CORRELATION_ID_KEY = "X-Correlation-Id";
-
-    private String baseUrl = System.getProperty("app.baseUrl", "http://localhost:8082");
-    private RestClient restClient = RestClient.create();
+class ServiceBusQueueTest extends BaseTest {
 
     @BeforeEach
     void beforeEach() {
         try {
             restClient.get()
-                    .uri(baseUrl + "/actuator/health")
+                    .uri(subscriptionsBaseUrl + "/actuator/health")
                     .retrieve();
         } catch (Exception e) {
             log.error("Service not running on 8082 - run docker compose to bring up service");
@@ -38,23 +32,8 @@ class ServiceBusQueueTest {
     }
 
     @Test
-    void post_notification_without_correlation_id_should_have_one_generated_in_response() {
-        final String postUrl = baseUrl + "/notifications";
-        ResponseEntity<String> postResponse = restClient.post()
-                .uri(postUrl)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(notificationBody())
-                .retrieve()
-                .toEntity(String.class);
-        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
-        String generatedCorrelationId = postResponse.getHeaders().getFirst(CORRELATION_ID_KEY);
-        assertThat(generatedCorrelationId).isNotNull();
-        log.info("filter generated correlationId:{}", generatedCorrelationId);
-    }
-
-    @Test
-    void post_notification() {
-        final String postUrl = baseUrl + "/notifications";
+    void post_notification_should_get_material_and_send_callback() {
+        final String postUrl = subscriptionsBaseUrl + "/notifications";
         String correlationId = UUID.randomUUID().toString();
         ResponseEntity<String> postResponse = restClient.post()
                 .uri(postUrl)

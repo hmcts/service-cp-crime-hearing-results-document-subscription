@@ -9,8 +9,8 @@ import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
 
 @Service
 @AllArgsConstructor
@@ -21,19 +21,19 @@ public class ServiceBusHandlers {
     private final NotificationManager notificationManager;
     private final JsonMapper jsonMapper;
 
-    public void handleMessage(final String topicName, final String target, final String message) {
-        switch (topicName) {
-            case PCR_INBOUND_TOPIC -> {
+    public void handleMessage(final String queueName, final String target, final String message) {
+        switch (queueName) {
+            case PCR_INBOUND_QUEUE -> {
                 final EventPayload eventPayload = jsonMapper.fromJson(message, EventPayload.class);
-                log.info("handleMessageType {} eventId:{}", topicName, eventPayload.getEventId());
+                log.info("handleMessageType {} eventId:{}", queueName, eventPayload.getEventId());
                 notificationManager.processPcrNotification(eventPayload);
             }
-            case PCR_OUTBOUND_TOPIC -> {
+            case PCR_OUTBOUND_QUEUE -> {
                 final EventNotificationPayloadWrapper wrapper = jsonMapper.fromJson(message, EventNotificationPayloadWrapper.class);
-                log.info("handleMessageType {}", topicName);
+                log.info("handleMessageType {}", queueName);
                 callbackClient.sendNotification(target, wrapper);
             }
-            default -> throw new RuntimeException("Invalid topic name " + topicName);
+            default -> throw new RuntimeException("Invalid queue name " + queueName);
         }
         log.info("handleMessageType completed OK");
     }

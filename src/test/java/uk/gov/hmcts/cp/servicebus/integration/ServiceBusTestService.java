@@ -1,7 +1,6 @@
 package uk.gov.hmcts.cp.servicebus.integration;
 
-import com.azure.messaging.servicebus.administration.models.SubscriptionProperties;
-import com.azure.messaging.servicebus.administration.models.TopicProperties;
+import com.azure.messaging.servicebus.administration.models.QueueProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,14 +15,10 @@ public class ServiceBusTestService {
     @Autowired
     ServiceBusConfigService configService;
 
-    public void dropTopicIfExists(String topicName) {
-        List<String> subscriptions = configService.adminClient().listSubscriptions("topic.new").stream().map(SubscriptionProperties::getSubscriptionName).toList();
-        for (String subscriptionName : subscriptions) {
-            configService.adminClient().deleteSubscription(topicName, subscriptionName);
-        }
-        List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
-        if (topics.contains(topicName)) {
-            configService.adminClient().deleteTopic(topicName);
+    public void dropQueueIfExists(String queueName) {
+        List<String> queues = configService.adminClient().listQueues().stream().map(QueueProperties::getName).toList();
+        if (queues.contains(queueName)) {
+            configService.adminClient().deleteQueue(queueName);
         }
     }
 }

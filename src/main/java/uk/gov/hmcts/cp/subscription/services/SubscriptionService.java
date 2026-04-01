@@ -7,8 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
@@ -26,7 +26,7 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final EventTypeService eventTypeService;
     private final SubscriptionMapper mapper;
-    private final HmacKeyService hmacKeyService;
+    private final HmacManager hmacManager;
 
     @Transactional
     public ClientSubscription createSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
@@ -35,9 +35,9 @@ public class SubscriptionService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist with " + existing.getId());
         });
-        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, clockService.nowOffsetUTC());
+        final KeyPair keyPair = hmacManager.createAndStoreNewKey();
+        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, keyPair.getKeyId(), request, clockService.nowOffsetUTC());
         subscriptionRepository.save(entity);
-        final KeyPair keyPair = hmacKeyService.generateKey();
         return mapper.mapEntityToResponse(entity, keyPair);
     }
 

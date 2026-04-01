@@ -1,10 +1,8 @@
 package uk.gov.hmcts.cp.servicebus.services;
 
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
-import com.azure.messaging.servicebus.administration.models.CreateSubscriptionOptions;
-import com.azure.messaging.servicebus.administration.models.CreateTopicOptions;
-import com.azure.messaging.servicebus.administration.models.SubscriptionProperties;
-import com.azure.messaging.servicebus.administration.models.TopicProperties;
+import com.azure.messaging.servicebus.administration.models.CreateQueueOptions;
+import com.azure.messaging.servicebus.administration.models.QueueProperties;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,11 +18,10 @@ public class ServiceBusAdminService {
 
     private final ServiceBusConfigService configService;
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     public boolean isServiceBusReady() {
         try {
-            final List<String> topics = configService.adminClient().listTopics().stream().map(TopicProperties::getName).toList();
-            log.info("ServiceBus has topics:{}", topics);
+            final List<String> queues = configService.adminClient().listQueues().stream().map(QueueProperties::getName).toList();
+            log.info("ServiceBus has queues:{}", queues);
             return true;
         } catch (Exception e) {
             log.info("ServiceBus is not available. Error:{}", e.getMessage());
@@ -32,28 +29,16 @@ public class ServiceBusAdminService {
         }
     }
 
-    public void createTopicAndSubscription(final String topicName) {
+    public void createQueue(final String queueName) {
         final ServiceBusAdministrationClient adminClient = configService.adminClient();
-        final List<String> topics = adminClient.listTopics().stream().map(TopicProperties::getName).toList();
-        if (topics.contains(topicName)) {
-            log.info("Topic {} already exists", topicName);
+        if (adminClient.getQueueExists(queueName)) {
+            log.info("Queue {} already exists", queueName);
         } else {
-            log.info("Creating topic {}", topicName);
-            final CreateTopicOptions createTopicOptions = new CreateTopicOptions();
-            createTopicOptions.setDefaultMessageTimeToLive(Duration.ofHours(1));
-            adminClient.createTopic(topicName, createTopicOptions);
-        }
-
-        final List<String> subscriptions = adminClient.listSubscriptions(topicName).stream().map(SubscriptionProperties::getSubscriptionName).toList();
-        if (subscriptions.contains(topicName)) {
-            log.info("Subscription {}/{} already exists", topicName, topicName);
-        } else {
-            log.info("Creating subscription {}/{}", topicName, topicName);
-            final CreateSubscriptionOptions options = new CreateSubscriptionOptions();
-            options.setDefaultMessageTimeToLive(Duration.ofHours(1));
-            options.setLockDuration(Duration.ofMinutes(1));
-            options.setMaxDeliveryCount(1);
-            adminClient.createSubscription(topicName, topicName, options);
+            log.info("Creating queue {}", queueName);
+            final CreateQueueOptions createQueueOptions = new CreateQueueOptions();
+            createQueueOptions.setDefaultMessageTimeToLive(Duration.ofHours(1));
+            createQueueOptions.setMaxDeliveryCount(1);
+            adminClient.createQueue(queueName, createQueueOptions);
         }
     }
 }

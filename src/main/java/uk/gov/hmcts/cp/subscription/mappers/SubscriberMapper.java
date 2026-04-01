@@ -12,7 +12,8 @@ public class SubscriberMapper {
                 entity.getId(),
                 entity.getEventTypes(),
                 entity.getNotificationEndpoint(),
-                entity.getClientId()
+                entity.getClientId(),
+                entity.getHmacKeyId()
         );
     }
 }

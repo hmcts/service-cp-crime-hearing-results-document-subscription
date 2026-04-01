@@ -19,8 +19,8 @@ import java.util.Map;
 
 import static org.awaitility.Awaitility.await;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
 
 @Service
 @AllArgsConstructor
@@ -47,62 +47,62 @@ public class ServiceBusProcessorService {
                         .pollInterval(Duration.ofSeconds(POLL_SECONDS))
                         .until(adminService::isServiceBusReady);
                 log.info("createServiceBusQueues creating service bus queues");
-                adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
-                startMessageProcessor(PCR_INBOUND_TOPIC);
-                adminService.createTopicAndSubscription(PCR_OUTBOUND_TOPIC);
-                startMessageProcessor(PCR_OUTBOUND_TOPIC);
+                adminService.createQueue(PCR_INBOUND_QUEUE);
+                startMessageProcessor(PCR_INBOUND_QUEUE);
+                adminService.createQueue(PCR_OUTBOUND_QUEUE);
+                startMessageProcessor(PCR_OUTBOUND_QUEUE);
             } catch (Exception e) {
                 log.error("Failed to initialise serviceBus. {}", e.getMessage());
             }
         }
     }
 
-    public void stopMessageProcessor(final String topicName) {
-        final ServiceBusProcessorClient processorClient = processorClients.get(topicName);
+    public void stopMessageProcessor(final String queueName) {
+        final ServiceBusProcessorClient processorClient = processorClients.get(queueName);
         if (processorClient != null && processorClient.isRunning()) {
-            log.info("Service Bus Processor {} is being stopped", topicName);
+            log.info("Service Bus Processor {} is being stopped", queueName);
             processorClient.stop();
-            processorClients.remove(topicName);
+            processorClients.remove(queueName);
         } else {
-            log.info("Service Bus Processor {} is not running", topicName);
+            log.info("Service Bus Processor {} is not running", queueName);
         }
     }
 
     @SneakyThrows
-    public void startMessageProcessor(final String topicName) {
-        log.info("starting service bus processor {}/{}", topicName, topicName);
+    public void startMessageProcessor(final String queueName) {
+        log.info("starting service bus processor {}", queueName);
         final ServiceBusProcessorClient processorClient = configService
-                .processorClientBuilder(topicName, topicName)
-                .processMessage(context -> handleMessage(topicName, context))
-                .processError(context -> handleError(topicName, context))
+                .processorClientBuilder(queueName)
+                .processMessage(context -> handleMessage(queueName, context))
+                .processError(context -> handleError(queueName, context))
                 .buildProcessorClient();
         processorClient.start();
-        processorClients.put(topicName, processorClient);
+        processorClients.put(queueName, processorClient);
     }
 
-    public void handleMessage(final String topicName, final ServiceBusReceivedMessageContext context) {
+    public void handleMessage(final String queueName, final ServiceBusReceivedMessageContext context) {
         final String wrappedMessageString = context.getMessage().getBody().toString();
         final ServiceBusWrappedMessage queueMessage = jsonMapper.fromJson(wrappedMessageString, ServiceBusWrappedMessage.class);
-        log.info("Processing {} with targetUrl:{}", topicName, queueMessage.getTargetUrl());
+        log.info("handleMessage processing {} with targetUrl:{}", queueName, queueMessage.getTargetUrl());
         try {
             MDC.put(CORRELATION_ID_KEY, queueMessage.getCorrelationId().toString());
-            serviceBusHandlers.handleMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage());
+            serviceBusHandlers.handleMessage(queueName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
             log.error("handleMessage failureCount:{} of {} tries with exception.", failureCount, configService.getMaxTries(), exception);
             if (failureCount >= configService.getMaxTries()) {
-                log.error("handleMessage failed finally");
+                log.error("handleMessage FAILED FINALLY");
                 throw exception;
             }
-            clientService.queueMessage(topicName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
+            clientService.queueMessage(queueName, queueMessage.getTargetUrl(), queueMessage.getMessage(), failureCount);
             // Because we added a new message and swallowed the error then the current message will be dropped
         } finally {
             MDC.remove(CORRELATION_ID_KEY);
         }
     }
 
-    public void handleError(final String topicName, final ServiceBusErrorContext errorContext) {
+    public void handleError(final String queueName, final ServiceBusErrorContext errorContext) {
         // We should only be called when failCount has exceeded maxTries and message go to DLQ
-        log.error("handleError unexpected error on {} moving to DLQ", topicName, errorContext.getException());
+        log.error("handleError unexpected error on {} moving to DLQ", queueName, errorContext.getException());
     }
 }

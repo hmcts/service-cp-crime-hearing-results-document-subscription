@@ -4,18 +4,17 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCustodyEstablishmentDetails;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
+import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
 import java.util.UUID;
@@ -25,12 +24,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
 
 @Slf4j
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
+        "vault.enabled=false",
         "service-bus.enabled=true",
         "service-bus.max-tries=2",
         "service-bus.retry-msecs=0"
@@ -44,17 +44,16 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
 
     @BeforeEach
     void setUp() {
-        assumeTrue(adminService.isServiceBusReady(),
-                "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
-        testService.dropTopicIfExists(PCR_INBOUND_TOPIC);
-        adminService.createTopicAndSubscription(PCR_INBOUND_TOPIC);
-        processorService.startMessageProcessor(PCR_INBOUND_TOPIC);
+        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
+        testService.dropQueueIfExists(PCR_INBOUND_QUEUE);
+        adminService.createQueue(PCR_INBOUND_QUEUE);
+        processorService.startMessageProcessor(PCR_INBOUND_QUEUE);
     }
 
     @AfterEach
     void afterEach() {
-        processorService.stopMessageProcessor(PCR_INBOUND_TOPIC);
+        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
     }
 
     @SneakyThrows
@@ -63,7 +62,7 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
         MaterialMetadata materialMetadata = materialMetadata(materialId);
         when(materialService.getMaterialMetadata(materialId)).thenReturn(materialMetadata);
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
-        clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(eventPayload()), 0);
+        clientService.queueMessage(PCR_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload()), 0);
         MDC.clear();
 
         Thread.sleep(5000);
@@ -76,7 +75,7 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
         when(materialService.getMaterialMetadata(materialId)).thenReturn(null);
         EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").materialId(materialId).build();
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
-        clientService.queueMessage(PCR_INBOUND_TOPIC, null, jsonMapper.toJson(eventPayload), 0);
+        clientService.queueMessage(PCR_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload), 0);
         MDC.clear();
 
         Thread.sleep(5000);
