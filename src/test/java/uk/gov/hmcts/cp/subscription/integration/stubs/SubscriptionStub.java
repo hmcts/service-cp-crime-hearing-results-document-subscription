@@ -39,9 +39,9 @@ public final class SubscriptionStub {
                 : callbackBaseUrl + callbackUri;
         String requestBody = loadPayload(SUBSCRIPTION_PCR_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
         String responseBody = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, requestBody, clientId);
-        log.info("COLING got keyId:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/keyId"));
-        log.info("COLING got secret:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/secret"));
-        log.info("COLING got clientSubscriptionId:{}", jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId"));
+        log.info("got keyId:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/keyId"));
+        log.info("got secret:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/secret"));
+        log.info("got clientSubscriptionId:{}", jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId"));
         return responseBody;
     }
 

@@ -277,7 +277,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         callbackBody = getBodyFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
         callbackDocumentId = jsonMapper.getUUIDAtPath(callbackBody, "/documentId");
 
-        log.info("COLING got signature:{} from callback header", callbackSignature);
+        log.info("got signature:{} from callback header", callbackSignature);
     }
 
     private void and_the_callback_signature_is_correct() {

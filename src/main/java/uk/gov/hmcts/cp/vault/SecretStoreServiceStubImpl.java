@@ -23,12 +23,10 @@ public class SecretStoreServiceStubImpl implements SecretStoreServiceInterface {
 
     public Optional<String> getSecret(final String secretName) {
         final String encoded = encodingService.encodeWithBase64(STUB_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
-        log.info("COLING stub getSecret returning {}", encoded);
         return Optional.of(encoded);
     }
 
     public void setSecret(final String secretName, final String secretValue) {
-        log.info("COLING stub storing secret {} to {}", secretName, secretValue);
         // Do nothing we return the stubbed secret when we call getSecret()
     }
 
