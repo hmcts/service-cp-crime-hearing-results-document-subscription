@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/material-query-api/query/api/rest/material/material/04325082-5203-4eaa-9f62-e153d6308631/content"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "text/uri-list;charset=UTF-8"
+    },
+    "body": "http://{{request.host}}:{{request.port}}/blob/signed-document.pdf?sv=2024-01-01&sig=Abc%2BDef%2BGhi%3D",
+    "transformers": [
+      "response-template"
+    ]
+  }
+}

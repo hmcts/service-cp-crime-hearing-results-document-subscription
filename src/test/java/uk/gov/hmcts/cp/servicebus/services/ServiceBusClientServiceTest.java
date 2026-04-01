@@ -20,7 +20,7 @@ import java.util.UUID;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_INBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusClientServiceTest {
@@ -51,13 +51,13 @@ class ServiceBusClientServiceTest {
     void queue_message_should_pass_to_queue() {
         UUID correlationId = UUID.randomUUID();
         MDC.put(CORRELATION_ID_KEY, correlationId.toString());
-        when(configService.senderClient(PCR_INBOUND_QUEUE)).thenReturn(senderClient);
+        when(configService.senderClient(NOTIFICATIONS_INBOUND_QUEUE)).thenReturn(senderClient);
         when(wrapperMapper.newWrapper(correlationId, 1, callbackUrl, "message")).thenReturn(wrappedMessage);
         when(jsonMapper.toJson(wrappedMessage)).thenReturn("wrapped-message");
         when(retryService.getNextTryTime(1)).thenReturn(nextTryTime);
         when(mapper.newMessage("wrapped-message", nextTryTime)).thenReturn(serviceBusMessage);
 
-        clientService.queueMessage(PCR_INBOUND_QUEUE, callbackUrl, "message", 1);
+        clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, callbackUrl, "message", 1);
 
         verify(senderClient).sendMessage(serviceBusMessage);
         verify(senderClient).close();

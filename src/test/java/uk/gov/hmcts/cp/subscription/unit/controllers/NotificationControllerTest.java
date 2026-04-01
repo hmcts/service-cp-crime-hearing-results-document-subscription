@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.ACCEPTED;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_INBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
@@ -73,7 +73,7 @@ class NotificationControllerTest {
         when(configService.isEnabled()).thenReturn(true);
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
         ResponseEntity<Void> response = notificationController.createNotification(payload, null);
-        verify(clientService).queueMessage(PCR_INBOUND_QUEUE, null, "payload-json", 0);
+        verify(clientService).queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, "payload-json", 0);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
 

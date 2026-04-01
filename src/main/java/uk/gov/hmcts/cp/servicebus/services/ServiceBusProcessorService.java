@@ -19,8 +19,8 @@ import java.util.Map;
 
 import static org.awaitility.Awaitility.await;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Service
 @AllArgsConstructor
@@ -47,10 +47,10 @@ public class ServiceBusProcessorService {
                         .pollInterval(Duration.ofSeconds(POLL_SECONDS))
                         .until(adminService::isServiceBusReady);
                 log.info("createServiceBusQueues creating service bus queues");
-                adminService.createQueue(PCR_INBOUND_QUEUE);
-                startMessageProcessor(PCR_INBOUND_QUEUE);
-                adminService.createQueue(PCR_OUTBOUND_QUEUE);
-                startMessageProcessor(PCR_OUTBOUND_QUEUE);
+                adminService.createQueue(NOTIFICATIONS_INBOUND_QUEUE);
+                startMessageProcessor(NOTIFICATIONS_INBOUND_QUEUE);
+                adminService.createQueue(NOTIFICATIONS_OUTBOUND_QUEUE);
+                startMessageProcessor(NOTIFICATIONS_OUTBOUND_QUEUE);
             } catch (Exception e) {
                 log.error("Failed to initialise serviceBus. {}", e.getMessage());
             }

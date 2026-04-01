@@ -23,7 +23,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusProcessorServiceTest {
@@ -84,9 +84,9 @@ class ServiceBusProcessorServiceTest {
         when(wrappedMessage.getMessage()).thenReturn("message");
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context);
+        serviceBusProcessorService.handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, context);
 
-        verify(serviceBusHandlers).handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
+        verify(serviceBusHandlers).handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "message");
     }
 
     @Test
@@ -100,13 +100,13 @@ class ServiceBusProcessorServiceTest {
         when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
-                .handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
+                .handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "message");
 
         when(configService.getMaxTries()).thenReturn(2);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context);
+        serviceBusProcessorService.handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, context);
 
-        verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "wrapped-message", 1);
+        verify(serviceBusClientService).queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "wrapped-message", 1);
     }
 
     @Test
@@ -118,9 +118,9 @@ class ServiceBusProcessorServiceTest {
         when(wrappedMessage.getMessage()).thenReturn("message");
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
-                .handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
+                .handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "message");
         when(configService.getMaxTries()).thenReturn(1);
 
-        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context));
+        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, context));
     }
 }

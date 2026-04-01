@@ -41,8 +41,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.NOTIFICATIONS_OUTBOUND_QUEUE;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
@@ -57,8 +57,8 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
 })
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
-        "servicebus.enabled=true",
-        "service-bus.retry.msecs=0,500,1000,5000",
+        "service-bus.max-tries=3",
+        "service-bus.retry-msecs=0,500,1000",
         "material-client.retry.intervalMilliSecs=100",
         "material-client.retry.timeoutMilliSecs=500"
 })
@@ -91,15 +91,15 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     @BeforeEach
     void setUp() {
         assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
-        testService.dropQueueIfExists(PCR_INBOUND_QUEUE);
-        adminService.createQueue(PCR_INBOUND_QUEUE);
-        processorService.startMessageProcessor(PCR_INBOUND_QUEUE);
+        processorService.stopMessageProcessor(NOTIFICATIONS_INBOUND_QUEUE);
+        testService.dropQueueIfExists(NOTIFICATIONS_INBOUND_QUEUE);
+        adminService.createQueue(NOTIFICATIONS_INBOUND_QUEUE);
+        processorService.startMessageProcessor(NOTIFICATIONS_INBOUND_QUEUE);
 
-        processorService.stopMessageProcessor(PCR_OUTBOUND_QUEUE);
-        testService.dropQueueIfExists(PCR_OUTBOUND_QUEUE);
-        adminService.createQueue(PCR_OUTBOUND_QUEUE);
-        processorService.startMessageProcessor(PCR_OUTBOUND_QUEUE);
+        processorService.stopMessageProcessor(NOTIFICATIONS_OUTBOUND_QUEUE);
+        testService.dropQueueIfExists(NOTIFICATIONS_OUTBOUND_QUEUE);
+        adminService.createQueue(NOTIFICATIONS_OUTBOUND_QUEUE);
+        processorService.startMessageProcessor(NOTIFICATIONS_OUTBOUND_QUEUE);
 
         WireMock.reset();
         if (nonNull(callbackWireMock)) {
@@ -110,8 +110,8 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @AfterEach
     void afterEach() {
-        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
-        processorService.stopMessageProcessor(PCR_OUTBOUND_QUEUE);
+        processorService.stopMessageProcessor(NOTIFICATIONS_INBOUND_QUEUE);
+        processorService.stopMessageProcessor(NOTIFICATIONS_OUTBOUND_QUEUE);
     }
 
     @Test

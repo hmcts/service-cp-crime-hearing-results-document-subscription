@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.UUID;
 
@@ -23,8 +24,8 @@ import java.util.UUID;
 @Getter
 public class ServiceBusConfigService {
     public static final int ADMIN_CONNECTION_PORT = 5300;
-    public static final String PCR_INBOUND_QUEUE = "notifications.inbound";
-    public static final String PCR_OUTBOUND_QUEUE = "notifications.outbound";
+    public static final String NOTIFICATIONS_INBOUND_QUEUE = "notifications.inbound";
+    public static final String NOTIFICATIONS_OUTBOUND_QUEUE = "notifications.outbound";
 
     private boolean enabled;
     private String adminConnectionString;
@@ -63,7 +64,7 @@ public class ServiceBusConfigService {
         final HttpPipelinePolicy forceHttpPolicy = (context, next) -> {
             try {
                 final URL current = context.getHttpRequest().getUrl();
-                final URL httpUrl = new URL("http", current.getHost(), ADMIN_CONNECTION_PORT, current.getFile());
+                final URL httpUrl = URI.create("http://" + current.getHost() + ":" + ADMIN_CONNECTION_PORT + current.getFile()).toURL();
                 context.getHttpRequest().setUrl(httpUrl);
             } catch (MalformedURLException e) {
                 return Mono.error(e);
