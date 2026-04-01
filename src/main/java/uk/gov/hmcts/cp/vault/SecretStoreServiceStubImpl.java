@@ -8,7 +8,6 @@ import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.util.Optional;
 
@@ -20,15 +19,15 @@ import static uk.gov.hmcts.cp.vault.SecretStoreServiceAzureImpl.SECRET_PREFIX;
 public class SecretStoreServiceStubImpl implements SecretStoreServiceInterface {
     public static final String STUB_SECRET_STRING = "Stub string used purely for development purposes. To be secured.";
 
-    HmacKeyService hmacKeyService;
+    private HmacKeyService hmacKeyService;
 
     public static byte[] secret;
     private EncodingService encodingService;
 
     public Optional<String> getSecret(final String secretName) {
         if (secret == null) {
-            KeyPair key = hmacKeyService.generateKey();
-            secret = key.getSecret();
+            final KeyPair keyPair = hmacKeyService.generateKey();
+            secret = keyPair.getSecret();
             log.info("COLING created new secret {}", encodingService.encodeWithBase64(secret));
         }
         final String encoded = encodingService.encodeWithBase64(secret);
