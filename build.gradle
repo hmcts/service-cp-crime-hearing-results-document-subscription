@@ -33,7 +33,7 @@ apply {
 dependencies {
   // Api spec
   implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-case-event-subscription:1.1.6')
-  implementation('io.swagger.core.v3:swagger-annotations:2.2.45')
+  implementation('io.swagger.core.v3:swagger-annotations:2.2.46')
 
 
   // Java core
@@ -90,6 +90,6 @@ dependencies {
   testImplementation 'org.wiremock.integrations:wiremock-spring-boot:3.10.6'
   testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
 
-  implementation 'com.azure:azure-identity:1.5.1'
-  implementation 'com.azure:azure-security-keyvault-secrets:4.4.2'
+  implementation 'com.azure:azure-identity:1.18.2'
+  implementation 'com.azure:azure-security-keyvault-secrets:4.10.6'
 }
