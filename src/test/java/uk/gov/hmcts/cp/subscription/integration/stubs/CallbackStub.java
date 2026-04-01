@@ -62,11 +62,11 @@ public final class CallbackStub {
                         new AssertionError("Callback request body did not contain documentId"));
     }
 
-    public static String getSignatureFromCallbackServeEvents(WireMockServer server, String callbackUri) {
+    public static String getHeaderFromCallbackServeEvents(WireMockServer server, String callbackUri, String headerFieldName) {
         return server.getAllServeEvents().stream()
                 .map(ServeEvent::getRequest)
                 .filter(r -> nonNull(r.getUrl()) && r.getUrl().contains(callbackUri))
-                .map(r -> r.getHeader(SIGNATURE_HEADER))
+                .map(r -> r.getHeader(headerFieldName))
                 .findFirst()
                 .orElseThrow(() ->
                         new AssertionError("Callback headers did not contain signature " + SIGNATURE_HEADER));

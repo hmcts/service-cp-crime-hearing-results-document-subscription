@@ -48,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getBodyFromCallbackServeEvents;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getSignatureFromCallbackServeEvents;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getHeaderFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
@@ -57,6 +57,8 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
+import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
+import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.SIGNATURE_HEADER;
 
 @EnableWireMock({
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
@@ -80,6 +82,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private UUID callbackDocumentId;
     private String callbackBody;
     private String callbackSignature;
+    private String callbackKeyId;
     private static final String correlationId = String.valueOf(UUID.randomUUID());
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
@@ -269,13 +272,16 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private void then_the_subscriber_receives_a_callback() {
         callbackWireMock.verify(1, postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
-        callbackSignature = getSignatureFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
+        callbackKeyId = getHeaderFromCallbackServeEvents(callbackWireMock, CALLBACK_URI, KEY_ID_HEADER);
+        callbackSignature = getHeaderFromCallbackServeEvents(callbackWireMock, CALLBACK_URI, SIGNATURE_HEADER);
         callbackBody = getBodyFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
         callbackDocumentId = jsonMapper.getUUIDAtPath(callbackBody, "/documentId");
+
         log.info("COLING got signature:{} from callback header", callbackSignature);
     }
 
     private void and_the_callback_signature_is_correct() {
+        assertThat(callbackKeyId).isEqualTo(hmacKeyId);
         byte[] hmacSecretBytes = encodingService.decodeFromBase64(hmacSecret);
         String calculatedSignature = hmacSigningService.sign(hmacSecretBytes, callbackBody);
         assertThat(callbackSignature).isEqualTo(calculatedSignature);
