@@ -3,13 +3,17 @@ package uk.gov.hmcts.cp;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClientBuilder;
+import com.azure.messaging.servicebus.administration.models.CreateQueueOptions;
 import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 import uk.gov.hmcts.cp.vault.VaultServiceProperties;
+
+import java.time.Duration;
 
 /**
  * We add any debug logging we might need such as database checks
