@@ -11,12 +11,10 @@ import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
-import uk.gov.hmcts.cp.subscription.mappers.ClientSubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
-import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.List;
 import java.util.UUID;

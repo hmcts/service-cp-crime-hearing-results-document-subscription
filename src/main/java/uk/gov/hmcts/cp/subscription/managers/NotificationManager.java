@@ -10,7 +10,7 @@ import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionServiceV2;
 
 import java.util.UUID;
 
@@ -25,7 +25,7 @@ public class NotificationManager {
 
     private final NotificationService notificationService;
     private final DocumentService documentService;
-    private final SubscriptionService subscriptionService;
+    private final SubscriptionServiceV2 subscriptionService;
     private final CallbackDeliveryService callbackDeliveryService;
 
     public void processPcrNotification(final EventPayload eventPayload) {
@@ -38,7 +38,7 @@ public class NotificationManager {
     public DocumentContent getPcrDocumentContent(final UUID clientSubscriptionId, final UUID clientId, final UUID documentId) {
         log.info("getPcrDocumentContent clientSubscriptionId:{} clientId:{} documentId:{}", clientSubscriptionId, clientId, documentId);
         final String eventType = documentService.getEventTypeForDocument(documentId);
-        if (!subscriptionService.hasAccess(clientSubscriptionId, clientId, eventType)) {
+        if (!subscriptionService.hasAccess(clientSubscriptionId, eventType)) {
             log.warn("getPcrDocumentContent access denied clientSubscriptionId:{} clientId:{} eventType:{}", clientSubscriptionId, clientId, eventType);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
