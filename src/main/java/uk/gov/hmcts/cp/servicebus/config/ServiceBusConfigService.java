@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 
 @Slf4j
@@ -52,7 +53,7 @@ public class ServiceBusConfigService {
         final HttpPipelinePolicy forceHttpPolicy = (context, next) -> {
             try {
                 final URL current = context.getHttpRequest().getUrl();
-                final URL httpUrl = new URL("http", current.getHost(), ADMIN_CONNECTION_PORT, current.getFile());
+                final URL httpUrl = URI.create("http://" + current.getHost() + ":" + ADMIN_CONNECTION_PORT + current.getFile()).toURL();
                 context.getHttpRequest().setUrl(httpUrl);
             } catch (MalformedURLException e) {
                 return Mono.error(e);
