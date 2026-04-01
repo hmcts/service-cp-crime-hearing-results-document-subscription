@@ -3,6 +3,7 @@ package uk.gov.hmcts.cp.servicebus.config;
 import com.azure.core.http.HttpClient;
 import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
 import com.azure.core.http.policy.HttpPipelinePolicy;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.messaging.servicebus.ServiceBusClientBuilder;
 import com.azure.messaging.servicebus.ServiceBusSenderClient;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -28,12 +30,14 @@ public class ServiceBusConfigService {
     private String adminConnectionString;
     private String connectionString;
     private int maxTries;
+    private UUID vaultClientId;
 
     public ServiceBusConfigService(
             final @Value("${service-bus.enabled}") boolean enabled,
             final @Value("${service-bus.admin-connection}") String adminConnectionString,
             final @Value("${service-bus.connection}") String connectionString,
-            final @Value("${service-bus.max-tries}") int maxTries
+            final @Value("${service-bus.max-tries}") int maxTries,
+            final @Value("${vault.client-id:}") UUID vaultClientId
     ) {
         log.info("ServiceBusConfigService initialised with enabled {}", enabled);
         log.info("ServiceBusConfigService initialised with adminConnectionString starting:\"{}\"", adminConnectionString.substring(0, 20));
@@ -43,9 +47,16 @@ public class ServiceBusConfigService {
         this.adminConnectionString = adminConnectionString;
         this.connectionString = connectionString;
         this.maxTries = maxTries;
+        this.vaultClientId = vaultClientId;
     }
 
     public ServiceBusAdministrationClient adminClient() {
+        log.info("ServiceBusConfigService adminClient enabled:{}", enabled);
+        return enabled ? httpsAdminClient() : localEmulatorAdminClient();
+    }
+
+    private ServiceBusAdministrationClient localEmulatorAdminClient() {
+        log.info("ServiceBusConfigService building local emulator admin client");
         final HttpClient adminHttpClient = new NettyAsyncHttpClientBuilder()
                 .port(ADMIN_CONNECTION_PORT)
                 .build();
@@ -64,6 +75,16 @@ public class ServiceBusConfigService {
                 .connectionString(adminConnectionString)
                 .httpClient(adminHttpClient)
                 .addPolicy(forceHttpPolicy)
+                .buildClient();
+    }
+
+    private ServiceBusAdministrationClient httpsAdminClient() {
+        log.info("ServiceBusConfigService building https admin client with endpoint:{}", adminConnectionString);
+        return new ServiceBusAdministrationClientBuilder()
+                .endpoint(adminConnectionString)
+                .credential(new DefaultAzureCredentialBuilder()
+                        .managedIdentityClientId(vaultClientId.toString())
+                        .build())
                 .buildClient();
     }
 

@@ -49,7 +49,7 @@ public class PostStartup {
             log.info("SKIPPING PostStartup service bus listing queues");
              //COLING temp removed this as it hangs in pipelines
              //We see the Azure auth trying but failing
-            
+
             final List<String> queues = adminClient.listQueues().stream().map(QueueProperties::getName).toList();
             log.info("PostStartup service bus has queues:{}", queues);
             for (final String queue : queues) {
