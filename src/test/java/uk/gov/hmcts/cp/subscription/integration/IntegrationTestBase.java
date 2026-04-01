@@ -34,7 +34,7 @@ import java.util.UUID;
 
 
 @SpringBootTest
-// @ContextConfiguration(initializers = TestContainersInitialise.class)
+@ContextConfiguration(initializers = TestContainersInitialise.class)
 @AutoConfigureMockMvc
 @Slf4j
 @TestPropertySource(properties = {
