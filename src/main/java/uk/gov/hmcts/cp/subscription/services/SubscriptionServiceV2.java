@@ -63,9 +63,9 @@ public class SubscriptionServiceV2 {
     }
 
     @Transactional
-    public ClientSubscription updateClientSubscription(final ClientSubscriptionRequest request,
-                                                       final UUID clientId,
-                                                       final UUID subscriptionId) {
+    public ClientSubscription updateClientSubscription(final UUID clientId,
+                                                       final UUID subscriptionId,
+                                                       final ClientSubscriptionRequest request) {
         log.info("updateClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
         final List<Long> eventIds = validateAndFetchEvents(request);
@@ -79,7 +79,7 @@ public class SubscriptionServiceV2 {
     public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
         log.info("getClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
-        final List<String> eventNames = clientEventRepository.findEventNamesForClient(clientId, subscriptionId);
+        final List<String> eventNames = clientEventRepository.findEventNamesForSubscription(subscriptionId);
         return clientSubscriptionMapper.toDto(client, eventNames, null);
     }
 
@@ -108,7 +108,7 @@ public class SubscriptionServiceV2 {
     private ClientEntity validateAndFetchClient(final UUID clientId, final UUID subscriptionId) {
         return clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)
                 .orElseThrow(() ->
-                        new EntityNotFoundException("Subscription not found"));
+                        new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
     }
 
     private List<Long> validateAndFetchEvents(final ClientSubscriptionRequest request) {

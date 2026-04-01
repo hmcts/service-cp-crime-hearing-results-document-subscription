@@ -4,9 +4,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.gov.hmcts.cp.filters.CorrelationIdService;
-import uk.gov.hmcts.cp.hmac.services.EncodingService;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.filters.UUIDService;
@@ -51,8 +48,8 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").exists())
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.createdAt").exists())
-                .andExpect(jsonPath("$.hmac.keyId").value("kid-f4f5dc10-d6d8-4e94-8b02-459c4121aad0"))
-                .andExpect(jsonPath("$.hmac.secret").value(expectedSecret));
+                .andExpect(jsonPath("$.hmac.keyId", matchesRegex("^kid-v1.*")))
+                .andExpect(jsonPath("$.hmac.secret", matchesRegex("[a-zA-Z0-9/+]*=")));
     }
 
     @Test

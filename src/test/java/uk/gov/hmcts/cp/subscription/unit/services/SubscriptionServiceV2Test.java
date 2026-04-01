@@ -156,7 +156,7 @@ class SubscriptionServiceV2Test {
         when(clientSubscriptionMapper.toDto(updatedClientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
         when(clientRepository.save(updatedClientEntity)).thenReturn(updatedClientEntity);
 
-        ClientSubscription result = subscriptionService.updateClientSubscription(updateRequest, clientId, subscriptionId);
+        ClientSubscription result = subscriptionService.updateClientSubscription(clientId, subscriptionId, updateRequest);
 
         assertThat(result).isEqualTo(response);
         verify(clientRepository).save(updatedClientEntity);
@@ -166,7 +166,7 @@ class SubscriptionServiceV2Test {
     @Test
     void get_should_return_subscription_when_owned_by_client() {
         when(clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
-        when(clientEventRepository.findEventNamesForClient(clientId, subscriptionId)).thenReturn(List.of("PRISON_COURT_REGISTER_GENERATED"));
+        when(clientEventRepository.findEventNamesForSubscription(subscriptionId)).thenReturn(List.of("PRISON_COURT_REGISTER_GENERATED"));
         when(clientSubscriptionMapper.toDto(clientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
 
         ClientSubscription result = subscriptionService.getClientSubscription(clientId, subscriptionId);
