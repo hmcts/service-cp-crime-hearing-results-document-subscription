@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.http;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BaseTest {
     public static final String AUTHORIZATION = "Authorization";
     public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
+    public static final int SECRET_LENGTH = 44;
 
     protected JsonMapper jsonMapper = new JsonMapper();
     protected RestClient restClient = RestClient.create();
@@ -34,8 +34,7 @@ public class BaseTest {
             return createSubscription(clientId, "https://mycallback");
         } catch (HttpClientErrorException e) {
             log.info("Subscription already exists ... trying to parse subscriptionId from:{}", e.getMessage());
-            JsonNode jsonNode = new JsonMapper().toJsonNode(e.getResponseBodyAsString());
-            String message = String.valueOf(jsonNode.get("message"));
+            String message = jsonMapper.getStringAtPath(e.getResponseBodyAsString(), "/message");
             String subscriptionIdString = message.replaceAll("subscription already exist with ", "").replaceAll("\"", "");
             UUID subscriptionId = UUID.fromString(subscriptionIdString);
             return getSubscription(clientId, subscriptionId);
@@ -56,7 +55,7 @@ public class BaseTest {
         String hmacKeyId = jsonMapper.getStringAtPath(response.getBody(), "/hmac/keyId");
         assertThat(hmacKeyId).matches("kid-[a-zA-Z0-9\\-]*");
         String hmacSecret = jsonMapper.getStringAtPath(response.getBody(), "/hmac/secret");
-        assertThat(hmacSecret).isEqualTo("U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==");
+        assertThat(hmacSecret).hasSize(SECRET_LENGTH);
         return jsonMapper.getUUIDAtPath(response.getBody(), "/clientSubscriptionId");
     }
 

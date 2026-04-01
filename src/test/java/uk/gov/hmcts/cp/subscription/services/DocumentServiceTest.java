@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import uk.gov.hmcts.cp.filters.UUIDService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.clients.MaterialDocumentClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
@@ -16,6 +17,8 @@ import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 
 import java.net.URI;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -29,6 +32,8 @@ class DocumentServiceTest {
     @Mock
     ClockService clockService;
     @Mock
+    UUIDService uuidService;
+    @Mock
     DocumentMapper documentMapper;
     @Mock
     DocumentMappingRepository documentMappingRepository;
@@ -40,6 +45,7 @@ class DocumentServiceTest {
     @InjectMocks
     DocumentService documentService;
 
+    OffsetDateTime now = OffsetDateTime.of(2026, 3, 1, 12, 30, 30, 500, ZoneOffset.UTC);
     String materialUrl = "http://material-servce";
     UUID materialId = UUID.fromString("43bb8246-2bdf-487c-a0d3-160bbfd37777");
     UUID documentId = UUID.fromString("2e48f8f1-c057-48f7-92e5-c4183480ea3e");
@@ -50,7 +56,9 @@ class DocumentServiceTest {
 
     @Test
     void save_document_should_save_entity() {
-        when(documentMapper.mapToNewEntity(clockService, materialId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(documentMappingEntity);
+        when(clockService.nowOffsetUTC()).thenReturn(now);
+        when(uuidService.random()).thenReturn(documentId);
+        when(documentMapper.mapToNewEntity(documentId, materialId, "PRISON_COURT_REGISTER_GENERATED", now)).thenReturn(documentMappingEntity);
         when(documentMappingRepository.save(documentMappingEntity)).thenReturn(documentMappingEntity);
         documentService.saveDocumentMapping(materialId, "PRISON_COURT_REGISTER_GENERATED");
         verify(documentMappingRepository).save(documentMappingEntity);

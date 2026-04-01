@@ -8,18 +8,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-class CorrelationIdServiceTest {
+class UUIDServiceTest {
 
     @InjectMocks
-    CorrelationIdService correlationIdService;
+    UUIDService uuidService;
 
     @Test
     void random_should_return_uuid() {
-        assertThat(correlationIdService.random()).isNotNull();
+        assertThat(uuidService.random()).isNotNull();
     }
 
     @Test
     void random_should_return_string() {
-        assertThat(correlationIdService.randomString()).isNotNull();
+        assertThat(uuidService.randomString()).isNotNull();
     }
 }

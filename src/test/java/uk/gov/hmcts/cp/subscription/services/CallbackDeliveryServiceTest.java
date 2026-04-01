@@ -62,7 +62,7 @@ class CallbackDeliveryServiceTest {
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
+        when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
@@ -78,7 +78,7 @@ class CallbackDeliveryServiceTest {
         Subscriber exampleSubscriber = Subscriber.builder().hmacKeyId(hmacKeyId).notificationEndpoint(exampleCallbackUrl).build();
         when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(exampleSubscriber);
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
+        when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
