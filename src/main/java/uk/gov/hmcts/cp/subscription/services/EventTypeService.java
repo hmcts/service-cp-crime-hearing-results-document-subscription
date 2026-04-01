@@ -20,10 +20,13 @@ public class EventTypeService {
 
     public EventTypeResponse getAllEventTypes() {
         final List<EventTypeEntity> eventTypeEntityList = eventTypeRepository.findAll();
+        log.info("getAllEventTypes returning {} event types", eventTypeEntityList.size());
         return eventTypeMapper.mapToEventTypes(eventTypeEntityList);
     }
 
     public boolean eventExists(final String eventName) {
-        return eventTypeRepository.existsByEventName(eventName);
+        final boolean exists = eventTypeRepository.existsByEventName(eventName);
+        log.info("eventExists eventName:{} exists:{}", eventName, exists);
+        return exists;
     }
 }

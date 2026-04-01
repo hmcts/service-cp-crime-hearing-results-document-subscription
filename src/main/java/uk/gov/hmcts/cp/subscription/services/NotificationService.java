@@ -19,9 +19,14 @@ public class NotificationService {
     private final DocumentService documentService;
 
     public UUID processInboundEvent(final EventPayload eventPayload) {
+        log.info("processInboundEvent eventId:{} materialId:{} eventType:{} async:{}",
+                eventPayload.getEventId(), eventPayload.getMaterialId(), eventPayload.getEventType(),
+                serviceBusConfigService.isEnabled());
         final MaterialMetadata materialMetadata = serviceBusConfigService.isEnabled()
                 ? materialService.getMaterialMetadata(eventPayload.getMaterialId())
                 : materialService.waitForMaterialMetadata(eventPayload.getMaterialId());
-        return documentService.saveDocumentMapping(materialMetadata.getMaterialId(), eventPayload.getEventType());
+        final UUID documentId = documentService.saveDocumentMapping(materialMetadata.getMaterialId(), eventPayload.getEventType());
+        log.info("processInboundEvent complete eventId:{} documentId:{}", eventPayload.getEventId(), documentId);
+        return documentId;
     }
 }

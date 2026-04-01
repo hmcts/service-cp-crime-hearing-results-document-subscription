@@ -43,6 +43,7 @@ public class SubscriptionServiceV2 {
 
     @Transactional
     public ClientSubscription createClientSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
+        log.info("createClientSubscription clientId:{} eventTypeCount:{}", clientId, request.getEventTypes().size());
         validateClientDoesNotExists(clientId);
         final List<Long> eventIds = validateAndFetchEvents(request);
 
@@ -51,13 +52,16 @@ public class SubscriptionServiceV2 {
 
         //TODO save the client hmacKeyId in the new table
         final KeyPair keyPair = hmacManager.createAndStoreNewKey();
-        return clientSubscriptionMapper.toDto(client, request.getEventTypes(), keyPair);
+        final ClientSubscription result = clientSubscriptionMapper.toDto(client, request.getEventTypes(), keyPair);
+        log.info("createClientSubscription complete clientId:{} subscriptionId:{}", clientId, result.getClientSubscriptionId());
+        return result;
     }
 
     @Transactional
     public ClientSubscription updateClientSubscription(final ClientSubscriptionRequest request,
                                                        final UUID clientId,
                                                        final UUID subscriptionId) {
+        log.info("updateClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
         final List<Long> eventIds = validateAndFetchEvents(request);
 
@@ -68,6 +72,7 @@ public class SubscriptionServiceV2 {
     }
 
     public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
+        log.info("getClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
         final List<String> eventNames = clientEventRepository.findEventNamesForClient(clientId, subscriptionId);
         return clientSubscriptionMapper.toDto(client, eventNames, null);
@@ -75,6 +80,7 @@ public class SubscriptionServiceV2 {
 
     @Transactional
     public void deleteClientSubscription(final UUID clientId, final UUID subscriptionId) {
+        log.info("deleteClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
         clientRepository.delete(client);

@@ -36,3 +36,5 @@ applicationinsights-agent-*.jar
 */.DS_Store
 
 pmd-output.txt
+
+.claude
