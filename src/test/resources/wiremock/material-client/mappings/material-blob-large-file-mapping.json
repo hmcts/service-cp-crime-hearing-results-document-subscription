@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/blob/signed-document.pdf?sv=2024-01-01&sig=Abc%2BDef%2BGhi%3D"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/pdf"
+    },
+    "base64Body": "cGRm"
+  },
+  "priority": 1
+}

@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/blob/.*"
+  },
+  "response": {
+    "status": 403,
+    "body": "Signature fields not well formed."
+  },
+  "priority": 10
+}

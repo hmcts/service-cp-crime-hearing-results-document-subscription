@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.integration.config;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
@@ -17,7 +16,6 @@ public class TestContainersInitialise implements ApplicationContextInitializer<C
             .withPassword("postgres");
 
 
-    @SneakyThrows
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         POSTGRE_SQL_CONTAINER.start();

@@ -67,4 +67,5 @@ class TracingFilterTest {
         verify(response).setHeader(TracingFilter.CORRELATION_ID_KEY, correlationId);
         verify(filterChain).doFilter(request, response);
     }
+
 }

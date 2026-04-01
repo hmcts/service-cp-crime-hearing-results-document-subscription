@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.subscription.clients;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,7 @@ public class MaterialDocumentClient {
     private final RestTemplate restTemplate;
 
     public ResponseEntity<byte[]> getMaterialDocument(final URI uri) {
+        log.debug("getMaterialDocument uri:{}", Encode.forJava(uri.toString()));
         return restTemplate.exchange(uri, GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
     }
 }
