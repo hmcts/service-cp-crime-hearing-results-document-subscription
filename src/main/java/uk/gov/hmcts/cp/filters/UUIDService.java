@@ -7,7 +7,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-public class CorrelationIdService {
+public class UUIDService {
 
     public UUID random() {
         return UUID.randomUUID();

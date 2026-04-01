@@ -25,7 +25,7 @@ public class TracingFilter extends OncePerRequestFilter {
 
     public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
 
-    private CorrelationIdService correlationIdService;
+    private UUIDService uuidService;
 
     @SneakyThrows
     @Override
@@ -40,7 +40,7 @@ public class TracingFilter extends OncePerRequestFilter {
                                     @Nonnull final FilterChain filterChain) throws ServletException, IOException {
         try {
             final String correlationId = getCorrelationId(request);
-            MDC.put(CORRELATION_ID_KEY, correlationId);
+            MDC.put(CORRELATION_ID_KEY, getCorrelationId(request));
             response.setHeader(CORRELATION_ID_KEY, correlationId);
             filterChain.doFilter(request, response);
         } finally {
@@ -49,12 +49,10 @@ public class TracingFilter extends OncePerRequestFilter {
     }
 
     private String getCorrelationId(final HttpServletRequest request) {
-        String cId = request.getHeader(CORRELATION_ID_KEY);
-        if (cId == null) {
+        if (request.getHeader(CORRELATION_ID_KEY) == null) {
             log.info("No 'X-Correlation-Id' header found. Generating Correlation ID.");
-            cId = correlationIdService.randomString();
+            return uuidService.randomString();
         }
-        return cId;
+        return request.getHeader(CORRELATION_ID_KEY);
     }
-
 }

@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.hmac.services.EncodingService;
 
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.util.Optional;
 
@@ -17,15 +15,16 @@ import static uk.gov.hmcts.cp.vault.SecretStoreServiceAzureImpl.SECRET_PREFIX;
 @AllArgsConstructor
 public class SecretStoreServiceStubImpl implements SecretStoreServiceInterface {
 
-    private EncodingService encodingService;
+    public static String encodedSecret;
 
     public Optional<String> getSecret(final String secretName) {
-        final String encoded = encodingService.encodeWithBase64(secretName.getBytes(StandardCharsets.UTF_8));
-        return Optional.of(encoded);
+        log.warn("WARNING SecretService is stubbed. Do not use in real environments");
+        return Optional.of(encodedSecret);
     }
 
     public void setSecret(final String secretName, final String secretValue) {
-        // Do nothing we stub the secret to be
+        log.warn("WARNING SecretService is stubbed. Do not use in real environments");
+        encodedSecret = secretValue;
     }
 
     @SneakyThrows
