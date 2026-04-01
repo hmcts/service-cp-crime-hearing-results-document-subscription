@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.gov.hmcts.cp.filters.CorrelationIdService;
+import uk.gov.hmcts.cp.filters.UUIDService;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
@@ -26,7 +26,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
     private static final String SUBSCRIPTION_REQUEST_VALID = "stubs/requests/subscription/subscription-request-valid.json";
 
     @MockitoBean
-    CorrelationIdService correlationIdService;
+    UUIDService uuidService;
     @Autowired
     HmacKeyService hmacKeyService;
     @Autowired
@@ -41,7 +41,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void create_subscription_should_save_subscription_with_hmac() throws Exception {
-        when(correlationIdService.randomString()).thenReturn(correlationId);
+        when(uuidService.randomString()).thenReturn(correlationId);
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
         String expectedSecret = encodingService.encodeWithBase64(hmacKeyService.generateKey().getSecret());
         mockMvc.perform(post("/client-subscriptions")

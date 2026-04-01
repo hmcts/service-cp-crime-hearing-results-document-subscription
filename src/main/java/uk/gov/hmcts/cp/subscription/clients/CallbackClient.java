@@ -31,7 +31,7 @@ public class CallbackClient {
         headers.set(SIGNATURE_HEADER, payloadWrapper.getSignature());
         final String payloadJson = jsonMapper.toJson(payloadWrapper.getPayload());
         final HttpEntity<String> req = new HttpEntity<>(payloadJson, headers);
-        log.info("Sending signature:{} for payload:{}", payloadWrapper.getSignature(), payloadJson);
+        log.info("COLING Sending signature:{} for payload:{}", payloadWrapper.getSignature(), payloadJson);
         restTemplate.exchange(url, POST, req, String.class);
     }
 }

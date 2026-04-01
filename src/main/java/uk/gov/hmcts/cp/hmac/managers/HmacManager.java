@@ -29,9 +29,11 @@ public class HmacManager {
         return keyPair;
     }
 
-    public String getSignature(final String keyId, final String payload) {
+    public String calculateSignature(final String keyId, final String payload) {
+        log.info("COLING calculateSignature for payload:\"{}\"", payload);
         final String encodedSecret = secretStoreService.getSecret(keyId).
                 orElseThrow(() -> new EntityNotFoundException("no existing secret for keyId:" + keyId));
+        log.info("COLING calculateSignature signing with secret:{}", encodedSecret);
         final byte[] secret = encodingService.decodeFromBase64(encodedSecret);
         return hmacSigningService.sign(secret, payload);
     }

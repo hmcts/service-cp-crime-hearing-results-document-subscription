@@ -16,16 +16,20 @@ import static uk.gov.hmcts.cp.vault.SecretStoreServiceAzureImpl.SECRET_PREFIX;
 @Service
 @AllArgsConstructor
 public class SecretStoreServiceStubImpl implements SecretStoreServiceInterface {
+    public static final String STUB_KEY_ID = "kid-" + "f4f5dc10-d6d8-4e94-8b02-459c4121aad0";
+    public static final String STUB_SECRET_STRING = "Stub string used purely for development purposes. To be secured.";
 
     private EncodingService encodingService;
 
     public Optional<String> getSecret(final String secretName) {
-        final String encoded = encodingService.encodeWithBase64(secretName.getBytes(StandardCharsets.UTF_8));
+        final String encoded = encodingService.encodeWithBase64(STUB_SECRET_STRING.getBytes(StandardCharsets.UTF_8));
+        log.info("COLING stub getSecret returning {}", encoded);
         return Optional.of(encoded);
     }
 
     public void setSecret(final String secretName, final String secretValue) {
-        // Do nothing we stub the secret to be
+        log.info("COLING stub storing secret {} to {}", secretName, secretValue);
+        // Do nothing we return the stubbed secret when we call getSecret()
     }
 
     @SneakyThrows

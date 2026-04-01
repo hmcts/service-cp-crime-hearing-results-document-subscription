@@ -43,7 +43,8 @@ public class CallbackDeliveryService {
         log.info("sending {} outbound notifications", entities.size());
         for (final ClientSubscriptionEntity entity : entities) {
             final Subscriber subscriber = subscriberMapper.toSubscriber(entity);
-            final String signature = hmacManager.getSignature(subscriber.getHmacKeyId(), jsonMapper.toJson(eventNotificationPayload));
+            final String signature = hmacManager.calculateSignature(subscriber.getHmacKeyId(), jsonMapper.toJson(eventNotificationPayload));
+            log.info("COLING sending signature:{} for payload:\"{}\"", signature, jsonMapper.toJson(eventNotificationPayload));
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, subscriber.getHmacKeyId(), signature);
             if (subscriber.getNotificationEndpoint().startsWith(EXAMPLE_ENDPOINT)) {
                 log.info("Skipping notification for EXAMPLE callback endpoint:{}", subscriber.getNotificationEndpoint());

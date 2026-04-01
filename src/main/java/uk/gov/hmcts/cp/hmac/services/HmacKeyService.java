@@ -27,7 +27,7 @@ public class HmacKeyService {
     public KeyPair generateKey() {
         if (vaultServiceProperties.isVaultEnabled()) {
             final String keyId = "kid-v1-" + UUID.randomUUID();
-            log.info("Generating new keyPair for keyId:{}", keyId);
+            log.info("COLING Generating new keyPair for keyId:{}", keyId);
             final byte[] secretBytes = new byte[SECRET_BYTES_LENGTH];
             secureRandom.nextBytes(secretBytes);
             return KeyPair.builder().keyId(keyId).secret(secretBytes).build();

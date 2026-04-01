@@ -23,7 +23,7 @@ public class TracingFilter extends OncePerRequestFilter {
 
     public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
 
-    private CorrelationIdService correlationIdService;
+    private UUIDService uuidService;
 
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
@@ -46,7 +46,7 @@ public class TracingFilter extends OncePerRequestFilter {
 
     private String getCorrelationId(final HttpServletRequest request) {
         return request.getHeader(CORRELATION_ID_KEY) == null
-                ? correlationIdService.randomString()
+                ? uuidService.randomString()
                 : request.getHeader(CORRELATION_ID_KEY);
     }
 }
