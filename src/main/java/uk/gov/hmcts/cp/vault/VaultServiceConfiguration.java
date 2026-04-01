@@ -16,7 +16,7 @@ public class VaultServiceConfiguration {
         if (vaultServiceProperties.isVaultEnabled()) {
             return new SecretStoreServiceAzureImpl(vaultServiceProperties);
         } else {
-            return new SecretStoreServiceStubImpl(hmacKeyService);
+            return new SecretStoreServiceStubImpl();
         }
     }
 }

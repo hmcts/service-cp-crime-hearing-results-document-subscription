@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import uk.gov.hmcts.cp.filters.UUIDService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.clients.MaterialDocumentClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
@@ -31,6 +32,8 @@ class DocumentServiceTest {
     @Mock
     ClockService clockService;
     @Mock
+    UUIDService uuidService;
+    @Mock
     DocumentMapper documentMapper;
     @Mock
     DocumentMappingRepository documentMappingRepository;
@@ -54,6 +57,7 @@ class DocumentServiceTest {
     @Test
     void save_document_should_save_entity() {
         when(clockService.nowOffsetUTC()).thenReturn(now);
+        when(uuidService.random()).thenReturn(documentId);
         when(documentMapper.mapToNewEntity(documentId, materialId, "PRISON_COURT_REGISTER_GENERATED", now)).thenReturn(documentMappingEntity);
         when(documentMappingRepository.save(documentMappingEntity)).thenReturn(documentMappingEntity);
         documentService.saveDocumentMapping(materialId, "PRISON_COURT_REGISTER_GENERATED");

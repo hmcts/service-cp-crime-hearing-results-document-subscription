@@ -15,7 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DocumentMapperTest {
 
     @InjectMocks
-    DocumentMapper documentMapper;
+    DocumentMapperImpl documentMapper;
 
     @Test
     void mapper_should_create_entity() {
