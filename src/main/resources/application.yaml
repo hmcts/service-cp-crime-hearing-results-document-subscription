@@ -28,9 +28,11 @@ callback-client:
     timeoutMilliSecs: ${CALLBACK_CLIENT_TIMEOUT_MSECS:5000}
 
 service-bus:
-  enabled: ${AZURE_SERVICE_BUS_ENABLED:false}
+  # true  = real Azure Service Bus (only AZURE_SERVICE_BUS_URI is used for both admin and messaging)
+  # false = local Service Bus emulator (AZURE_SERVICE_BUS_ADMIN_URI for admin on port 5300, AZURE_SERVICE_BUS_URI for messaging)
+  enabled: ${AZURE_SERVICE_BUS_ENABLED:true}
   admin-connection: ${AZURE_SERVICE_BUS_ADMIN_URI:Endpoint=sb://localhost:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
-  connection: ${AZURE_SERVICEBUS_URI:Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
+  connection: ${AZURE_SERVICE_BUS_URI:Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
   retry-msecs: ${SERVICE_BUS_RETRY_SECONDS:0,1000,2000,10000,30000,60000}
   max-tries: ${SERVICE_BUS_MAX_TRIES:5}
 

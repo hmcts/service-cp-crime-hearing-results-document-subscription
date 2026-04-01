@@ -82,7 +82,10 @@ public abstract class IntegrationTestBase {
             .build();
 
     protected void clearClientSubscriptionTable() {
-        log.info("Clearing client_subscription table");
+        log.info("Clearing client_subscription table and related client/client_events/client_hmac rows");
+        clientEventRepository.deleteAll();
+        clientHmacRepository.deleteAll();
+        clientRepository.deleteAll();
         subscriptionRepository.deleteAll();
     }
 
@@ -113,10 +116,11 @@ public abstract class IntegrationTestBase {
                 .notificationEndpoint(notificationUri)
                 .createdAt(now)
                 .updatedAt(now)
+                .hmacKeyId("integration-test-hmac-key")
                 .build();
-        subscriptionRepository.save(subscription);
+        subscriptionRepository.saveAndFlush(subscription);
 
-        clientRepository.save(ClientEntity.builder()
+        clientRepository.saveAndFlush(ClientEntity.builder()
                 .id(clientId)
                 .subscriptionId(subscription.getId())
                 .callbackUrl(notificationUri)
@@ -124,6 +128,7 @@ public abstract class IntegrationTestBase {
                 .updatedAt(now)
                 .build());
 
+        // client_events.subscription_id FK references client.subscription_id — client row must be persisted first.
         entityEventTypes.forEach(eventType ->
                 eventTypeRepository.findByEventName(eventType).ifPresent(eventTypeEntity ->
                         clientEventRepository.save(ClientEventEntity.builder()

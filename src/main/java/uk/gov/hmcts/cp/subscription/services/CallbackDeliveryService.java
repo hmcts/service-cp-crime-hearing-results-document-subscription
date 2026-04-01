@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
@@ -18,7 +18,7 @@ import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 import java.util.List;
 import java.util.UUID;
 
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class CallbackDeliveryService {
     private final SubscriberMapper subscriberMapper;
     private final NotificationMapper notificationMapper;
     private final JsonMapper jsonMapper;
-    private final ServiceBusConfigService serviceBusConfig;
+    private final ServiceBusProperties serviceBusConfig;
     private final ServiceBusClientService clientService;
     private final CallbackService callbackService;
     private final HmacManager hmacManager;
@@ -50,7 +50,7 @@ public class CallbackDeliveryService {
                 log.info("Skipping notification for EXAMPLE callback endpoint:{}", subscriber.getNotificationEndpoint());
             } else if (serviceBusConfig.isEnabled()) {
                 final String payload = jsonMapper.toJson(payloadWrapper);
-                clientService.queueMessage(PCR_OUTBOUND_QUEUE, subscriber.getNotificationEndpoint(), payload, 0);
+                clientService.queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, subscriber.getNotificationEndpoint(), payload, 0);
             } else {
                 callbackService.sendToSubscriber(subscriber.getNotificationEndpoint(), payloadWrapper);
                 log.info("Subscriber {} notified via callbackUrl {} for documentId {}", subscriber.getId(), subscriber.getNotificationEndpoint(), eventNotificationPayload.getDocumentId());

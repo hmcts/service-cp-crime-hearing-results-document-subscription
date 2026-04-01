@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpServerErrorException;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusProcessorServiceTest {
@@ -34,7 +34,9 @@ class ServiceBusProcessorServiceTest {
     @Mock
     ServiceBusMapper serviceBusMapper;
     @Mock
-    ServiceBusConfigService configService;
+    ServiceBusProperties properties;
+    @Mock
+    ServiceBusClientFactory clientFactory;
     @Mock
     ServiceBusClientService serviceBusClientService;
     @Mock
@@ -57,7 +59,7 @@ class ServiceBusProcessorServiceTest {
 
     @Test
     void initialise_do_nothing_if_not_enabled() {
-        when(configService.isEnabled()).thenReturn(false);
+        when(properties.isEnabled()).thenReturn(false);
         serviceBusProcessorService.initialiseServiceBus();
         verify(adminService, never()).isServiceBusReady();
     }
@@ -84,9 +86,9 @@ class ServiceBusProcessorServiceTest {
         when(wrappedMessage.getMessage()).thenReturn("message");
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context);
+        serviceBusProcessorService.handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, context);
 
-        verify(serviceBusHandlers).handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
+        verify(serviceBusHandlers).handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "message");
     }
 
     @Test
@@ -100,13 +102,13 @@ class ServiceBusProcessorServiceTest {
         when(jsonMapper.fromJson("wrapped-message", EventNotificationPayload.class)).thenReturn(notificationPayload);
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
-                .handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
+                .handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "message");
 
-        when(configService.getMaxTries()).thenReturn(2);
+        when(properties.getMaxTries()).thenReturn(2);
 
-        serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context);
+        serviceBusProcessorService.handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, context);
 
-        verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "wrapped-message", 1);
+        verify(serviceBusClientService).queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "wrapped-message", 1);
     }
 
     @Test
@@ -118,9 +120,9 @@ class ServiceBusProcessorServiceTest {
         when(wrappedMessage.getMessage()).thenReturn("message");
         when(wrappedMessage.getTargetUrl()).thenReturn(callbackUrl);
         doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(serviceBusHandlers)
-                .handleMessage(PCR_OUTBOUND_QUEUE, callbackUrl, "message");
-        when(configService.getMaxTries()).thenReturn(1);
+                .handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "message");
+        when(properties.getMaxTries()).thenReturn(1);
 
-        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(PCR_OUTBOUND_QUEUE, context));
+        assertThrows(HttpServerErrorException.class, () -> serviceBusProcessorService.handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, context));
     }
 }

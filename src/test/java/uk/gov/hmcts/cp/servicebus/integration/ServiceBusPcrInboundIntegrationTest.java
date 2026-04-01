@@ -19,19 +19,18 @@ import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
 
 @Slf4j
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false",
-        "service-bus.enabled=true",
+        "service-bus.enabled=false",
         "service-bus.max-tries=2",
         "service-bus.retry-msecs=0"
 })
@@ -44,42 +43,38 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
 
     @BeforeEach
     void setUp() {
-        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
-        testService.dropQueueIfExists(PCR_INBOUND_QUEUE);
-        adminService.createQueue(PCR_INBOUND_QUEUE);
-        processorService.startMessageProcessor(PCR_INBOUND_QUEUE);
+        prepareQueue(NOTIFICATIONS_INBOUND_QUEUE);
     }
 
     @AfterEach
     void afterEach() {
-        processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
+        processorService.stopMessageProcessor(NOTIFICATIONS_INBOUND_QUEUE);
     }
 
     @SneakyThrows
     @Test
     void inbound_notification_should_process_material_service() {
         MaterialMetadata materialMetadata = materialMetadata(materialId);
-        when(materialService.getMaterialMetadata(materialId)).thenReturn(materialMetadata);
+        when(materialService.waitForMaterialMetadata(materialId)).thenReturn(materialMetadata);
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
-        clientService.queueMessage(PCR_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload()), 0);
+        clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload()), 0);
         MDC.clear();
 
         Thread.sleep(5000);
-        verify(materialService).getMaterialMetadata(materialId);
+        verify(materialService).waitForMaterialMetadata(materialId);
     }
 
     @SneakyThrows
     @Test
     void process_message_should_retry_n_times_then_send_to_DLQ() {
-        when(materialService.getMaterialMetadata(materialId)).thenReturn(null);
+        when(materialService.waitForMaterialMetadata(materialId)).thenReturn(null);
         EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").materialId(materialId).build();
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
-        clientService.queueMessage(PCR_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload), 0);
+        clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload), 0);
         MDC.clear();
 
         Thread.sleep(5000);
-        verify(materialService, times(2)).getMaterialMetadata(materialId);
+        verify(materialService, times(2)).waitForMaterialMetadata(materialId);
     }
 
     // There are not nulls on EventPayload so we need to populate it quite fully
