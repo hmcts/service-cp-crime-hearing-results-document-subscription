@@ -26,7 +26,7 @@ public class MaterialDocumentClient {
     private final RestTemplate restTemplate;
 
     public ResponseEntity<byte[]> getMaterialDocument(final URI uri) {
-        log.info("getMaterialDocument uri:{}", Encode.forJava(uri.toString()));
+        log.debug("getMaterialDocument uri:{}", Encode.forJava(uri.toString()));
         return restTemplate.exchange(uri, GET, new HttpEntity<>(new HttpHeaders()), byte[].class);
     }
 }
