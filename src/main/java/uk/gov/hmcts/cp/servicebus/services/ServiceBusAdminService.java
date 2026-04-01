@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.servicebus.services;
 
-import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
 import com.azure.messaging.servicebus.administration.models.CreateQueueOptions;
 import com.azure.messaging.servicebus.administration.models.QueueProperties;
 import lombok.AllArgsConstructor;
