@@ -30,11 +30,8 @@ public class TracingFilter extends OncePerRequestFilter {
     @SneakyThrows
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
-        String pathRoot = new URI(request.getRequestURI()).getPath();
-        if (pathRoot.equals("/") || pathRoot.startsWith("/actuator")) {
-            return true;
-        }
-        return false;
+        final String pathRoot = new URI(request.getRequestURI()).getPath();
+        return "/".equals(pathRoot) || pathRoot.startsWith("/actuator");
     }
 
     @Override
