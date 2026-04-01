@@ -32,8 +32,8 @@ apply {
 // Sadly, dependabot does not track dependencies in the apply-from files
 dependencies {
   // Api spec
-  implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-case-event-subscription:1.1.5')
-  implementation('io.swagger.core.v3:swagger-annotations:2.2.45')
+  implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-case-event-subscription:1.1.6')
+  implementation('io.swagger.core.v3:swagger-annotations:2.2.46')
 
 
   // Java core
@@ -89,4 +89,7 @@ dependencies {
   implementation('com.azure:azure-messaging-servicebus:7.17.17')
   testImplementation 'org.wiremock.integrations:wiremock-spring-boot:4.2.1'
   testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
+
+  implementation 'com.azure:azure-identity:1.18.2'
+  implementation 'com.azure:azure-security-keyvault-secrets:4.10.6'
 }

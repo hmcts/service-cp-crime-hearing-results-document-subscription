@@ -37,7 +37,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
                         .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("invalid_request"))
-                .andExpect(jsonPath("$.message").value("JSON parse error: Cannot construct instance of `uk.gov.hmcts.cp.openapi.model.EventType`, problem: Unexpected value 'BAD'"));
+                .andExpect(jsonPath("$.message").value("Invalid event type: BAD"));
     }
 
     @Test

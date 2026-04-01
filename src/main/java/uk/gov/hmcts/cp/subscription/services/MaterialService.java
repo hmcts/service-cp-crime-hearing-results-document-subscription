@@ -34,9 +34,8 @@ public class MaterialService {
         return materialResponse.get();
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     public boolean pollMaterialMetadata(final UUID materialId, final Map<String, String> mdcContext,
-                                 final AtomicReference<MaterialMetadata> materialResponse) {
+                                        final AtomicReference<MaterialMetadata> materialResponse) {
         if (mdcContext != null) {
             MDC.setContextMap(mdcContext);
         }
@@ -51,7 +50,6 @@ public class MaterialService {
     }
 
     public MaterialMetadata getMaterialMetadata(final UUID materialId) {
-        log.info("COLING MDC corId:{}", MDC.get("X-Correlation-Id"));
         return materialClient.getMetadata(materialId);
     }
 }

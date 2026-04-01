@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.util.UUID;
 
@@ -23,7 +22,6 @@ public class NotificationService {
         final MaterialMetadata materialMetadata = serviceBusConfigService.isEnabled()
                 ? materialService.getMaterialMetadata(eventPayload.getMaterialId())
                 : materialService.waitForMaterialMetadata(eventPayload.getMaterialId());
-        final EntityEventType eventType = EntityEventType.valueOf(eventPayload.getEventType().name());
-        return documentService.saveDocumentMapping(materialMetadata.getMaterialId(), eventType);
+        return documentService.saveDocumentMapping(materialMetadata.getMaterialId(), eventPayload.getEventType());
     }
 }

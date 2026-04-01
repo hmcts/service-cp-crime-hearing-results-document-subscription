@@ -15,13 +15,13 @@ import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 
+import java.net.URI;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.subscription.model.EntityEventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
@@ -46,13 +46,13 @@ class DocumentServiceTest {
     DocumentMappingEntity documentMappingEntity = DocumentMappingEntity.builder()
             .documentId(documentId)
             .materialId(materialId)
-            .eventType(PRISON_COURT_REGISTER_GENERATED).build();
+            .eventType("PRISON_COURT_REGISTER_GENERATED").build();
 
     @Test
     void save_document_should_save_entity() {
-        when(documentMapper.mapToNewEntity(clockService, materialId, PRISON_COURT_REGISTER_GENERATED)).thenReturn(documentMappingEntity);
+        when(documentMapper.mapToNewEntity(clockService, materialId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(documentMappingEntity);
         when(documentMappingRepository.save(documentMappingEntity)).thenReturn(documentMappingEntity);
-        documentService.saveDocumentMapping(materialId, PRISON_COURT_REGISTER_GENERATED);
+        documentService.saveDocumentMapping(materialId, "PRISON_COURT_REGISTER_GENERATED");
         verify(documentMappingRepository).save(documentMappingEntity);
     }
 
@@ -69,7 +69,7 @@ class DocumentServiceTest {
         when(materialClient.getMetadata(materialId)).thenReturn(createMetadata());
         when(materialClient.getContentUrl(materialId)).thenReturn(materialUrl);
         ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
-        when(materialDocumentClient.getMaterialDocument(materialUrl)).thenReturn(document);
+        when(materialDocumentClient.getMaterialDocument(URI.create(materialUrl))).thenReturn(document);
 
         DocumentContent documentContent = documentService.getDocumentContent(documentId);
 

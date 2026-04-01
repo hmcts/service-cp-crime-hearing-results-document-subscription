@@ -46,9 +46,9 @@ public class ClientEventsService {
         return clientSubscription.getEventTypes()
                 .stream()
                 .map(eventType -> eventTypeEntities.stream()
-                        .filter(e -> e.getEventName().equals(eventType.name()))
+                        .filter(e -> e.getEventName().equals(eventType))
                         .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid event type: " + eventType.name())))
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid event type: " + eventType)))
                 .collect(Collectors.toSet());
     }
 }

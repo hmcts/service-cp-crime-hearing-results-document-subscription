@@ -52,10 +52,12 @@ services:
       SERVER_PORT: 8082
       DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
       MATERIAL_CLIENT_URL: http://wiremock:8080
-      SERVICE_BUS_ENABLED: true
-      SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
-      SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      AZURE_SERVICE_BUS_ENABLED: true
+      AZURE_SERVICE_BUS_ADMIN_URI: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
+      AZURE_SERVICEBUS_URI: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
       SERVICE_BUS_MAX_TRIES: 4
+      AZURE_VAULT_ENABLED: false
+
     depends_on:
       - db
       - wiremock
@@ -67,31 +69,6 @@ services:
     # Once actuator/health returns 200, service bus is confirmed ready.
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8082/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 18
-      start_period: 60s
-
-  app2:
-    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
-    build:
-      context: ..
-    environment:
-      SERVER_PORT: 8083
-      DATASOURCE_URL: jdbc:postgresql://db:5432/appdb
-      MATERIAL_CLIENT_URL: http://wiremock:8080
-      SERVICE_BUS_ENABLED: true
-      SERVICE_BUS_ADMIN_CONNECTION: Endpoint=sb://servicebus:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
-      SERVICE_BUS_CONNECTION: Endpoint=sb://servicebus;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;
-      SERVICE_BUS_MAX_TRIES: 4
-    depends_on:
-      - db
-      - wiremock
-      - servicebus
-    ports:
-      - "8083:8083"
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:8083/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 18

@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_TOPIC;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
 
 /**
  * Handles PCR notification events and document retrieval for subscribers.
@@ -66,7 +66,7 @@ public class NotificationController implements InternalApi, NotificationApi {
                 eventPayload.getEventType());
         if (serviceBusConfig.isEnabled()) {
             final String pcrEventjson = jsonMapper.toJson(eventPayload);
-            clientService.queueMessage(PCR_INBOUND_TOPIC, null, pcrEventjson, 0);
+            clientService.queueMessage(PCR_INBOUND_QUEUE, null, pcrEventjson, 0);
         } else {
             notificationManager.processPcrNotification(eventPayload);
         }

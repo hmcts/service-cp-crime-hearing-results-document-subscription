@@ -8,10 +8,8 @@ import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
-import uk.gov.hmcts.cp.openapi.model.EventType;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -29,7 +27,8 @@ public interface SubscriptionMapper {
     @Mapping(source = "request.notificationEndpoint", target = "notificationEndpoint", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(source = "now", target = "createdAt")
     @Mapping(source = "now", target = "updatedAt")
-    ClientSubscriptionEntity mapCreateRequestToEntity(UUID clientId, ClientSubscriptionRequest request, OffsetDateTime now);
+    @Mapping(source = "hmacKeyId", target = "hmacKeyId")
+    ClientSubscriptionEntity mapCreateRequestToEntity(UUID clientId, String hmacKeyId, ClientSubscriptionRequest request, OffsetDateTime now);
 
     @Mapping(source = "existing.id", target = "id")
     @Mapping(source = "existing.clientId", target = "clientId")
@@ -47,9 +46,8 @@ public interface SubscriptionMapper {
     ClientSubscription mapEntityToResponse(ClientSubscriptionEntity entity, KeyPair hmac);
 
     @Named("mapWithSortedEventTypes")
-    static List<EntityEventType> sortedEventTypes(final List<EventType> events) {
-        final List<String> sorted = events.stream().map(Enum::name).sorted().collect(toList());
-        return sorted.stream().map(EntityEventType::valueOf).toList();
+    static List<String> sortedEventTypes(final List<String> events) {
+        return events.stream().sorted().collect(toList());
     }
 
     @Named("mapFromNotificationEndpoint")

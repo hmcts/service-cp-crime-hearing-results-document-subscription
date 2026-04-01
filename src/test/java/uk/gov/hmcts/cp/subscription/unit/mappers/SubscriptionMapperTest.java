@@ -11,7 +11,6 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapperImpl;
-import uk.gov.hmcts.cp.subscription.model.EntityEventType;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static uk.gov.hmcts.cp.openapi.model.EventType.PRISON_COURT_REGISTER_GENERATED;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionMapperTest {
@@ -50,10 +48,10 @@ class SubscriptionMapperTest {
     void create_request_should_map_to_entity() {
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(notificationEndpoint)
-                .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
+                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
                 .build();
 
-        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, request, createdAt);
+        ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, "kid-v1", request, createdAt);
 
         assertThat(entity.getId()).isNotNull();
         assertThat(entity.getClientId()).isEqualTo(clientId);
@@ -61,6 +59,7 @@ class SubscriptionMapperTest {
         assertThat(entity.getEventTypes().toString()).isEqualTo("[PRISON_COURT_REGISTER_GENERATED]");
         assertThat(entity.getCreatedAt()).isEqualTo(createdAt);
         assertThat(entity.getUpdatedAt()).isEqualTo(createdAt);
+        assertThat(entity.getHmacKeyId()).isEqualTo("kid-v1");
     }
 
     @Test
@@ -70,7 +69,7 @@ class SubscriptionMapperTest {
                 .build();
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(updatedEndpoint)
-                .eventTypes(List.of(PRISON_COURT_REGISTER_GENERATED))
+                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
                 .build();
         ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, createdAt);
 
@@ -96,9 +95,9 @@ class SubscriptionMapperTest {
         assertThat(subscription.getHmac().getSecret()).isEqualTo(expectedSecretString);
     }
 
-    private List<EntityEventType> mutableLisOfEventTypes() {
-        List<EntityEventType> mutableList = new ArrayList<>();
-        mutableList.add(EntityEventType.PRISON_COURT_REGISTER_GENERATED);
+    private List<String> mutableLisOfEventTypes() {
+        List<String> mutableList = new ArrayList<>();
+        mutableList.add("PRISON_COURT_REGISTER_GENERATED");
         return mutableList;
     }
 }

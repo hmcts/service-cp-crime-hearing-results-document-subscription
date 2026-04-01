@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.hmcts.cp.hmac.config.HmacServiceConfig;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
+import uk.gov.hmcts.cp.vault.VaultServiceProperties;
 
 import java.security.InvalidKeyException;
 
@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @ExtendWith(MockitoExtension.class)
 public class HmacSigningServiceTest {
     @Mock
-    HmacServiceConfig hmacServiceConfig;
+    VaultServiceProperties vaultServiceProperties;
 
     @InjectMocks
     HmacKeyService hmacKeyService;

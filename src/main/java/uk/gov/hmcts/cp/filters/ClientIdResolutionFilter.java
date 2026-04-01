@@ -34,7 +34,6 @@ public class ClientIdResolutionFilter extends OncePerRequestFilter {
         this.config = config;
     }
 
-    @SuppressWarnings("PMD.OnlyOneReturn")
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
         if (!request.getRequestURI().startsWith(CLIENT_SUBSCRIPTIONS_PREFIX) ||

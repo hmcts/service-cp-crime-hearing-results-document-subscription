@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 
+import java.util.UUID;
+
 public class JsonMapper {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -31,5 +33,11 @@ public class JsonMapper {
     @SneakyThrows
     public int getIntAtPath(final String json, final String jsonPointer) {
         return toJsonNode(json).at(jsonPointer).intValue();
+    }
+
+    @SneakyThrows
+    public UUID getUUIDAtPath(final String json, final String jsonPointer) {
+        final String uuid = toJsonNode(json).at(jsonPointer).textValue();
+        return uuid == null ? null : UUID.fromString(uuid);
     }
 }
