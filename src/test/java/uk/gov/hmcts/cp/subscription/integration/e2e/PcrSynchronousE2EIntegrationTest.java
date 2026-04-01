@@ -341,7 +341,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private void given_late_subscriber_with_pcr() throws Exception {
         String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_LATE, CLIENT_ID_LATE);
-        subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
+        lateSubscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
     }
 
     private void then_late_subscriber_can_retrieve_document() throws Exception {
