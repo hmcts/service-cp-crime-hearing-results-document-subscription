@@ -40,7 +40,38 @@ class TracingFilterTest {
     }
 
     @Test
-    void shouldAlwaysFilter_all_paths() {
+    void filter_should_skip_actuators() {
+        when(request.getRequestURI()).thenReturn("http://localhost/actuator/info");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("http://localhost:8080/actuator/info");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("https://example.com/actuator/info");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+    }
+
+    @Test
+    void filter_should_skip_root() {
+        when(request.getRequestURI()).thenReturn("http://localhost/");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("http://localhost:8080/");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("https://example.com/");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+    }
+
+    @Test
+    void filter_should_not_skip_other_url_paths() {
+        when(request.getRequestURI()).thenReturn("http://localhost/anything-else");
+        assertThat(tracingFilter.shouldNotFilter(request)).isFalse();
+
+        when(request.getRequestURI()).thenReturn("http://localhost:8080/anything-else");
+        assertThat(tracingFilter.shouldNotFilter(request)).isFalse();
+
+        when(request.getRequestURI()).thenReturn("https://example.com/a/long/url");
         assertThat(tracingFilter.shouldNotFilter(request)).isFalse();
     }
 
