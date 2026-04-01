@@ -23,6 +23,7 @@ import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -71,6 +72,8 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     ServiceBusProcessorService processorService;
     @Autowired
     ServiceBusTestService testService;
+    @Autowired
+    JsonMapper jsonMapper;
 
     private UUID subscriptionId;
     private UUID callbackDocumentId;
@@ -202,6 +205,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void createSubscription() throws Exception {
-        subscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
     }
 }

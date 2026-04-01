@@ -29,7 +29,7 @@ class TracingFilterTest {
     @Mock
     private FilterChain filterChain;
     @Mock
-    CorrelationIdService correlationIdService;
+    UUIDService uuidService;
 
     @InjectMocks
     TracingFilter tracingFilter;
@@ -59,7 +59,7 @@ class TracingFilterTest {
     @Test
     void doFilterInternal_generates_correlationId_when_header_absent() throws ServletException, IOException {
         String correlationId = "283bdad6-6a67-4e74-9f28-e556d7410e59";
-        when(correlationIdService.randomString()).thenReturn(correlationId);
+        when(uuidService.randomString()).thenReturn(correlationId);
         when(request.getHeader(TracingFilter.CORRELATION_ID_KEY)).thenReturn(null);
 
         tracingFilter.doFilterInternal(request, response, filterChain);

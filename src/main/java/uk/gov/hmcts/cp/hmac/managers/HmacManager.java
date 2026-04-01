@@ -30,8 +30,8 @@ public class HmacManager {
         return keyPair;
     }
 
-    public String getSignature(final String keyId, final String payload) {
-        log.info("getSignature keyId:{}", keyId);
+    public String calculateSignature(final String keyId, final String payload) {
+        log.info("calculateSignature for keyId:{}", keyId);
         final String encodedSecret = secretStoreService.getSecret(keyId).
                 orElseThrow(() -> new EntityNotFoundException("no existing secret for keyId:" + keyId));
         final byte[] secret = encodingService.decodeFromBase64(encodedSecret);

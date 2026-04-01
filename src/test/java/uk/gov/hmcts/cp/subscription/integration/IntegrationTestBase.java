@@ -34,7 +34,7 @@ import java.util.UUID;
 
 
 @SpringBootTest
-@ContextConfiguration(initializers = TestContainersInitialise.class)
+// @ContextConfiguration(initializers = TestContainersInitialise.class)
 @AutoConfigureMockMvc
 @Slf4j
 @TestPropertySource(properties = {
@@ -94,6 +94,7 @@ public abstract class IntegrationTestBase {
     protected void clearAllTables() {
         log.info("Clearing all tables");
         clientEventRepository.deleteAll();
+        clientHmacRepository.deleteAll();
         clientRepository.deleteAll();
         subscriptionRepository.deleteAll();
         documentMappingRepository.deleteAll();

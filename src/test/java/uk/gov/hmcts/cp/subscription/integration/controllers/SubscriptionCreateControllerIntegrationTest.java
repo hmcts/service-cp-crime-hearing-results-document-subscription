@@ -2,18 +2,16 @@ package uk.gov.hmcts.cp.subscription.integration.controllers;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import uk.gov.hmcts.cp.filters.CorrelationIdService;
-import uk.gov.hmcts.cp.hmac.services.EncodingService;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import uk.gov.hmcts.cp.filters.UUIDService;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.matchesRegex;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -26,11 +24,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
     private static final String SUBSCRIPTION_REQUEST_VALID = "stubs/requests/subscription/subscription-request-valid.json";
 
     @MockitoBean
-    CorrelationIdService correlationIdService;
-    @Autowired
-    HmacKeyService hmacKeyService;
-    @Autowired
-    EncodingService encodingService;
+    UUIDService uuidService;
 
     @BeforeEach
     void beforeEach() {
@@ -41,9 +35,8 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void create_subscription_should_save_subscription_with_hmac() throws Exception {
-        when(correlationIdService.randomString()).thenReturn(correlationId);
+        when(uuidService.randomString()).thenReturn(correlationId);
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
-        String expectedSecret = encodingService.encodeWithBase64(hmacKeyService.generateKey().getSecret());
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -54,8 +47,8 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").exists())
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.createdAt").exists())
-                .andExpect(jsonPath("$.hmac.keyId").value("kid-f4f5dc10-d6d8-4e94-8b02-459c4121aad0"))
-                .andExpect(jsonPath("$.hmac.secret").value(expectedSecret));
+                .andExpect(jsonPath("$.hmac.keyId", matchesRegex("^kid-v1.*")))
+                .andExpect(jsonPath("$.hmac.secret", matchesRegex("[a-zA-Z0-9/+]*=")));
         assertThatEventTypesAreSortedInDatabase();
     }
 

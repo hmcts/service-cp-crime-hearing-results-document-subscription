@@ -38,6 +38,11 @@ public class JsonMapper {
     }
 
     @SneakyThrows
+    public String getStringAtPath(final String json, final String jsonPointer) {
+        return toJsonNode(json).at(jsonPointer).textValue();
+    }
+
+    @SneakyThrows
     public UUID getUUIDAtPath(final String json, final String jsonPointer) {
         final String uuid = toJsonNode(json).at(jsonPointer).textValue();
         return uuid == null ? null : UUID.fromString(uuid);
