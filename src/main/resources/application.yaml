@@ -30,7 +30,7 @@ callback-client:
 service-bus:
   enabled: ${AZURE_SERVICE_BUS_ENABLED:false}
   admin-connection: ${AZURE_SERVICE_BUS_ADMIN_URI:Endpoint=sb://localhost:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
-  connection: ${AZURE_SERVICEBUS_URI:Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
+  connection: ${AZURE_SERVICE_BUS_URI:Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
   retry-msecs: ${SERVICE_BUS_RETRY_SECONDS:0,1000,2000,10000,30000,60000}
   max-tries: ${SERVICE_BUS_MAX_TRIES:5}
 
