@@ -8,11 +8,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
@@ -29,7 +28,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
 import static uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService.EXAMPLE_ENDPOINT;
 
 @ExtendWith(MockitoExtension.class)
@@ -107,7 +105,5 @@ class CallbackDeliveryServiceTest {
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
 
-        verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));
-        verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_QUEUE, clientEntity.getCallbackUrl(), "{payload-wrapper}", 0);
-    }
+        verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));}
 }

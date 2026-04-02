@@ -100,7 +100,6 @@ public abstract class IntegrationTestBase {
         log.info("Clearing all tables");
         clientHmacRepository.deleteAll();
         clientEventRepository.deleteAll();
-        clientHmacRepository.deleteAll();
         clientRepository.deleteAll();
         subscriptionRepository.deleteAll();
         documentMappingRepository.deleteAll();

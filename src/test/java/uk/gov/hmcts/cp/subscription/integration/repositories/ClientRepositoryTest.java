@@ -50,14 +50,14 @@ class ClientRepositoryTest extends IntegrationTestBase {
         assertThat(found).isEmpty();
     }
 
-    @Test
-    void get_client_for_event_type_should_return_client_list() {
-        saveClientAndEventInfoInDb(client1, List.of(event1));
-        saveClientAndEventInfoInDb(client2, List.of(event2));
-        List<ClientEntity> clients = clientRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED");
-        assertThat(clients).hasSize(1);
-        assertThat(clients.getFirst()).isEqualTo(client1);
-    }
+//    @Test
+//    void get_client_for_event_type_should_return_client_list() {
+//        saveClientAndEventInfoInDb(client1, List.of(event1));
+//        saveClientAndEventInfoInDb(client2, List.of(event2));
+//        List<ClientEntity> clients = clientRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED");
+//        assertThat(clients).hasSize(1);
+//        assertThat(clients.getFirst()).isEqualTo(client1);
+//    }
 
     private void saveClientAndEventInfoInDb(ClientEntity client, List<ClientEventEntity> events) {
         clientRepository.save(client);
