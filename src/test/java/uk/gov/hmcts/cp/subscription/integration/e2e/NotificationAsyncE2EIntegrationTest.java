@@ -66,7 +66,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
         "material-client.retry.timeoutMilliSecs=500"
 })
 @Slf4j
-class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
+class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @Autowired
     ServiceBusAdminService adminService;
@@ -95,7 +95,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void setUp() {
-        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        assertThat(adminService.isServiceBusReady()).isTrue();
         processorService.stopMessageProcessor(NOTIFICATIONS_INBOUND_QUEUE);
         testService.dropQueueIfExists(NOTIFICATIONS_INBOUND_QUEUE);
         adminService.createQueue(NOTIFICATIONS_INBOUND_QUEUE);

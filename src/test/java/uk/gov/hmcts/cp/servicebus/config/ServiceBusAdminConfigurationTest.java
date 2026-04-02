@@ -18,13 +18,13 @@ class ServiceBusAdminConfigurationTest {
 
     @Test
     void emulator_connection_string_creates_emulator_impl() {
-        assertThat(configFor(EMULATOR_ADMIN, EMULATOR_CONNECTION).serviceBusAdminClient())
+        assertThat(configFor(EMULATOR_ADMIN, EMULATOR_CONNECTION).serviceBusAdmin())
                 .isInstanceOf(ServiceBusAdminEmulatorImpl.class);
     }
 
     @Test
     void azure_connection_string_creates_azure_impl() {
-        assertThat(configFor(EMULATOR_ADMIN, HTTPS_CONNECTION).serviceBusAdminClient())
+        assertThat(configFor(EMULATOR_ADMIN, HTTPS_CONNECTION).serviceBusAdmin())
                 .isInstanceOf(ServiceBusAdminAzureImpl.class);
     }
 

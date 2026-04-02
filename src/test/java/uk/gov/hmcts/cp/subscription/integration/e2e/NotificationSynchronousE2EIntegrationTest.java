@@ -71,7 +71,7 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
         "material-client.retry.timeoutMilliSecs=500"
 })
 @Slf4j
-class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
+class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
     private String hmacKeyId;
