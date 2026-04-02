@@ -45,7 +45,7 @@ public class CallbackDeliveryService {
         for (final ClientEntity client : clients) {
             ClientHmacEntity clientHmac = clientHmacRepository.findBySubscriptionId(client.getSubscriptionId())
                     .orElseThrow(() -> new EntityNotFoundException("Hmac not found for client subscriptionId"));
-            final String signature = hmacManager.getSignature(clientHmac.getKeyId(), jsonMapper.toJson(eventNotificationPayload));
+            final String signature = hmacManager.calculateSignature(clientHmac.getKeyId(), jsonMapper.toJson(eventNotificationPayload));
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, clientHmac.getKeyId(), signature);
             if (client.getCallbackUrl().startsWith(EXAMPLE_ENDPOINT)) {
                 log.info("Skipping notification for EXAMPLE callback endpoint:{}", client.getCallbackUrl());

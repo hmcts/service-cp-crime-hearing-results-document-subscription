@@ -103,7 +103,7 @@ class CallbackDeliveryServiceTest {
         when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
         when(jsonMapper.toJson(payloadWrapper)).thenReturn("{payload-wrapper}");
-        when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
+        when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
