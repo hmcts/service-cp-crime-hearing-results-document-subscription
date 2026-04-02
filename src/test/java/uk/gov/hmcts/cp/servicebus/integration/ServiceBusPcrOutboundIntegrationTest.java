@@ -21,7 +21,6 @@ import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -49,8 +48,7 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
 
     @BeforeEach
     void setUp() {
-        assumeTrue(adminService.isServiceBusReady(),
-                "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        assertThat(adminService.isServiceBusReady()).isTrue();
         processorService.stopMessageProcessor(PCR_OUTBOUND_QUEUE);
         testService.dropQueueIfExists(PCR_OUTBOUND_QUEUE);
 

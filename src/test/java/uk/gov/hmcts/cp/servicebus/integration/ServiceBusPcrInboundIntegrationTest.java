@@ -19,7 +19,7 @@ import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,7 +44,7 @@ public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTe
 
     @BeforeEach
     void setUp() {
-        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        assertThat(adminService.isServiceBusReady()).isTrue();
         processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
         testService.dropQueueIfExists(PCR_INBOUND_QUEUE);
         adminService.createQueue(PCR_INBOUND_QUEUE);
