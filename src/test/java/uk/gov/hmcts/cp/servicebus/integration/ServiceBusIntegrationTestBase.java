@@ -8,7 +8,7 @@ import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @SpringBootTest
@@ -26,8 +26,7 @@ public class ServiceBusIntegrationTestBase {
     protected ServiceBusTestService testService;
 
     protected void prepareQueue(final String queueName) {
-        assertTrue(adminService.isServiceBusReady(),
-                "ServiceBus is not running. Run ./gradlew dockerTest or ./gradlew composeUp before these tests.");
+        assertThat(adminService.isServiceBusReady()).isTrue();
         processorService.stopMessageProcessor(queueName);
         testService.dropQueueIfExists(queueName);
         adminService.createQueue(queueName);
