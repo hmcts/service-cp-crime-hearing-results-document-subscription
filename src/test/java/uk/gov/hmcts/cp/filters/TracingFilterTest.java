@@ -29,7 +29,7 @@ class TracingFilterTest {
     @Mock
     private FilterChain filterChain;
     @Mock
-    CorrelationIdService correlationIdService;
+    UUIDService uuidService;
 
     @InjectMocks
     TracingFilter tracingFilter;
@@ -40,7 +40,38 @@ class TracingFilterTest {
     }
 
     @Test
-    void shouldAlwaysFilter_all_paths() {
+    void filter_should_skip_actuators() {
+        when(request.getRequestURI()).thenReturn("http://localhost/actuator/info");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("http://localhost:8080/actuator/info");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("https://example.com/actuator/info");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+    }
+
+    @Test
+    void filter_should_skip_root() {
+        when(request.getRequestURI()).thenReturn("http://localhost/");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("http://localhost:8080/");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+
+        when(request.getRequestURI()).thenReturn("https://example.com/");
+        assertThat(tracingFilter.shouldNotFilter(request)).isTrue();
+    }
+
+    @Test
+    void filter_should_not_skip_other_url_paths() {
+        when(request.getRequestURI()).thenReturn("http://localhost/anything-else");
+        assertThat(tracingFilter.shouldNotFilter(request)).isFalse();
+
+        when(request.getRequestURI()).thenReturn("http://localhost:8080/anything-else");
+        assertThat(tracingFilter.shouldNotFilter(request)).isFalse();
+
+        when(request.getRequestURI()).thenReturn("https://example.com/a/long/url");
         assertThat(tracingFilter.shouldNotFilter(request)).isFalse();
     }
 
@@ -59,7 +90,7 @@ class TracingFilterTest {
     @Test
     void doFilterInternal_generates_correlationId_when_header_absent() throws ServletException, IOException {
         String correlationId = "283bdad6-6a67-4e74-9f28-e556d7410e59";
-        when(correlationIdService.randomString()).thenReturn(correlationId);
+        when(uuidService.randomString()).thenReturn(correlationId);
         when(request.getHeader(TracingFilter.CORRELATION_ID_KEY)).thenReturn(null);
 
         tracingFilter.doFilterInternal(request, response, filterChain);

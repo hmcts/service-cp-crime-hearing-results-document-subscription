@@ -2,8 +2,10 @@ package uk.gov.hmcts.cp.subscription.integration.e2e;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -13,9 +15,13 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import org.wiremock.spring.InjectWireMock;
+import uk.gov.hmcts.cp.filters.UUIDService;
+import uk.gov.hmcts.cp.hmac.services.EncodingService;
+import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -26,11 +32,13 @@ import static com.github.tomakehurst.wiremock.client.WireMock.moreThanOrExactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.Objects.nonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -39,7 +47,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper.bearerTokenWithAzp;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getDocumentIdFromCallbackServeEvents;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getBodyFromCallbackServeEvents;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.getHeaderFromCallbackServeEvents;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpoint;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCallbackEndpointReturnsServerError;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
@@ -48,6 +57,8 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
+import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
+import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.SIGNATURE_HEADER;
 
 @EnableWireMock({
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
@@ -60,15 +71,22 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.de
         "material-client.retry.intervalMilliSecs=100",
         "material-client.retry.timeoutMilliSecs=500"
 })
+@Slf4j
 class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
+    private String hmacKeyId;
+    private String hmacSecret;
     private UUID otherSubscriptionId;
     private UUID lateSubscriptionId;
     private UUID callbackDocumentId;
+    private String callbackBody;
+    private String callbackSignature;
+    private String callbackKeyId;
     private static final String correlationId = String.valueOf(UUID.randomUUID());
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
+    private static final UUID DOCUMENT_ID = UUID.fromString("2c1b7ce5-af3a-4cec-bd9f-ac9aa939f86b");
     private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
     private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
     private static final String CALLBACK_URI_OTHER = "/callback/other";
@@ -77,6 +95,12 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private static final String CLIENT_ID_OTHER = "22222222-2222-3333-4444-555555555555";
     private static final String CLIENT_ID_LATE = "33333333-2222-3333-4444-555555555555";
 
+    @Autowired
+    HmacSigningService hmacSigningService;
+    @Autowired
+    EncodingService encodingService;
+    @Autowired
+    JsonMapper jsonMapper;
 
     @InjectWireMock("callback-client")
     private WireMockServer callbackWireMock;
@@ -84,6 +108,8 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     @Value("${callback-client.url}")
     private String callbackBaseUrl;
 
+    @MockitoSpyBean
+    private UUIDService uuidService;
     @MockitoSpyBean
     private MaterialClient materialClient;
 
@@ -97,8 +123,8 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void document_retrieval_success_should_return_pdf() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
+    void document_retrieval_success_should_return_signed_pdf() throws Exception {
+        given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 
@@ -106,12 +132,13 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         when_material_service_responds();
 
         then_the_subscriber_receives_a_callback();
+        and_the_callback_signature_is_correct();
         then_the_subscriber_can_retrieve_the_document();
     }
 
     @Test
     void material_not_ready_should_not_send_callback_and_return_504() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
+        given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_not_found();
 
@@ -124,7 +151,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     @Test
     void callback_client_not_responding_should_return_504() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
+        given_i_create_a_new_subscription();
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
 
@@ -135,7 +162,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     @Test
     void subscriber_lost_access_after_pcr_delivered_should_return_403() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
+        given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 
@@ -150,7 +177,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     @Test
     void other_subscription_without_pcr_attempting_document_retrieval_should_return_403() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
+        given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
         given_another_subscription_with_custodial_only();
@@ -164,7 +191,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     @Test
     void late_subscriber_with_pcr_should_retrieve_document_when_access_is_by_event_type() throws Exception {
-        given_i_am_a_subscriber_with_a_subscription();
+        given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 
@@ -178,8 +205,12 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         then_late_subscriber_can_retrieve_document();
     }
 
-    private void given_i_am_a_subscriber_with_a_subscription() throws Exception {
-        createSubscription();
+    private void given_i_create_a_new_subscription() throws Exception {
+        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
+        hmacKeyId = jsonMapper.getStringAtPath(responseBody, "/hmac/keyId");
+        hmacSecret = jsonMapper.getStringAtPath(responseBody, "/hmac/secret");
+        log.info("WireMockDebug received keyId:{} secret:{}", hmacKeyId, hmacSecret);
     }
 
     private void given_i_have_a_callback_endpoint() throws IOException {
@@ -187,6 +218,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void given_material_service_returns_document_success() throws IOException {
+        when(uuidService.random()).thenReturn(DOCUMENT_ID);
         stubMaterialMetadata(MATERIAL_ID);
         stubMaterialContent(MATERIAL_ID);
         stubMaterialBinary(MATERIAL_ID);
@@ -225,10 +257,10 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private ResultActions postPcrEvent(String payloadPath) throws Exception {
         return mockMvc.perform(post(NOTIFICATIONS_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .header(CORRELATION_ID_KEY, correlationId)
-                        .content(loadPayload(payloadPath)));
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Accept", MediaType.APPLICATION_JSON_VALUE)
+                .header(CORRELATION_ID_KEY, correlationId)
+                .content(loadPayload(payloadPath)));
     }
 
     private void when_material_service_responds() {
@@ -244,7 +276,19 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private void then_the_subscriber_receives_a_callback() {
         callbackWireMock.verify(1, postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
-        callbackDocumentId = getDocumentIdFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
+        callbackKeyId = getHeaderFromCallbackServeEvents(callbackWireMock, CALLBACK_URI, KEY_ID_HEADER);
+        callbackSignature = getHeaderFromCallbackServeEvents(callbackWireMock, CALLBACK_URI, SIGNATURE_HEADER);
+        callbackBody = getBodyFromCallbackServeEvents(callbackWireMock, CALLBACK_URI);
+        callbackDocumentId = jsonMapper.getUUIDAtPath(callbackBody, "/documentId");
+
+        log.info("WireMockDebug got callbackKeyId:{} callbackSignature:{} from callback header", callbackKeyId, callbackSignature);
+    }
+
+    private void and_the_callback_signature_is_correct() {
+        assertThat(callbackKeyId).isEqualTo(hmacKeyId);
+        byte[] hmacSecretBytes = encodingService.decodeFromBase64(hmacSecret);
+        String calculatedSignature = hmacSigningService.sign(hmacSecretBytes, callbackBody);
+        assertThat(callbackSignature).isEqualTo(calculatedSignature);
     }
 
     private void then_the_subscriber_does_not_receive_a_callback() {
@@ -288,10 +332,6 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
                 .andExpect(header().string(CORRELATION_ID_KEY, correlationId));
     }
 
-    private void createSubscription() throws Exception {
-        subscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
-    }
-
     private void given_another_subscription_with_custodial_only() {
         // Directly insert a subscription with no event types to simulate a client
         // that has no access to PCR documents, bypassing API validation.
@@ -300,7 +340,8 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void given_late_subscriber_with_pcr() throws Exception {
-        lateSubscriptionId = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_LATE, CLIENT_ID_LATE);
+        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_LATE, CLIENT_ID_LATE);
+        lateSubscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
     }
 
     private void then_late_subscriber_can_retrieve_document() throws Exception {

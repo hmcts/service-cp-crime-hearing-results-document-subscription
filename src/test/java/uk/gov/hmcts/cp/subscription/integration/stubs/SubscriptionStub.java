@@ -1,6 +1,7 @@
 package uk.gov.hmcts.cp.subscription.integration.stubs;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -16,27 +17,32 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@Slf4j
 public final class SubscriptionStub {
 
     private static final String TEST_CLIENT_ID = "11111111-2222-3333-4444-555555555555";
     private static final String SUBSCRIPTION_PCR_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String PLACEHOLDER_CALLBACK_URL = "{{callback.url}}";
     public static final String CLIENT_SUBSCRIPTION_ID_FIELD = "clientSubscriptionId";
+    public static JsonMapper jsonMapper = new JsonMapper();
 
-    public static UUID createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
-                                             String callbackBaseUrl, String callbackUri) throws Exception {
+    public static String createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
+                                               String callbackBaseUrl, String callbackUri) throws Exception {
         return createSubscriptionPcr(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, TEST_CLIENT_ID);
     }
 
-    public static UUID createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
-                                             String callbackBaseUrl, String callbackUri,
-                                             String clientId) throws Exception {
+    public static String createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
+                                               String callbackBaseUrl, String callbackUri,
+                                               String clientId) throws Exception {
         String callbackUrl = callbackBaseUrl.endsWith("/")
                 ? callbackBaseUrl + callbackUri.substring(1)
                 : callbackBaseUrl + callbackUri;
-        String body = loadPayload(SUBSCRIPTION_PCR_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
-        String json = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, body, clientId);
-        return extractClientSubscriptionId(json);
+        String requestBody = loadPayload(SUBSCRIPTION_PCR_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
+        String responseBody = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, requestBody, clientId);
+        log.info("got keyId:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/keyId"));
+        log.info("got secret:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/secret"));
+        log.info("got clientSubscriptionId:{}", jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId"));
+        return responseBody;
     }
 
     public static UUID createSubscriptionFromPayload(MockMvc mockMvc, String clientSubscriptionsUri,

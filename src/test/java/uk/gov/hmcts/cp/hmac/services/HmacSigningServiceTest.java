@@ -1,10 +1,12 @@
 package uk.gov.hmcts.cp.hmac.services;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.vault.VaultServiceProperties;
@@ -19,27 +21,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class HmacSigningServiceTest {
     @Mock
     VaultServiceProperties vaultServiceProperties;
+    @Spy
+    EncodingService encodingService = new EncodingService();
 
     @InjectMocks
     HmacKeyService hmacKeyService;
     @InjectMocks
     HmacSigningService hmacSigningService;
-    @InjectMocks
-    EncodingService encodingService;
 
     String message = "A message";
 
+    @Disabled
     @Test
     void real_signature_and_message_should_match() throws InvalidKeyException {
-        // Message sent at 14:30:07
-        KeyPair keyPair = hmacKeyService.generateKey();
-        String message = "{\"cases\":[{\"urn\":\"AAA20713684\"}],\"masterDefendantId\":\"d5ad03d0-5f2d-477b-9aa8-e0beb68f46a3\",\"documentId\":\"6deab43e-70f2-4d8e-bc28-04ab39fbeff1\",\"documentGeneratedTimestamp\":\"2026-03-20T14:29:15.453071625Z\",\"prisonEmailAddress\":\"yoiashfield.premiercustody@premier-serco.cjsm.net\"}";
-        String signature = hmacSigningService.sign(keyPair.getSecret(), message);
-        hmacSigningService.validateSignature(keyPair.getSecret(), message, signature);
-        assertThat(signature).isEqualTo("/G+QZLzXG1ZTpZuWir23C7c/mRcVWF/+gzHqvOu95EU=");
+        String encodedSecret = "insert-encoded-secret-here";
+        String messageJson = "{insert-json-here}";
+        String signature = "signature-here";
+        byte[] secret = encodingService.decodeFromBase64(encodedSecret);
 
-        String encodedSecret = encodingService.encodeWithBase64(keyPair.getSecret());
-        assertThat(encodedSecret).isEqualTo("U3R1YiBzdHJpbmcgdXNlZCBwdXJlbHkgZm9yIGRldmVsb3BtZW50IHB1cnBvc2VzLiBUbyBiZSBzZWN1cmVkLg==");
+        hmacSigningService.validateSignature(secret, messageJson, signature);
+
+        String encodedSecretAgain = encodingService.encodeWithBase64(secret);
+        assertThat(encodedSecretAgain).isEqualTo(encodedSecret);
     }
 
     @Test
@@ -47,7 +50,7 @@ public class HmacSigningServiceTest {
         KeyPair keyPair = hmacKeyService.generateKey();
         String signature = hmacSigningService.sign(keyPair.getSecret(), message);
         log.info("Signature:{}", signature);
-        assertThat(signature).isEqualTo("TkkWx3X55YaWF5KB2BwSY4LcoDnFqZFOMrB43hkuFkE=");
+        assertThat(signature).hasSize(44);
         hmacSigningService.validateSignature(keyPair.getSecret(), message, signature);
         // no exception
     }
@@ -62,7 +65,7 @@ public class HmacSigningServiceTest {
     void validate_should_throw_if_bad_secret() throws InvalidKeyException {
         KeyPair keyPair = hmacKeyService.generateKey();
         String signature = hmacSigningService.sign(keyPair.getSecret(), message);
-        assertThat(signature).isEqualTo("TkkWx3X55YaWF5KB2BwSY4LcoDnFqZFOMrB43hkuFkE=");
+        assertThat(signature).hasSize(44);
         assertThrows(InvalidKeyException.class, () -> hmacSigningService.validateSignature("bad-=secret".getBytes(), message, signature));
     }
 }

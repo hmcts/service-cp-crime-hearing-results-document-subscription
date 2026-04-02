@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.core.Ordered;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.URI;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -23,11 +25,13 @@ public class TracingFilter extends OncePerRequestFilter {
 
     public static final String CORRELATION_ID_KEY = "X-Correlation-Id";
 
-    private CorrelationIdService correlationIdService;
+    private UUIDService uuidService;
 
+    @SneakyThrows
     @Override
     protected boolean shouldNotFilter(@Nonnull final HttpServletRequest request) {
-        return false;
+        final String pathRoot = new URI(request.getRequestURI()).getPath();
+        return "/".equals(pathRoot) || pathRoot.startsWith("/actuator");
     }
 
     @Override
@@ -36,7 +40,7 @@ public class TracingFilter extends OncePerRequestFilter {
                                     @Nonnull final FilterChain filterChain) throws ServletException, IOException {
         try {
             final String correlationId = getCorrelationId(request);
-            MDC.put(CORRELATION_ID_KEY, correlationId);
+            MDC.put(CORRELATION_ID_KEY, getCorrelationId(request));
             response.setHeader(CORRELATION_ID_KEY, correlationId);
             filterChain.doFilter(request, response);
         } finally {
@@ -45,12 +49,10 @@ public class TracingFilter extends OncePerRequestFilter {
     }
 
     private String getCorrelationId(final HttpServletRequest request) {
-        String cId = request.getHeader(CORRELATION_ID_KEY);
-        if (cId == null) {
+        if (request.getHeader(CORRELATION_ID_KEY) == null) {
             log.info("No 'X-Correlation-Id' header found. Generating Correlation ID.");
-            cId = correlationIdService.randomString();
+            return uuidService.randomString();
         }
-        return cId;
+        return request.getHeader(CORRELATION_ID_KEY);
     }
-
 }
