@@ -7,12 +7,16 @@ import com.azure.messaging.servicebus.administration.models.QueueProperties;
 
 import java.time.Duration;
 
-public class ServiceBusAdminAdapter implements ServiceBusAdminInterface {
+public abstract class ServiceBusAdminBase implements ServiceBusAdminInterface {
 
-    private final ServiceBusAdministrationClient adminClient;
+    protected final ServiceBusAdministrationClient adminClient;
 
-    public ServiceBusAdminAdapter(final ServiceBusAdministrationClient adminClient) {
+    protected ServiceBusAdminBase(final ServiceBusAdministrationClient adminClient) {
         this.adminClient = adminClient;
+    }
+
+    public ServiceBusAdministrationClient getAdminClient() {
+        return adminClient;
     }
 
     @Override
@@ -32,5 +36,4 @@ public class ServiceBusAdminAdapter implements ServiceBusAdminInterface {
         options.setMaxDeliveryCount(1);
         adminClient.createQueue(queueName, options);
     }
-
 }

@@ -1,72 +1,36 @@
 package uk.gov.hmcts.cp.servicebus.config;
 
-import com.azure.core.http.HttpClient;
-import com.azure.core.http.netty.NettyAsyncHttpClientBuilder;
-import com.azure.core.http.policy.HttpPipelinePolicy;
-import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClient;
-import com.azure.messaging.servicebus.administration.ServiceBusAdministrationClientBuilder;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import reactor.core.publisher.Mono;
-import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminAdapter;
+import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminAzureImpl;
+import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminBase;
+import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminEmulatorImpl;
+import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminInterface;
 import uk.gov.hmcts.cp.vault.VaultServiceProperties;
-
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.ADMIN_CONNECTION_PORT;
 
 @Slf4j
 @Configuration
 @AllArgsConstructor
 public class ServiceBusAdminConfiguration {
 
-    private ServiceBusProperties configService;
-    private VaultServiceProperties vaultServiceProperties;
+    private final ServiceBusProperties configService;
+    private final VaultServiceProperties vaultServiceProperties;
 
     @Bean
-    public ServiceBusAdministrationClient administrationClient() {
-        log.info("ServiceBusAdminConfiguration building administrationClient isEmulator:{}", configService.isEmulator());
-        return configService.isEmulator() ? buildEmulatorAdminClient() : buildAzureAdminClient();
+    public ServiceBusAdminInterface serviceBusAdminClient() {
+        log.info("ServiceBusAdminConfiguration building serviceBusAdminClient isEmulator:{}", configService.isEmulator());
+        if (configService.isEmulator()) {
+            return new ServiceBusAdminEmulatorImpl(configService);
+        } else {
+            return new ServiceBusAdminAzureImpl(configService, vaultServiceProperties);
+        }
     }
 
     @Bean
-    public ServiceBusAdminAdapter serviceBusAdminClient(final ServiceBusAdministrationClient administrationClient) {
-        return new ServiceBusAdminAdapter(administrationClient);
-    }
-
-    private ServiceBusAdministrationClient buildAzureAdminClient() {
-        return new ServiceBusAdministrationClientBuilder()
-                .endpoint(configService.getConnectionString())
-                .credential(new DefaultAzureCredentialBuilder()
-                        .managedIdentityClientId(vaultServiceProperties.getVaultClientId().toString())
-                        .build())
-                .buildClient();
-    }
-
-    private ServiceBusAdministrationClient buildEmulatorAdminClient() {
-        final HttpClient httpClient = new NettyAsyncHttpClientBuilder()
-                .port(ADMIN_CONNECTION_PORT)
-                .build();
-        final HttpPipelinePolicy forceHttpPolicy = (context, next) -> {
-            try {
-                final URL current = context.getHttpRequest().getUrl();
-                final URL httpUrl = URI.create("http://" + current.getHost() + ":" + ADMIN_CONNECTION_PORT + current.getFile()).toURL();
-                context.getHttpRequest().setUrl(httpUrl);
-            } catch (MalformedURLException e) {
-                return Mono.error(e);
-            }
-            return next.process();
-        };
-
-        return new ServiceBusAdministrationClientBuilder()
-                .connectionString(configService.getAdminConnectionString())
-                .httpClient(httpClient)
-                .addPolicy(forceHttpPolicy)
-                .buildClient();
+    public ServiceBusAdministrationClient administrationClient(final ServiceBusAdminInterface serviceBusAdminClient) {
+        return ((ServiceBusAdminBase) serviceBusAdminClient).getAdminClient();
     }
 }

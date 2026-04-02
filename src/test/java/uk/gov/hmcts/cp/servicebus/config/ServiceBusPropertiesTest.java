@@ -1,7 +1,7 @@
 package uk.gov.hmcts.cp.servicebus.config;
 
 import org.junit.jupiter.api.Test;
-import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminAdapter;
+import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminInterface;
 import uk.gov.hmcts.cp.vault.VaultServiceProperties;
 
 import java.util.UUID;
@@ -15,11 +15,10 @@ class ServiceBusPropertiesTest {
     private static final String HTTPS_ENDPOINT = "https://test.servicebus.windows.net";
     private static final UUID CLIENT_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    private ServiceBusAdminAdapter adminClientFor(String adminConnection, String connection) {
+    private ServiceBusAdminInterface adminClientFor(String adminConnection, String connection) {
         final ServiceBusProperties configService = new ServiceBusProperties(false, adminConnection, connection, 5);
         final VaultServiceProperties vaultProperties = new VaultServiceProperties(false, "", CLIENT_ID);
-        final ServiceBusAdminConfiguration config = new ServiceBusAdminConfiguration(configService, vaultProperties);
-        return config.serviceBusAdminClient(config.administrationClient());
+        return new ServiceBusAdminConfiguration(configService, vaultProperties).serviceBusAdminClient();
     }
 
     @Test
