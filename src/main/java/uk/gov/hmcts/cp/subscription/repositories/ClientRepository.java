@@ -11,5 +11,4 @@ import java.util.UUID;
 public interface ClientRepository extends JpaRepository<ClientEntity, UUID> {
 
     Optional<ClientEntity> findByIdAndSubscriptionId(UUID id, UUID subscriptionId);
-    boolean existsById(UUID clientId);
 }

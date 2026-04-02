@@ -20,6 +20,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Deprecated
 public class SubscriptionService {
 
     private final ClockService clockService;

@@ -86,7 +86,7 @@ class NotificationControllerTest {
                 .contentType(MediaType.APPLICATION_PDF)
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
-        when(notificationManager.getPcrDocumentContent(eq(subscriptionId), eq(resolvedClientUuid), eq(documentId))).thenReturn(content);
+        when(notificationManager.getPcrDocumentContent(subscriptionId, documentId)).thenReturn(content);
 
         ResponseEntity<Resource> response = notificationController.getDocument(subscriptionId, documentId, null);
 
@@ -95,6 +95,6 @@ class NotificationControllerTest {
         assertThat(response.getBody().getInputStream().readAllBytes()).isEqualTo(pdfBody);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("PrisonCourtRegister.pdf");
-        verify(notificationManager).getPcrDocumentContent(subscriptionId, resolvedClientUuid, documentId);
+        verify(notificationManager).getPcrDocumentContent(subscriptionId, documentId);
     }
 }

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Deprecated
 @Repository
 public interface SubscriptionRepository extends JpaRepository<ClientSubscriptionEntity, UUID> {
 

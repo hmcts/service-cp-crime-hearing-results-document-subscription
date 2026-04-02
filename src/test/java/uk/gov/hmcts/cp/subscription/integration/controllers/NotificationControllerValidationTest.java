@@ -105,7 +105,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
-                .when(notificationManager).getPcrDocumentContent(subscriptionId, TEST_CLIENT_ID, documentId);
+                .when(notificationManager).getPcrDocumentContent(subscriptionId, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         subscriptionId, documentId)
@@ -137,7 +137,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_404_when_document_not_found() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId))
-                .when(notificationManager).getPcrDocumentContent(subscriptionId, TEST_CLIENT_ID, documentId);
+                .when(notificationManager).getPcrDocumentContent(subscriptionId, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         subscriptionId, documentId)

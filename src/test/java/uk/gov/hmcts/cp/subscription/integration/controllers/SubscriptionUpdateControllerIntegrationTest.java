@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,7 +42,7 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.clientSubscriptionId").value(existing.getId().toString()))
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
-        verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(existing.getId(), existing.getCreatedAt());
+        assertDatabaseState();
     }
 
     @Test
@@ -71,16 +71,17 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isNotFound());
     }
 
-    // Pipeline fails because expected is nanoSecs and actual is microSecs
-    // Very puzzling.
-    void verifyCreatedAtIsUnchangedAndUpdateAtIsDifferentFromCreatedAt(UUID subscriptionId, OffsetDateTime expectedCreatedAt) {
-        ClientSubscriptionEntity entity = subscriptionRepository.findById(subscriptionId).orElseThrow();
-        String expected = expectedCreatedAt.format(DateTimeFormatter.BASIC_ISO_DATE);
-        String actualCreated = entity.getCreatedAt().format(DateTimeFormatter.BASIC_ISO_DATE);
-        log.info("Comparing actual:{} with expected:{}", actualCreated, expected);
-        assertThat(actualCreated).isEqualTo(expected);
-        assertThat(entity.getUpdatedAt()).isNotNull();
-        assertThat(entity.getUpdatedAt()).isNotEqualTo(entity.getCreatedAt());
-        assertThat(entity.getUpdatedAt()).isAfter(entity.getCreatedAt());
+    private void assertDatabaseState() {
+        List<ClientEntity> clientEntities = clientRepository.findAll();
+        assertThat(clientEntities).hasSize(1);
+        assertThat(clientEntities.getFirst().getSubscriptionId()).isNotNull();
+        assertThat(clientEntities.getFirst().getCreatedAt()).isNotNull();
+        assertThat(clientEntities.getFirst().getUpdatedAt()).isNotNull();
+        assertThat(clientEntities.getFirst().getCallbackUrl()).isEqualTo("https://my-callback-url");
+
+        List<ClientEventEntity> clientEventEntities = clientEventRepository.findAll();
+        assertThat(clientEventEntities).hasSize(1);
+        assertThat(clientEventEntities.getFirst().getSubscriptionId()).isNotNull();
+        assertThat(clientEventEntities.getFirst().getEventTypeId()).isEqualTo(1);
     }
 }

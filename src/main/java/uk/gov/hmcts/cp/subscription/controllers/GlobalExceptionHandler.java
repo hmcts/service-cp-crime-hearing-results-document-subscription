@@ -56,6 +56,14 @@ public class GlobalExceptionHandler {
                 .body(errorResponse(ERROR_INVALID_REQUEST, message));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(final IllegalArgumentException exception) {
+        log.error("IllegalArgumentException: {}", exception.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse(ERROR_INVALID_REQUEST, exception.getMessage()));
+    }
+
     private static String toMessage(final FieldError fieldError) {
         final String field = fieldError.getField();
         final String code = fieldError.getCode();
