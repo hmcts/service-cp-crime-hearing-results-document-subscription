@@ -15,11 +15,14 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
 import uk.gov.hmcts.cp.subscription.mappers.ClientEntityMapper;
 import uk.gov.hmcts.cp.subscription.mappers.ClientEventEntityMapper;
+import uk.gov.hmcts.cp.subscription.mappers.ClientHmacMapper;
 import uk.gov.hmcts.cp.subscription.mappers.ClientSubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
@@ -46,6 +49,10 @@ class SubscriptionServiceV2Test {
     HmacManager hmacManager;
     @Mock
     ClientRepository clientRepository;
+    @Mock
+    ClientHmacMapper clientHmacMapper;
+    @Mock
+    ClientHmacRepository clientHmacRepository;
     @Mock
     ClientEventRepository clientEventRepository;
     @Mock
@@ -77,6 +84,7 @@ class SubscriptionServiceV2Test {
             .subscriptionId(subscriptionId)
             .id(clientId)
             .build();
+    ClientHmacEntity clientHmacEntity = ClientHmacEntity.builder().build();
     ClientEntity updatedClientEntity = ClientEntity.builder()
             .subscriptionId(subscriptionId)
             .id(clientId)
@@ -92,6 +100,7 @@ class SubscriptionServiceV2Test {
     @Test
     void create_request_should_save_new_entity() {
         when(clientEntityMapper.toEntity(clockService, createRequest, clientId)).thenReturn(clientEntity);
+        when(clientHmacMapper.toEntity(subscriptionId, hmacKeyPair.getKeyId())).thenReturn(clientHmacEntity);
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
         when(hmacManager.createAndStoreNewKey()).thenReturn(hmacKeyPair);
         when(clientSubscriptionMapper.toDto(clientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), hmacKeyPair)).thenReturn(response);
@@ -102,6 +111,7 @@ class SubscriptionServiceV2Test {
 
         assertThat(result).isEqualTo(response);
         verify(clientRepository).save(clientEntity);
+        verify(clientHmacRepository).save(clientHmacEntity);
         verify(clientEventRepository).saveAll(List.of(clientEventEntity));
     }
 
@@ -150,7 +160,8 @@ class SubscriptionServiceV2Test {
 
         assertThat(result).isEqualTo(response);
         verify(clientRepository).save(updatedClientEntity);
-        verify(clientEventRepository).saveAll(List.of(clientEventEntity));    }
+        verify(clientEventRepository).saveAll(List.of(clientEventEntity));
+    }
 
     @Test
     void get_should_return_subscription_when_owned_by_client() {

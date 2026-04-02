@@ -13,11 +13,14 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
 import uk.gov.hmcts.cp.subscription.mappers.ClientEntityMapper;
 import uk.gov.hmcts.cp.subscription.mappers.ClientEventEntityMapper;
+import uk.gov.hmcts.cp.subscription.mappers.ClientHmacMapper;
 import uk.gov.hmcts.cp.subscription.mappers.ClientSubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
@@ -31,6 +34,8 @@ import java.util.UUID;
 public class SubscriptionServiceV2 {
 
     private final ClientRepository clientRepository;
+    private final ClientHmacMapper clientHmacMapper;
+    private final ClientHmacRepository clientHmacRepository;
     private final ClientEventRepository clientEventRepository;
     private final EventTypeRepository eventTypeRepository;
 
@@ -46,12 +51,12 @@ public class SubscriptionServiceV2 {
         log.info("createClientSubscription clientId:{} eventTypeCount:{}", clientId, request.getEventTypes().size());
         validateClientDoesNotExists(clientId);
         final List<Long> eventIds = validateAndFetchEvents(request);
+        final KeyPair keyPair = hmacManager.createAndStoreNewKey();
 
         final ClientEntity client = saveClientForCreateRequest(request, clientId);
         saveClientEvents(client.getSubscriptionId(), eventIds);
+        saveClientHmac(client.getSubscriptionId(), keyPair.getKeyId());
 
-        //TODO save the client hmacKeyId in the new table
-        final KeyPair keyPair = hmacManager.createAndStoreNewKey();
         final ClientSubscription result = clientSubscriptionMapper.toDto(client, request.getEventTypes(), keyPair);
         log.info("createClientSubscription complete clientId:{} subscriptionId:{}", clientId, result.getClientSubscriptionId());
         return result;
@@ -118,6 +123,11 @@ public class SubscriptionServiceV2 {
                 .map(id -> clientEventEntityMapper.toEntity(subscriptionId, id))
                 .toList();
         clientEventRepository.saveAll(eventEntities);
+    }
+
+    private void saveClientHmac(final UUID subscriptionId, final String hmacKeyId) {
+        ClientHmacEntity clientHmacEntity = clientHmacMapper.toEntity(subscriptionId, hmacKeyId);
+        clientHmacRepository.save(clientHmacEntity);
     }
 
     private ClientEntity saveClientForCreateRequest(final ClientSubscriptionRequest request, final UUID clientId) {

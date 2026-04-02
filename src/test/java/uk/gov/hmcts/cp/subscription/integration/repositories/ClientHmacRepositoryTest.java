@@ -14,15 +14,15 @@ class ClientHmacRepositoryTest extends IntegrationTestBase {
     @Test
     void client_hmac_table_should_write_and_read() {
         UUID clientId = UUID.randomUUID();
-        String kid = "kid-" + UUID.randomUUID();
+        String keyId = "kid-" + UUID.randomUUID();
         ClientEntity client = insertClient(clientId);
         ClientHmacEntity clientHmac = ClientHmacEntity.builder()
                 .subscriptionId(client.getSubscriptionId())
-                .keyId(kid)
+                .keyId(keyId)
                 .build();
         ClientHmacEntity saved = clientHmacRepository.save(clientHmac);
 
-        ClientHmacEntity retrieved = clientHmacRepository.findById(saved.getId()).get();
-        assertThat(retrieved.getSubscriptionId()).isEqualTo(client.getSubscriptionId());
+        ClientHmacEntity retrieved = clientHmacRepository.findBySubscriptionId(saved.getSubscriptionId()).get();
+        assertThat(retrieved.getKeyId()).isEqualTo(keyId);
     }
 }

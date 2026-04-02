@@ -88,6 +88,8 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
         assertThat(clientEntities).hasSize(1);
         assertThat(clientEntities.getFirst().getSubscriptionId()).isNotNull();
 
+        assertThat(clientHmacRepository.findAll()).hasSize(1);
+
         List<ClientEventEntity> clientEventEntities = clientEventRepository.findAll();
         assertThat(clientEventEntities).hasSize(1);
         assertThat(clientEventEntities.getFirst().getSubscriptionId()).isNotNull();

@@ -9,14 +9,18 @@ import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
-import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
-import uk.gov.hmcts.cp.subscription.model.Subscriber;
+import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
@@ -25,6 +29,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService.EXAMPLE_ENDPOINT;
 
 @ExtendWith(MockitoExtension.class)
 class CallbackDeliveryServiceTest {
@@ -33,15 +39,17 @@ class CallbackDeliveryServiceTest {
     @Mock
     JsonMapper jsonMapper;
     @Mock
-    SubscriptionRepository subscriptionRepository;
+    ClientEventRepository clientEventRepository;
+    @Mock
+    ClientHmacRepository clientHmacRepository;
     @Mock
     NotificationMapper notificationMapper;
-    @Mock
-    SubscriberMapper subscriberMapper;
     @Mock
     CallbackService callbackService;
     @Mock
     HmacManager hmacManager;
+    @Mock
+    ServiceBusClientService serviceBusClientService;
 
     @InjectMocks
     private CallbackDeliveryService callbackDeliveryService;
@@ -50,17 +58,19 @@ class CallbackDeliveryServiceTest {
     private String callbackUrl = "https://callback.example.com";
     private UUID subscriptionId = randomUUID();
     private String hmacKeyId = "kid-v1";
+    private ClientEntity clientEntity = ClientEntity.builder().subscriptionId(subscriptionId).callbackUrl(callbackUrl).build();
+    private ClientHmacEntity clientHmacEntity = ClientHmacEntity.builder().keyId(hmacKeyId).build();
     private ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().id(subscriptionId).build();
     private EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").build();
-    private Subscriber subscriber = Subscriber.builder().hmacKeyId(hmacKeyId).notificationEndpoint(callbackUrl).build();
+    //private Subscriber subscriber = Subscriber.builder().hmacKeyId(hmacKeyId).notificationEndpoint(callbackUrl).build();
     private EventNotificationPayload payload = EventNotificationPayload.builder().build();
     private EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
 
     @Test
     void submit_should_send_when_servicebus_disabled() {
-        when(subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(subscriptionEntity));
+        when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
-        when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(subscriber);
+        when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
         when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
@@ -72,11 +82,10 @@ class CallbackDeliveryServiceTest {
 
     @Test
     void submit_should_skip_when_example_endpoint() {
-        when(subscriptionRepository.findByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(subscriptionEntity));
+        ClientEntity clientWithExample = ClientEntity.builder().subscriptionId(subscriptionId).callbackUrl(EXAMPLE_ENDPOINT).build();
+        when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientWithExample));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
-        String exampleCallbackUrl = "https://example.com/demo";
-        Subscriber exampleSubscriber = Subscriber.builder().hmacKeyId(hmacKeyId).notificationEndpoint(exampleCallbackUrl).build();
-        when(subscriberMapper.toSubscriber(subscriptionEntity)).thenReturn(exampleSubscriber);
+        when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
         when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
@@ -84,5 +93,22 @@ class CallbackDeliveryServiceTest {
         callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
 
         verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));
+    }
+
+    @Test
+    void submit_async_should_add_to_queue() {
+        when(serviceBusConfigService.isEnabled()).thenReturn(true);
+        when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
+        when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
+        when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
+        when(jsonMapper.toJson(payload)).thenReturn("{payload}");
+        when(jsonMapper.toJson(payloadWrapper)).thenReturn("{payload-wrapper}");
+        when(hmacManager.getSignature(hmacKeyId, "{payload}")).thenReturn("signature");
+        when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
+
+        callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
+
+        verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));
+        verify(serviceBusClientService).queueMessage(PCR_OUTBOUND_QUEUE, clientEntity.getCallbackUrl(), "{payload-wrapper}", 0);
     }
 }

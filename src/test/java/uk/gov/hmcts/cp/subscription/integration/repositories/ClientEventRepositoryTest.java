@@ -2,8 +2,8 @@ package uk.gov.hmcts.cp.subscription.integration.repositories;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.time.OffsetDateTime;
@@ -49,6 +49,15 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
 
         long result = clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId1, "PRISON_COURT_REGISTER_GENERATED");
         assertThat(result).isEqualTo(1);
+    }
+
+    @Test
+    void get_client_for_event_type_should_return_client_list() {
+        saveClientAndEventInfoInDb(client1, List.of(event1));
+        saveClientAndEventInfoInDb(client2, List.of(event2));
+        List<ClientEntity> clients = clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED");
+        assertThat(clients).hasSize(1);
+        assertThat(clients.getFirst()).isEqualTo(client1);
     }
 
     @Transactional
