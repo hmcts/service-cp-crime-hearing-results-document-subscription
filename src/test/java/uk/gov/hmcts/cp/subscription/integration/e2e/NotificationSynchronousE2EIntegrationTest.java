@@ -71,7 +71,7 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
         "material-client.retry.timeoutMilliSecs=500"
 })
 @Slf4j
-class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
+class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     private UUID subscriptionId;
     private String hmacKeyId;
@@ -123,7 +123,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
 
     @Test
     void document_retrieval_success_should_return_signed_pdf() throws Exception {
-        given_i_create_a_new_subscription();
+        // given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 

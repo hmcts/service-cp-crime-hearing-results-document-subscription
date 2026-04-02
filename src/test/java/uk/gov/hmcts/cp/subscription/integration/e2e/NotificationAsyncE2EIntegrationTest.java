@@ -66,7 +66,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
         "material-client.retry.timeoutMilliSecs=500"
 })
 @Slf4j
-class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
+class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @Autowired
     ServiceBusAdminService adminService;
