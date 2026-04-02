@@ -43,11 +43,6 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
         assertThat(result.getLast()).isEqualTo("WEE_Layout5");
     }
 
-    private void saveClientAndEventInfoInDb(ClientEntity client, List<ClientEventEntity> events) {
-        clientRepository.save(client);
-        clientEventRepository.saveAll(events);
-    }
-
     @Transactional
     @Test
     void countByClientSubscriptionAndEventName_should_return_count_if_event_exists() {
@@ -70,6 +65,16 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
         assertThat(result.getFirst().getSubscriptionId()).isEqualTo(subscriptionId2);
     }
 
+    @Transactional
+    @Test
+    void get_client_for_event_type_should_return_client_list() {
+        saveClientAndEventInfoInDb(client1, List.of(event1));
+        saveClientAndEventInfoInDb(client2, List.of(event2));
+        List<ClientEntity> clients = clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED");
+        assertThat(clients).hasSize(1);
+        assertThat(clients.getFirst()).isEqualTo(client1);
+    }
+
     private static ClientEntity getClientEntity(UUID clientId, String callbackUrl, UUID subscriptionId) {
         return ClientEntity.builder()
                 .id(clientId)
@@ -85,5 +90,10 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
                 .subscriptionId(subscriptionId)
                 .eventTypeId(eventId)
                 .build();
+    }
+
+    private void saveClientAndEventInfoInDb(ClientEntity client, List<ClientEventEntity> events) {
+        clientRepository.save(client);
+        clientEventRepository.saveAll(events);
     }
 }
