@@ -127,7 +127,7 @@ public class SubscriptionServiceV2 {
     }
 
     private void saveClientHmac(final UUID subscriptionId, final String hmacKeyId) {
-        ClientHmacEntity clientHmacEntity = clientHmacMapper.toEntity(subscriptionId, hmacKeyId);
+        final ClientHmacEntity clientHmacEntity = clientHmacMapper.toEntity(subscriptionId, hmacKeyId);
         clientHmacRepository.save(clientHmacEntity);
     }
 

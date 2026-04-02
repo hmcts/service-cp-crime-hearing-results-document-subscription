@@ -27,6 +27,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTB
 public class CallbackDeliveryService {
 
     public static final String EXAMPLE_ENDPOINT = "https://example.com";
+    private static final EntityNotFoundException HMAC_NOT_FOUND = new EntityNotFoundException("Hmac not found for client subscriptionId");
 
     private final ClientRepository clientRepository;
     private final ClientHmacRepository clientHmacRepository;
@@ -43,8 +44,8 @@ public class CallbackDeliveryService {
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);
         log.info("sending {} outbound notifications", clients.size());
         for (final ClientEntity client : clients) {
-            ClientHmacEntity clientHmac = clientHmacRepository.findBySubscriptionId(client.getSubscriptionId())
-                    .orElseThrow(() -> new EntityNotFoundException("Hmac not found for client subscriptionId"));
+            final ClientHmacEntity clientHmac = clientHmacRepository.findBySubscriptionId(client.getSubscriptionId())
+                    .orElseThrow(() -> HMAC_NOT_FOUND);
             final String signature = hmacManager.calculateSignature(clientHmac.getKeyId(), jsonMapper.toJson(eventNotificationPayload));
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, clientHmac.getKeyId(), signature);
             if (client.getCallbackUrl().startsWith(EXAMPLE_ENDPOINT)) {

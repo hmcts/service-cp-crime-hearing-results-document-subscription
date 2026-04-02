@@ -77,7 +77,8 @@ dependencies {
   // --- Observability / Actuator / OTEL / Prometheus ---
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
   implementation 'org.hibernate.validator:hibernate-validator'
-  implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
+  // We get a lot of noise from OTLP lets assess what we need to do
+  // implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
 
 
   // Jwt token

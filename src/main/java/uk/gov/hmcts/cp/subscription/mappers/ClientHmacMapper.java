@@ -9,7 +9,6 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface ClientHmacMapper {
 
-
     @Mapping(target = "id", ignore = true)
-    ClientHmacEntity toEntity(final UUID subscriptionId, final String keyId);
+    ClientHmacEntity toEntity(UUID subscriptionId, String keyId);
 }
