@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
@@ -28,13 +28,13 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.ACCEPTED;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
 
     @Mock
-    ServiceBusConfigService configService;
+    ServiceBusProperties configService;
     @Mock
     JsonMapper jsonMapper;
     @Mock
@@ -62,18 +62,19 @@ class NotificationControllerTest {
 
     @SneakyThrows
     @Test
-    void valid_pcr_payload_should_process_notification() {
+    void service_bus_disabled_should_process_notification_synchronously() {
+        when(configService.isEnabled()).thenReturn(false);
         ResponseEntity<Void> response = notificationController.createNotification(payload, null);
         verify(notificationManager).processPcrNotification(eq(payload));
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
 
     @Test
-    void valid_pcr_payload_should_send_to_servicebus() {
+    void service_bus_enabled_should_queue_to_service_bus() {
         when(configService.isEnabled()).thenReturn(true);
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
         ResponseEntity<Void> response = notificationController.createNotification(payload, null);
-        verify(clientService).queueMessage(PCR_INBOUND_QUEUE, null, "payload-json", 0);
+        verify(clientService).queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, "payload-json", 0);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
 

@@ -67,7 +67,6 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
         "subscription.oauth-enabled=true",
-        "service-bus.enabled=false",
         "material-client.retry.intervalMilliSecs=100",
         "material-client.retry.timeoutMilliSecs=500"
 })

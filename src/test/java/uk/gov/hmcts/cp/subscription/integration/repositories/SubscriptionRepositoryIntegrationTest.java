@@ -15,7 +15,7 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {
-        clearClientSubscriptionTable();
+        clearAllTables();
     }
 
     @Transactional
@@ -33,7 +33,11 @@ class SubscriptionRepositoryIntegrationTest extends IntegrationTestBase {
     @Test
     void subscription_should_delete_ok() {
         ClientSubscriptionEntity saved = insertSubscription("https://example.com/notify", List.of("PRISON_COURT_REGISTER_GENERATED"));
-        subscriptionRepository.deleteById(saved.getId());
+        UUID id = saved.getId();
+        clientEventRepository.deleteAll();
+        clientHmacRepository.deleteAll();
+        clientRepository.deleteAll();
+        subscriptionRepository.deleteById(id);
         assertThat(subscriptionRepository.findAll()).hasSize(0);
     }
 

@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.servicebus.integration;
 
-import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,6 +7,8 @@ import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 @SpringBootTest
@@ -23,4 +24,13 @@ public class ServiceBusIntegrationTestBase {
     protected ServiceBusProcessorService processorService;
     @Autowired
     protected ServiceBusTestService testService;
+
+    protected void prepareQueue(final String queueName) {
+        assertTrue(adminService.isServiceBusReady(),
+                "ServiceBus is not running. Run ./gradlew dockerTest or ./gradlew composeUp before these tests.");
+        processorService.stopMessageProcessor(queueName);
+        testService.dropQueueIfExists(queueName);
+        adminService.createQueue(queueName);
+        processorService.startMessageProcessor(queueName);
+    }
 }

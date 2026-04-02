@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 class NotificationServiceTest {
 
     @Mock
-    ServiceBusConfigService configService;
+    ServiceBusProperties configService;
     @Mock
     AppProperties appProperties;
     @Mock
