@@ -52,16 +52,6 @@ public final class CallbackStub {
                         new AssertionError("Callback request body not found"));
     }
 
-    public static UUID getDocumentIdFromCallbackServeEvents(WireMockServer server, String callbackUri) {
-        return server.getAllServeEvents().stream()
-                .map(ServeEvent::getRequest)
-                .filter(r -> nonNull(r.getUrl()) && r.getUrl().contains(callbackUri))
-                .map(r -> parseDocumentIdFromBody(r.getBodyAsString()))
-                .findFirst()
-                .orElseThrow(() ->
-                        new AssertionError("Callback request body did not contain documentId"));
-    }
-
     public static String getHeaderFromCallbackServeEvents(WireMockServer server, String callbackUri, String headerFieldName) {
         return server.getAllServeEvents().stream()
                 .map(ServeEvent::getRequest)
