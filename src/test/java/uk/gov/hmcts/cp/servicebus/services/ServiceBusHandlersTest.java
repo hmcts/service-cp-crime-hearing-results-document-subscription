@@ -14,8 +14,8 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @ExtendWith(MockitoExtension.class)
 class ServiceBusHandlersTest {
@@ -34,7 +34,7 @@ class ServiceBusHandlersTest {
         EventPayload eventPayload = EventPayload.builder().build();
         when(jsonMapper.fromJson("pcr-json", EventPayload.class)).thenReturn(eventPayload);
 
-        serviceBusHandlers.handleMessage(PCR_INBOUND_QUEUE, null, "pcr-json");
+        serviceBusHandlers.handleMessage(NOTIFICATIONS_INBOUND_QUEUE, null, "pcr-json");
 
         verify(notificationManager).processPcrNotification(eventPayload);
     }
@@ -44,7 +44,7 @@ class ServiceBusHandlersTest {
         EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
         when(jsonMapper.fromJson("callback-json", EventNotificationPayloadWrapper.class)).thenReturn(payloadWrapper);
 
-        serviceBusHandlers.handleMessage(PCR_OUTBOUND_QUEUE, "https://callback", "callback-json");
+        serviceBusHandlers.handleMessage(NOTIFICATIONS_OUTBOUND_QUEUE, "https://callback", "callback-json");
 
         verify(callbackClient).sendNotification("https://callback", payloadWrapper);
     }

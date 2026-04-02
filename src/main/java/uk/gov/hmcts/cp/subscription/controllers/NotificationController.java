@@ -21,7 +21,7 @@ import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
 
 /**
  * Handles PCR notification events and document retrieval for subscribers.
@@ -44,7 +44,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBO
 @Slf4j
 public class NotificationController implements InternalApi, NotificationApi {
 
-    private final ServiceBusConfigService serviceBusConfig;
+    private final ServiceBusProperties serviceBusConfig;
     private final ServiceBusClientService clientService;
     private final NotificationManager notificationManager;
     private final JsonMapper jsonMapper;
@@ -66,7 +66,7 @@ public class NotificationController implements InternalApi, NotificationApi {
                 eventPayload.getEventType());
         if (serviceBusConfig.isEnabled()) {
             final String pcrEventjson = jsonMapper.toJson(eventPayload);
-            clientService.queueMessage(PCR_INBOUND_QUEUE, null, pcrEventjson, 0);
+            clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, pcrEventjson, 0);
         } else {
             notificationManager.processPcrNotification(eventPayload);
         }

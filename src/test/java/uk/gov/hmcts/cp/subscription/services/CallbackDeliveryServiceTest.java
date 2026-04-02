@@ -12,6 +12,7 @@ import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
@@ -34,7 +35,7 @@ import static uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService.EXAM
 @ExtendWith(MockitoExtension.class)
 class CallbackDeliveryServiceTest {
     @Mock
-    ServiceBusConfigService serviceBusConfigService;
+    ServiceBusProperties serviceBusConfigService;
     @Mock
     JsonMapper jsonMapper;
     @Mock

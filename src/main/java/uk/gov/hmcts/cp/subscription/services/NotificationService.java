@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class NotificationService {
 
-    private final ServiceBusConfigService serviceBusConfigService;
+    private final ServiceBusProperties serviceBusConfigService;
     private final MaterialService materialService;
     private final DocumentService documentService;
 

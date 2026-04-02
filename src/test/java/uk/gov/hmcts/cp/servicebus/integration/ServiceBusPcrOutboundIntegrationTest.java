@@ -21,20 +21,20 @@ import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Slf4j
 @SpringBootTest
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false",
+        "service-bus.enabled=false",
         "service-bus.max-tries=2",
         "service-bus.retry-msecs=0"
 })
@@ -49,18 +49,12 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
 
     @BeforeEach
     void setUp() {
-        assumeTrue(adminService.isServiceBusReady(),
-                "ServiceBus is not running. Run gradlew composeUp / composeDown");
-        processorService.stopMessageProcessor(PCR_OUTBOUND_QUEUE);
-        testService.dropQueueIfExists(PCR_OUTBOUND_QUEUE);
-
-        adminService.createQueue(PCR_OUTBOUND_QUEUE);
-        processorService.startMessageProcessor(PCR_OUTBOUND_QUEUE);
+        prepareQueue(NOTIFICATIONS_OUTBOUND_QUEUE);
     }
 
     @AfterEach
     void afterEach() {
-        processorService.stopMessageProcessor(PCR_OUTBOUND_QUEUE);
+        processorService.stopMessageProcessor(NOTIFICATIONS_OUTBOUND_QUEUE);
     }
 
     @SneakyThrows
@@ -95,7 +89,7 @@ public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationT
                 .signature("signature")
                 .build();
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
-        clientService.queueMessage(PCR_OUTBOUND_QUEUE, callbackUrl, jsonMapper.toJson(payload), 0);
+        clientService.queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, jsonMapper.toJson(payload), 0);
         MDC.clear();
     }
 

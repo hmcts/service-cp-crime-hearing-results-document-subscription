@@ -4,12 +4,12 @@ import com.azure.messaging.servicebus.ServiceBusErrorContext;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
 import jakarta.annotation.PostConstruct;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
@@ -19,11 +19,11 @@ import java.util.Map;
 
 import static org.awaitility.Awaitility.await;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_INBOUND_QUEUE;
-import static uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService.PCR_OUTBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Slf4j
 public class ServiceBusProcessorService {
 
@@ -31,7 +31,8 @@ public class ServiceBusProcessorService {
     private static final int POLL_SECONDS = 10;
 
     private final ServiceBusAdminService adminService;
-    private final ServiceBusConfigService configService;
+    private final ServiceBusProperties properties;
+    private final ServiceBusClientFactory clientFactory;
     private final ServiceBusClientService clientService;
     private final JsonMapper jsonMapper;
     private final ServiceBusHandlers serviceBusHandlers;
@@ -40,17 +41,17 @@ public class ServiceBusProcessorService {
 
     @PostConstruct
     public void initialiseServiceBus() {
-        if (configService.isEnabled()) {
+        if (properties.isEnabled()) {
             try {
                 await()
                         .atMost(Duration.ofSeconds(MAX_WAIT_SECONDS))
                         .pollInterval(Duration.ofSeconds(POLL_SECONDS))
                         .until(adminService::isServiceBusReady);
                 log.info("createServiceBusQueues creating service bus queues");
-                adminService.createQueue(PCR_INBOUND_QUEUE);
-                startMessageProcessor(PCR_INBOUND_QUEUE);
-                adminService.createQueue(PCR_OUTBOUND_QUEUE);
-                startMessageProcessor(PCR_OUTBOUND_QUEUE);
+                adminService.createQueue(NOTIFICATIONS_INBOUND_QUEUE);
+                startMessageProcessor(NOTIFICATIONS_INBOUND_QUEUE);
+                adminService.createQueue(NOTIFICATIONS_OUTBOUND_QUEUE);
+                startMessageProcessor(NOTIFICATIONS_OUTBOUND_QUEUE);
             } catch (Exception e) {
                 log.error("Failed to initialise serviceBus. {}", e.getMessage());
             }
@@ -71,7 +72,7 @@ public class ServiceBusProcessorService {
     @SneakyThrows
     public void startMessageProcessor(final String queueName) {
         log.info("starting service bus processor {}", queueName);
-        final ServiceBusProcessorClient processorClient = configService
+        final ServiceBusProcessorClient processorClient = clientFactory
                 .processorClientBuilder(queueName)
                 .processMessage(context -> handleMessage(queueName, context))
                 .processError(context -> handleError(queueName, context))
@@ -89,8 +90,8 @@ public class ServiceBusProcessorService {
             serviceBusHandlers.handleMessage(queueName, queueMessage.getTargetUrl(), queueMessage.getMessage());
         } catch (Exception exception) {
             final int failureCount = queueMessage.getFailureCount() + 1;
-            log.error("handleMessage failureCount:{} of {} tries with exception.", failureCount, configService.getMaxTries(), exception);
-            if (failureCount >= configService.getMaxTries()) {
+            log.error("handleMessage failureCount:{} of {} tries with exception.", failureCount, properties.getMaxTries(), exception);
+            if (failureCount >= properties.getMaxTries()) {
                 log.error("handleMessage FAILED FINALLY");
                 throw exception;
             }
