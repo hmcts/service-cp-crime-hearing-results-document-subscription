@@ -119,9 +119,9 @@ public abstract class IntegrationTestBase {
                 .updatedAt(now)
                 .hmacKeyId("integration-test-hmac-key")
                 .build();
-        subscriptionRepository.saveAndFlush(subscription);
+        subscriptionRepository.save(subscription);
 
-        clientRepository.saveAndFlush(ClientEntity.builder()
+        clientRepository.save(ClientEntity.builder()
                 .id(clientId)
                 .subscriptionId(subscription.getId())
                 .callbackUrl(notificationUri)

@@ -20,7 +20,7 @@ public class ServiceBusAdminConfiguration {
     private final VaultServiceProperties vaultServiceProperties;
 
     @Bean
-    public ServiceBusAdminInterface serviceBusAdminClient() {
+    public ServiceBusAdminInterface serviceBusAdmin() {
         log.info("ServiceBusAdminConfiguration building serviceBusAdminClient isEmulator:{}", configService.isEmulator());
         if (configService.isEmulator()) {
             return new ServiceBusAdminEmulatorImpl(configService);

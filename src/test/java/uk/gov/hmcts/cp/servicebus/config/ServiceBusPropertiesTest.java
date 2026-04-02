@@ -18,7 +18,7 @@ class ServiceBusPropertiesTest {
     private ServiceBusAdminInterface adminClientFor(String adminConnection, String connection) {
         final ServiceBusProperties configService = new ServiceBusProperties(false, adminConnection, connection, 5);
         final VaultServiceProperties vaultProperties = new VaultServiceProperties(false, "", CLIENT_ID);
-        return new ServiceBusAdminConfiguration(configService, vaultProperties).serviceBusAdminClient();
+        return new ServiceBusAdminConfiguration(configService, vaultProperties).serviceBusAdmin();
     }
 
     @Test

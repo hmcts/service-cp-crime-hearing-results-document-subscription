@@ -28,7 +28,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
 public class ServiceBusProcessorService {
 
     private static final int MAX_WAIT_SECONDS = 120;
-    private static final int POLL_SECONDS = 10;
+    private static final int POLL_SECONDS = 1;
 
     private final ServiceBusAdminService adminService;
     private final ServiceBusProperties properties;
