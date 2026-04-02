@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.mappers.SubscriberMapper;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CallbackDeliveryServiceTest {
     @Mock
-    ServiceBusConfigService serviceBusConfigService;
+    ServiceBusProperties serviceBusConfigService;
     @Mock
     JsonMapper jsonMapper;
     @Mock

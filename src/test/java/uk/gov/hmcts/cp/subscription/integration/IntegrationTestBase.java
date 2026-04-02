@@ -38,7 +38,8 @@ import java.util.UUID;
 @AutoConfigureMockMvc
 @Slf4j
 @TestPropertySource(properties = {
-        "vault.enabled=false"
+        "vault.enabled=false",
+        "service-bus.enabled=false"
 })
 public abstract class IntegrationTestBase {
 
@@ -116,10 +117,11 @@ public abstract class IntegrationTestBase {
                 .notificationEndpoint(notificationUri)
                 .createdAt(now)
                 .updatedAt(now)
+                .hmacKeyId("integration-test-hmac-key")
                 .build();
-        subscriptionRepository.save(subscription);
+        subscriptionRepository.saveAndFlush(subscription);
 
-        clientRepository.save(ClientEntity.builder()
+        clientRepository.saveAndFlush(ClientEntity.builder()
                 .id(clientId)
                 .subscriptionId(subscription.getId())
                 .callbackUrl(notificationUri)
@@ -127,6 +129,7 @@ public abstract class IntegrationTestBase {
                 .updatedAt(now)
                 .build());
 
+        // client_events.subscription_id FK references client.subscription_id — client row must be persisted first.
         entityEventTypes.forEach(eventType ->
                 eventTypeRepository.findByEventName(eventType).ifPresent(eventTypeEntity ->
                         clientEventRepository.save(ClientEventEntity.builder()

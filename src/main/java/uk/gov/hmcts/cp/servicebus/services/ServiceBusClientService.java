@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusMapper;
 import uk.gov.hmcts.cp.servicebus.mapper.ServiceBusWrapperMapper;
 import uk.gov.hmcts.cp.servicebus.model.ServiceBusWrappedMessage;
@@ -22,14 +21,14 @@ import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 @Slf4j
 public class ServiceBusClientService {
 
-    private final ServiceBusConfigService configService;
+    private final ServiceBusClientFactory clientFactory;
     private final ServiceBusWrapperMapper wrapperMapper;
     private final ServiceBusMapper mapper;
     private final JsonMapper jsonMapper;
     private final ServiceBusRetryService retryService;
 
     public void queueMessage(final String queueName, final String targetUrl, final String messageString, final int failureCount) {
-        final ServiceBusSenderClient serviceBusSenderClient = configService.senderClient(queueName);
+        final ServiceBusSenderClient serviceBusSenderClient = clientFactory.senderClient(queueName);
         final UUID correlationId = UUID.fromString(MDC.get(CORRELATION_ID_KEY));
         final ServiceBusWrappedMessage wrappedMessage = wrapperMapper.newWrapper(correlationId, failureCount, targetUrl, messageString);
         final OffsetDateTime nextTryTime = retryService.getNextTryTime(failureCount);

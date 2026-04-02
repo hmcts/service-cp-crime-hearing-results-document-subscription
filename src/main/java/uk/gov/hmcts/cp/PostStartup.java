@@ -9,7 +9,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusConfigService;
+import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 import uk.gov.hmcts.cp.vault.VaultServiceProperties;
@@ -25,7 +25,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PostStartup {
     private EventTypeRepository eventTypeRepository;
-    private ServiceBusConfigService configService;
+    private ServiceBusProperties configService;
     private ServiceBusAdminService adminService;
     private VaultServiceProperties vaultServiceProperties;
 
@@ -49,7 +49,7 @@ public class PostStartup {
             log.info("SKIPPING PostStartup service bus listing queues");
              //COLING temp removed this as it hangs in pipelines
              //We see the Azure auth trying but failing
-            
+
             final List<String> queues = adminClient.listQueues().stream().map(QueueProperties::getName).toList();
             log.info("PostStartup service bus has queues:{}", queues);
             for (final String queue : queues) {
