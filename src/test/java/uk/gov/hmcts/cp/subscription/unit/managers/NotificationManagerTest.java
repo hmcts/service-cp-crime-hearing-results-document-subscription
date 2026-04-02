@@ -75,7 +75,7 @@ class NotificationManagerTest {
         when(subscriptionService.hasAccess(subscriptionId, clientId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
         when(documentService.getDocumentContent(documentId)).thenReturn(content);
 
-        DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, clientId, documentId);
+        DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, documentId);
 
         assertThat(result).isEqualTo(content);
     }
@@ -85,7 +85,7 @@ class NotificationManagerTest {
         when(documentService.getEventTypeForDocument(documentId)).thenReturn("PRISON_COURT_REGISTER_GENERATED");
 
         ResponseStatusException thrown = assertThrows(ResponseStatusException.class,
-                () -> notificationManager.getPcrDocumentContent(subscriptionId, clientId, documentId));
+                () -> notificationManager.getPcrDocumentContent(subscriptionId, documentId));
 
         assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(thrown.getReason()).contains("Access denied");

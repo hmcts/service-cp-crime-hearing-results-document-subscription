@@ -32,6 +32,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.exactly;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static java.util.Objects.nonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -90,7 +91,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     @BeforeEach
     void setUp() {
-        assumeTrue(adminService.isServiceBusReady(), "ServiceBus is not running. Run gradlew composeUp / composeDown");
+        assertThat(adminService.isServiceBusReady()).isTrue();
         processorService.stopMessageProcessor(PCR_INBOUND_QUEUE);
         testService.dropQueueIfExists(PCR_INBOUND_QUEUE);
         adminService.createQueue(PCR_INBOUND_QUEUE);

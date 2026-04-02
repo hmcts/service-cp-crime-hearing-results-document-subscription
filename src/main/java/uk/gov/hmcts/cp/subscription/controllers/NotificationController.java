@@ -78,9 +78,10 @@ public class NotificationController implements InternalApi, NotificationApi {
             @NotNull @PathVariable("clientSubscriptionId") final UUID clientSubscriptionId,
             @NotNull @PathVariable("documentId") final UUID documentId,
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
+        // TODO Validate clientId and subscriptionId MATCH UP
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         log.info("getDocument request clientId:{} clientSubscriptionId:{} documentId:{}", clientId, clientSubscriptionId, documentId);
-        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, clientId, documentId);
+        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);
