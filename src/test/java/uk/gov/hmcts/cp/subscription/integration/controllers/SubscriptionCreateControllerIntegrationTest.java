@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.matchesRegex;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -28,10 +29,6 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
 
     @MockitoBean
     UUIDService uuidService;
-    @Autowired
-    HmacKeyService hmacKeyService;
-    @Autowired
-    EncodingService encodingService;
 
     @BeforeEach
     void beforeEach() {
@@ -44,7 +41,6 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
     void create_subscription_should_save_subscription_with_hmac() throws Exception {
         when(uuidService.randomString()).thenReturn(correlationId);
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
-        String expectedSecret = encodingService.encodeWithBase64(hmacKeyService.generateKey().getSecret());
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -57,6 +53,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.createdAt").exists())
                 .andExpect(jsonPath("$.hmac.keyId", matchesRegex("^kid-v1.*")))
                 .andExpect(jsonPath("$.hmac.secret", matchesRegex("[a-zA-Z0-9/+]*=")));
+        assertDatabaseState();
     }
 
     @Test
