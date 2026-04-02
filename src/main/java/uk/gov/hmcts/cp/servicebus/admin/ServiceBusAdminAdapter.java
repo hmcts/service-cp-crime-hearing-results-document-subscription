@@ -5,11 +5,13 @@ import com.azure.messaging.servicebus.administration.ServiceBusAdministrationCli
 import com.azure.messaging.servicebus.administration.models.CreateQueueOptions;
 import com.azure.messaging.servicebus.administration.models.QueueProperties;
 
-public class ServiceBusAdminClient implements ServiceBusAdminInterface {
+import java.time.Duration;
+
+public class ServiceBusAdminAdapter implements ServiceBusAdminInterface {
 
     private final ServiceBusAdministrationClient adminClient;
 
-    public ServiceBusAdminClient(final ServiceBusAdministrationClient adminClient) {
+    public ServiceBusAdminAdapter(final ServiceBusAdministrationClient adminClient) {
         this.adminClient = adminClient;
     }
 
@@ -24,12 +26,11 @@ public class ServiceBusAdminClient implements ServiceBusAdminInterface {
     }
 
     @Override
-    public void createQueue(final String queueName, final CreateQueueOptions options) {
+    public void createQueue(final String queueName) {
+        final CreateQueueOptions options = new CreateQueueOptions();
+        options.setDefaultMessageTimeToLive(Duration.ofHours(1));
+        options.setMaxDeliveryCount(1);
         adminClient.createQueue(queueName, options);
     }
 
-    @Override
-    public void deleteQueue(final String queueName) {
-        adminClient.deleteQueue(queueName);
-    }
 }

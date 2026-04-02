@@ -12,6 +12,7 @@ public class ServiceBusProperties {
     public static final int ADMIN_CONNECTION_PORT = 5300;
     public static final String NOTIFICATIONS_INBOUND_QUEUE = "notifications.inbound";
     public static final String NOTIFICATIONS_OUTBOUND_QUEUE = "notifications.outbound";
+    public static final String HTTPS = "https";
 
     private boolean enabled;
     private String adminConnectionString;
@@ -32,6 +33,10 @@ public class ServiceBusProperties {
         this.adminConnectionString = adminConnectionString;
         this.connectionString = connectionString;
         this.maxTries = maxTries;
+    }
+
+    public boolean isEmulator() {
+        return !connectionString.contains(HTTPS);
     }
 
 }

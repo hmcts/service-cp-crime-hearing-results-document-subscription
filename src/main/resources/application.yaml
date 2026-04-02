@@ -28,9 +28,9 @@ callback-client:
     timeoutMilliSecs: ${CALLBACK_CLIENT_TIMEOUT_MSECS:5000}
 
 service-bus:
-  # true  = real Azure Service Bus (only AZURE_SERVICE_BUS_URI is used for both admin and messaging)
-  # false = local Service Bus emulator (AZURE_SERVICE_BUS_ADMIN_URI for admin on port 5300, AZURE_SERVICE_BUS_URI for messaging)
+  # this switch is to detect true - async/false - sync flows
   enabled: ${AZURE_SERVICE_BUS_ENABLED:true}
+  # Emulator vs Azure is detected automatically from the connection string (https = Azure, sb:// = emulator)
   admin-connection: ${AZURE_SERVICE_BUS_ADMIN_URI:Endpoint=sb://localhost:5300;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
   connection: ${AZURE_SERVICE_BUS_URI:Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;}
   retry-msecs: ${SERVICE_BUS_RETRY_SECONDS:0,1000,2000,10000,30000,60000}

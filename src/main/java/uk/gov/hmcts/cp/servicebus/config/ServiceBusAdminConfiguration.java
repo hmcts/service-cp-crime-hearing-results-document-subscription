@@ -11,8 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Mono;
-import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminClient;
-import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminInterface;
+import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminAdapter;
 import uk.gov.hmcts.cp.vault.VaultServiceProperties;
 
 import java.net.MalformedURLException;
@@ -30,13 +29,14 @@ public class ServiceBusAdminConfiguration {
     private VaultServiceProperties vaultServiceProperties;
 
     @Bean
-    public ServiceBusAdminInterface serviceBusAdminClient() {
-        log.info("ServiceBusAdminConfiguration building serviceBusAdminClient enabled:{}", configService.isEnabled());
-        if (configService.isEnabled()) {
-            return new ServiceBusAdminClient(buildAzureAdminClient());
-        } else {
-            return new ServiceBusAdminClient(buildEmulatorAdminClient());
-        }
+    public ServiceBusAdministrationClient administrationClient() {
+        log.info("ServiceBusAdminConfiguration building administrationClient isEmulator:{}", configService.isEmulator());
+        return configService.isEmulator() ? buildEmulatorAdminClient() : buildAzureAdminClient();
+    }
+
+    @Bean
+    public ServiceBusAdminAdapter serviceBusAdminClient(final ServiceBusAdministrationClient administrationClient) {
+        return new ServiceBusAdminAdapter(administrationClient);
     }
 
     private ServiceBusAdministrationClient buildAzureAdminClient() {

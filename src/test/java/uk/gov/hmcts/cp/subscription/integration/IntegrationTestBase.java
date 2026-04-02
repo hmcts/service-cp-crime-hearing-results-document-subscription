@@ -38,7 +38,8 @@ import java.util.UUID;
 @AutoConfigureMockMvc
 @Slf4j
 @TestPropertySource(properties = {
-        "vault.enabled=false"
+        "vault.enabled=false",
+        "service-bus.enabled=false"
 })
 public abstract class IntegrationTestBase {
 

@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
-import uk.gov.hmcts.cp.subscription.integration.config.ServiceBusEmulatorTestConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.ResultActions;
 import org.wiremock.spring.ConfigureWireMock;
@@ -57,10 +56,9 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.cr
         @ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0),
         @ConfigureWireMock(name = "callback-client", httpsBaseUrlProperties = "callback-client.url", httpsPort = 0)
 })
-@Import({IgnoreSSLCertificatesForWiremockTest.class, ServiceBusEmulatorTestConfiguration.class})
+@Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
-        "spring.main.allow-bean-definition-overriding=true", // TODO: remove after sync fallback decommissioned
-        "service-bus.enabled=true",                         // TODO: remove after sync fallback decommissioned
+        "service-bus.enabled=true",
         "service-bus.max-tries=3",
         "service-bus.retry-msecs=0,500,1000",
         "material-client.retry.intervalMilliSecs=100",
@@ -133,7 +131,7 @@ class PcrAsyncE2EIntegrationTest extends IntegrationTestBase {
         then_the_subscriber_can_retrieve_the_document();
     }
 
-    // @Test - TODO - need to fix
+    @Test
     void callback_client_not_responding_should_try_3_times_in_4_seconds() throws Exception {
         given_i_am_a_subscriber_with_a_subscription();
         given_callback_endpoint_returns_server_error();

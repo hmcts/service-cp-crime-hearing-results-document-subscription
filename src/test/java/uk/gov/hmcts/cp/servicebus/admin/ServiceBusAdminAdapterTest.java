@@ -10,54 +10,51 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ServiceBusAdminClientTest {
+class ServiceBusAdminAdapterTest {
 
     @Mock
     private ServiceBusAdministrationClient adminClient;
     @Mock
     private PagedIterable<QueueProperties> queuePage;
 
-    private ServiceBusAdminClient subject;
+    private ServiceBusAdminAdapter subject;
+
+    @Captor
+    ArgumentCaptor<CreateQueueOptions> optionsCaptor;
 
     @BeforeEach
     void setUp() {
-        subject = new ServiceBusAdminClient(adminClient);
+        subject = new ServiceBusAdminAdapter(adminClient);
     }
 
     @Test
     void listQueues_delegatesToAdminClient() {
         when(adminClient.listQueues()).thenReturn(queuePage);
-
         assertThat(subject.listQueues()).isSameAs(queuePage);
-        verify(adminClient).listQueues();
     }
 
     @Test
     void getQueueExists_delegatesToAdminClient() {
         when(adminClient.getQueueExists("q1")).thenReturn(true);
-
         assertThat(subject.getQueueExists("q1")).isTrue();
-        verify(adminClient).getQueueExists("q1");
     }
 
     @Test
-    void createQueue_delegatesToAdminClient() {
-        final CreateQueueOptions options = new CreateQueueOptions();
-
-        subject.createQueue("q1", options);
-
-        verify(adminClient).createQueue("q1", options);
-    }
-
-    @Test
-    void deleteQueue_delegatesToAdminClient() {
-        subject.deleteQueue("q1");
-
-        verify(adminClient).deleteQueue("q1");
+    void createQueue_delegatesToAdminClientWithOptions() {
+        subject.createQueue("q1");
+        verify(adminClient).createQueue(eq("q1"), optionsCaptor.capture());
+        assertThat(optionsCaptor.getValue().getDefaultMessageTimeToLive()).isEqualTo(Duration.ofHours(1));
+        assertThat(optionsCaptor.getValue().getMaxDeliveryCount()).isEqualTo(1);
     }
 }
