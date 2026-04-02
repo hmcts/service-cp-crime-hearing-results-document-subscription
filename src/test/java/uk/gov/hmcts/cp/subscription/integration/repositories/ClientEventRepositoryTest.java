@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.integration.repositories;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.annotation.Transactional;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
@@ -24,6 +25,11 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
     final ClientEventEntity event1 = getClientEventEntity(subscriptionId1, 1L);
     final ClientEventEntity event2 = getClientEventEntity(subscriptionId1, 2L);
     final ClientEventEntity event3 = getClientEventEntity(subscriptionId2, 3L);
+
+    @BeforeEach
+    void beforeEach() {
+        super.clearAllTables();
+    }
 
     @Transactional
     @Test

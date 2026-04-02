@@ -143,7 +143,7 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         when_material_service_responds();
         then_the_subscriber_receives_a_callback();
 
-        when_subscriber_loses_access();
+        when_subscriber_deletes_subscription();
 
         then_subscriber_cannot_retrieve_document();
     }
@@ -255,9 +255,8 @@ class PcrSynchronousE2EIntegrationTest extends IntegrationTestBase {
         getDocumentAndExpectPdf(subscriptionId, callbackDocumentId);
     }
 
-    private void when_subscriber_loses_access() throws Exception {
-        deleteSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, subscriptionId)
-                .andExpect(status().isNoContent());
+    private void when_subscriber_deletes_subscription() throws Exception {
+        deleteSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, subscriptionId).andExpect(status().isNoContent());
     }
 
     private void then_subscriber_cannot_retrieve_document() throws Exception {

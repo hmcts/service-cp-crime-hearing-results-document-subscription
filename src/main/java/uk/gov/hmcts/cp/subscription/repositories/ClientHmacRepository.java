@@ -9,5 +9,7 @@ import java.util.UUID;
 
 @Repository
 public interface ClientHmacRepository extends JpaRepository<ClientHmacEntity, Long> {
-    Optional<ClientHmacEntity> findBySubscriptionId(UUID id);
+    Optional<ClientHmacEntity> findBySubscriptionId(UUID subscriptionId);
+
+    void deleteAllBySubscriptionId(UUID subscriptionId);
 }

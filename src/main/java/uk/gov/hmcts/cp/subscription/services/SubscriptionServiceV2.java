@@ -87,6 +87,7 @@ public class SubscriptionServiceV2 {
     public void deleteClientSubscription(final UUID clientId, final UUID subscriptionId) {
         log.info("deleteClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
+        clientHmacRepository.deleteAllBySubscriptionId(subscriptionId);
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
         clientRepository.delete(client);
     }
