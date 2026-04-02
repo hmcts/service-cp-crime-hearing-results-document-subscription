@@ -26,8 +26,6 @@ public class NotificationMapper {
         return EventNotificationPayload.builder()
                 .cases(cases)
                 .masterDefendantId(defendant.getMasterDefendantId())
-                .defendantName(defendant.getName())
-                .defendantDateOfBirth(defendant.getDateOfBirth())
                 .documentId(documentId)
                 .documentGeneratedTimestamp(eventPayload.getTimestamp())
                 .prisonEmailAddress(prisonEmailAddress)

@@ -56,8 +56,6 @@ class NotificationMapperTest {
         assertThat(response.getCases()).hasSize(1);
         assertThat(response.getCases().get(0).getUrn()).isEqualTo("http://localhost");
         assertThat(response.getMasterDefendantId()).isEqualTo(defendentId);
-        assertThat(response.getDefendantName()).isEqualTo("John Doe");
-        assertThat(response.getDefendantDateOfBirth()).isEqualTo(LocalDate.of(2000, 1, 1));
         assertThat(response.getDocumentId()).isEqualTo(documentId);
         assertThat(response.getDocumentGeneratedTimestamp()).isEqualTo(now);
         assertThat(response.getPrisonEmailAddress()).isEqualTo("prison@example.com");
