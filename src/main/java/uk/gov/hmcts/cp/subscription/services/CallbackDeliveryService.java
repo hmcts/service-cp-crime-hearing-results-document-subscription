@@ -49,6 +49,7 @@ public class CallbackDeliveryService {
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, clientHmac.getKeyId(), signature);
             if (client.getCallbackUrl().startsWith(EXAMPLE_ENDPOINT)) {
                 log.info("Skipping notification for EXAMPLE callback endpoint:{}", client.getCallbackUrl());
+
             } else if (serviceBusConfig.isEnabled()) {
                 final String payload = jsonMapper.toJson(payloadWrapper);
                 clientService.queueMessage(PCR_OUTBOUND_QUEUE, client.getCallbackUrl(), payload, 0);

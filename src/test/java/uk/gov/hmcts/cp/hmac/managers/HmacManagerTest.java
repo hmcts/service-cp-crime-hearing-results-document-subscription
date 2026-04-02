@@ -49,7 +49,7 @@ class HmacManagerTest {
         when(encodingService.decodeFromBase64("encodedSecret")).thenReturn("secret".getBytes());
         when(hmacSigningService.sign("secret".getBytes(), "payload")).thenReturn("signature");
 
-        String signature = hmacManager.getSignature(keyId, "payload");
+        String signature = hmacManager.calculateSignature(keyId, "payload");
 
         assertThat(signature).isEqualTo("signature");
     }
