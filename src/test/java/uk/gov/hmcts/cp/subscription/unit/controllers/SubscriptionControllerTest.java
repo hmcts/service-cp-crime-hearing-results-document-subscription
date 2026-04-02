@@ -66,9 +66,9 @@ class SubscriptionControllerTest {
     @Test
     void update_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.updateClientSubscription(updateRequest, TEST_CLIENT_UUID, subscriptionId)).thenReturn(response);
+        when(subscriptionService.updateClientSubscription(TEST_CLIENT_UUID, subscriptionId, updateRequest)).thenReturn(response);
         var result = subscriptionController.updateClientSubscription(subscriptionId, updateRequest, null);
-        verify(subscriptionService).updateClientSubscription(updateRequest, TEST_CLIENT_UUID, subscriptionId);
+        verify(subscriptionService).updateClientSubscription(TEST_CLIENT_UUID, subscriptionId, updateRequest);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
     }

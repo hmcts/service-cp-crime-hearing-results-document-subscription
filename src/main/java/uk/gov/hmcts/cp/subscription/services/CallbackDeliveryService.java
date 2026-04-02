@@ -13,8 +13,8 @@ import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
-import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,7 +28,7 @@ public class CallbackDeliveryService {
 
     public static final String EXAMPLE_ENDPOINT = "https://example.com";
 
-    private final ClientEventRepository clientEventRepository;
+    private final ClientRepository clientRepository;
     private final ClientHmacRepository clientHmacRepository;
     private final NotificationMapper notificationMapper;
     private final JsonMapper jsonMapper;
@@ -39,7 +39,7 @@ public class CallbackDeliveryService {
 
     public void submitOutboundPcrEvents(final EventPayload eventPayload, final UUID documentId) {
         final String eventType = eventPayload.getEventType();
-        final List<ClientEntity> clients = clientEventRepository.findClientsByEventType(eventType);
+        final List<ClientEntity> clients = clientRepository.findClientsByEventType(eventType);
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);
         log.info("sending {} outbound notifications", clients.size());
         for (final ClientEntity client : clients) {

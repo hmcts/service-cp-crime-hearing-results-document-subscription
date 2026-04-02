@@ -48,7 +48,7 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        final ClientSubscription response = subscriptionService.updateClientSubscription(clientSubscriptionRequest, clientId, clientSubscriptionId);
+        final ClientSubscription response = subscriptionService.updateClientSubscription(clientId, clientSubscriptionId, clientSubscriptionRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
