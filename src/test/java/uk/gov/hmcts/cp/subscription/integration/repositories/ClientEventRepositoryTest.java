@@ -70,6 +70,15 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
         assertThat(result.getFirst().getSubscriptionId()).isEqualTo(subscriptionId2);
     }
 
+    @Test
+    void get_client_for_event_type_should_return_client_list() {
+        saveClientAndEventInfoInDb(client1, List.of(event1));
+        saveClientAndEventInfoInDb(client2, List.of(event2));
+        List<ClientEntity> clients = clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED");
+        assertThat(clients).hasSize(1);
+        assertThat(clients.getFirst()).isEqualTo(client1);
+    }
+
     private static ClientEntity getClientEntity(UUID clientId, String callbackUrl, UUID subscriptionId) {
         return ClientEntity.builder()
                 .id(clientId)

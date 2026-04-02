@@ -16,7 +16,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
-import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +37,7 @@ class CallbackDeliveryServiceTest {
     @Mock
     JsonMapper jsonMapper;
     @Mock
-    ClientRepository clientRepository;
+    ClientEventRepository clientEventRepository;
     @Mock
     ClientHmacRepository clientHmacRepository;
     @Mock
@@ -65,7 +65,7 @@ class CallbackDeliveryServiceTest {
 
     @Test
     void submit_should_send_when_servicebus_disabled() {
-        when(clientRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
+        when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
@@ -80,7 +80,7 @@ class CallbackDeliveryServiceTest {
     @Test
     void submit_should_skip_when_example_endpoint() {
         ClientEntity clientWithExample = ClientEntity.builder().subscriptionId(subscriptionId).callbackUrl(EXAMPLE_ENDPOINT).build();
-        when(clientRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientWithExample));
+        when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientWithExample));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
@@ -95,7 +95,7 @@ class CallbackDeliveryServiceTest {
     @Test
     void submit_async_should_add_to_queue() {
         when(serviceBusConfigService.isEnabled()).thenReturn(true);
-        when(clientRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
+        when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
