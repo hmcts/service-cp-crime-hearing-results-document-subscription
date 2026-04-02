@@ -82,7 +82,10 @@ public abstract class IntegrationTestBase {
             .build();
 
     protected void clearClientSubscriptionTable() {
-        log.info("Clearing client_subscription table");
+        log.info("Clearing client_subscription table and related client/client_events/client_hmac rows");
+        clientEventRepository.deleteAll();
+        clientHmacRepository.deleteAll();
+        clientRepository.deleteAll();
         subscriptionRepository.deleteAll();
     }
 
