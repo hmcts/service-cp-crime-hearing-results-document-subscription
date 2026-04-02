@@ -53,7 +53,7 @@ public class CallbackDeliveryService {
 
             } else if (serviceBusConfig.isEnabled()) {
                 final String payload = jsonMapper.toJson(payloadWrapper);
-                clientService.queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, subscriber.getNotificationEndpoint(), payload, 0);
+                clientService.queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, client.getCallbackUrl(), payload, 0);
             } else {
                 callbackService.sendToSubscriber(client.getCallbackUrl(), payloadWrapper);
                 log.info("Subscriber {} notified via callbackUrl {} for documentId {}", client.getSubscriptionId(), client.getCallbackUrl(), eventNotificationPayload.getDocumentId());
