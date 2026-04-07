@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 
@@ -31,15 +30,15 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void update_client_subscription_should_update_subscription() throws Exception {
-        ClientSubscriptionEntity existing = insertSubscription("https://oldendpoint", List.of("PRISON_COURT_REGISTER_GENERATED"));
+        UUID subscriptionId = insertSubscription("https://oldendpoint", List.of("PRISON_COURT_REGISTER_GENERATED"));
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
-        mockMvc.perform(put("/client-subscriptions/{id}", existing.getId())
+        mockMvc.perform(put("/client-subscriptions/{id}", subscriptionId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .content(body))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.clientSubscriptionId").value(existing.getId().toString()))
+                .andExpect(jsonPath("$.clientSubscriptionId").value(subscriptionId.toString()))
                 .andExpect(jsonPath("$.eventTypes.[0]").value("PRISON_COURT_REGISTER_GENERATED"))
                 .andExpect(jsonPath("$.notificationEndpoint.callbackUrl").value("https://my-callback-url"));
         assertDatabaseState();
@@ -59,11 +58,11 @@ class SubscriptionUpdateControllerIntegrationTest extends IntegrationTestBase {
     @Test
     void update_subscription_belonging_to_different_client_should_return_404() throws Exception {
         UUID otherClientId = UUID.fromString("99999999-9999-9999-9999-999999999999");
-        ClientSubscriptionEntity otherClientSubscription = insertSubscription(
+        UUID otherSubscriptionId = insertSubscription(
                 otherClientId, List.of("PRISON_COURT_REGISTER_GENERATED"), "https://other-client.com/callback");
 
         String body = loadPayload(SUBSCRIPTION_REQUEST_VALID);
-        mockMvc.perform(put("/client-subscriptions/{id}", otherClientSubscription.getId())
+        mockMvc.perform(put("/client-subscriptions/{id}", otherSubscriptionId)
                         .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID.toString()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))

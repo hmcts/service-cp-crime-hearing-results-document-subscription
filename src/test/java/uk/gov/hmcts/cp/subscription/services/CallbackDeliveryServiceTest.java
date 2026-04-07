@@ -12,7 +12,6 @@ import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.mappers.NotificationMapper;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
@@ -58,7 +57,6 @@ class CallbackDeliveryServiceTest {
     private String hmacKeyId = "kid-v1";
     private ClientEntity clientEntity = ClientEntity.builder().subscriptionId(subscriptionId).callbackUrl(callbackUrl).build();
     private ClientHmacEntity clientHmacEntity = ClientHmacEntity.builder().keyId(hmacKeyId).build();
-    private ClientSubscriptionEntity subscriptionEntity = ClientSubscriptionEntity.builder().id(subscriptionId).build();
     private EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").build();
     private EventNotificationPayload payload = EventNotificationPayload.builder().build();
     private EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();

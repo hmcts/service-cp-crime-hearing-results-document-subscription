@@ -334,7 +334,7 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
         // Directly insert a subscription with no event types to simulate a client
         // that has no access to PCR documents, bypassing API validation.
         otherSubscriptionId = insertSubscription(
-                UUID.fromString(CLIENT_ID_OTHER), List.of(), callbackBaseUrl + CALLBACK_URI_OTHER).getId();
+                UUID.fromString(CLIENT_ID_OTHER), List.of(), callbackBaseUrl + CALLBACK_URI_OTHER);
     }
 
     private void given_late_subscriber_with_pcr() throws Exception {
