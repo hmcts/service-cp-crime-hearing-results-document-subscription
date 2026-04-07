@@ -10,17 +10,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
-import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
 import uk.gov.hmcts.cp.subscription.mappers.ClientEntityMapper;
 import uk.gov.hmcts.cp.subscription.mappers.ClientEventEntityMapper;
+import uk.gov.hmcts.cp.subscription.mappers.ClientHmacMapper;
 import uk.gov.hmcts.cp.subscription.mappers.ClientSubscriptionMapper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
@@ -47,6 +49,10 @@ class SubscriptionServiceV2Test {
     HmacManager hmacManager;
     @Mock
     ClientRepository clientRepository;
+    @Mock
+    ClientHmacMapper clientHmacMapper;
+    @Mock
+    ClientHmacRepository clientHmacRepository;
     @Mock
     ClientEventRepository clientEventRepository;
     @Mock
@@ -78,6 +84,7 @@ class SubscriptionServiceV2Test {
             .subscriptionId(subscriptionId)
             .id(clientId)
             .build();
+    ClientHmacEntity clientHmacEntity = ClientHmacEntity.builder().build();
     ClientEntity updatedClientEntity = ClientEntity.builder()
             .subscriptionId(subscriptionId)
             .id(clientId)
@@ -92,8 +99,8 @@ class SubscriptionServiceV2Test {
 
     @Test
     void create_request_should_save_new_entity() {
-        when(clientRepository.existsById(clientId)).thenReturn(false);
         when(clientEntityMapper.toEntity(clockService, createRequest, clientId)).thenReturn(clientEntity);
+        when(clientHmacMapper.toEntity(subscriptionId, hmacKeyPair.getKeyId())).thenReturn(clientHmacEntity);
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
         when(hmacManager.createAndStoreNewKey()).thenReturn(hmacKeyPair);
         when(clientSubscriptionMapper.toDto(clientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), hmacKeyPair)).thenReturn(response);
@@ -104,19 +111,20 @@ class SubscriptionServiceV2Test {
 
         assertThat(result).isEqualTo(response);
         verify(clientRepository).save(clientEntity);
+        verify(clientHmacRepository).save(clientHmacEntity);
         verify(clientEventRepository).saveAll(List.of(clientEventEntity));
     }
 
     @Test
     void create_request_should_throw_conflict_when_subscription_already_exists() {
-        when(clientRepository.existsById(clientId)).thenReturn(true);
+        when(clientRepository.findById(clientId)).thenReturn(Optional.of(clientEntity));
 
         assertThatThrownBy(() -> subscriptionService.createClientSubscription(createRequest, clientId))
                 .isInstanceOf(ResponseStatusException.class)
                 .satisfies(e -> {
                     ResponseStatusException ex = (ResponseStatusException) e;
                     assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-                    assertThat(ex.getReason()).isEqualTo("subscription already exist for client " + clientId);
+                    assertThat(ex.getReason()).isEqualTo("subscription already exist with " + subscriptionId);
                 });
 
         verify(clientRepository, never()).save(any());
@@ -148,16 +156,17 @@ class SubscriptionServiceV2Test {
         when(clientSubscriptionMapper.toDto(updatedClientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
         when(clientRepository.save(updatedClientEntity)).thenReturn(updatedClientEntity);
 
-        ClientSubscription result = subscriptionService.updateClientSubscription(updateRequest, clientId, subscriptionId);
+        ClientSubscription result = subscriptionService.updateClientSubscription(clientId, subscriptionId, updateRequest);
 
         assertThat(result).isEqualTo(response);
         verify(clientRepository).save(updatedClientEntity);
-        verify(clientEventRepository).saveAll(List.of(clientEventEntity));    }
+        verify(clientEventRepository).saveAll(List.of(clientEventEntity));
+    }
 
     @Test
     void get_should_return_subscription_when_owned_by_client() {
         when(clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
-        when(clientEventRepository.findEventNamesForClient(clientId, subscriptionId)).thenReturn(List.of("PRISON_COURT_REGISTER_GENERATED"));
+        when(clientEventRepository.findEventNamesForSubscription(subscriptionId)).thenReturn(List.of("PRISON_COURT_REGISTER_GENERATED"));
         when(clientSubscriptionMapper.toDto(clientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
 
         ClientSubscription result = subscriptionService.getClientSubscription(clientId, subscriptionId);

@@ -2,10 +2,14 @@ package uk.gov.hmcts.cp.subscription.integration.controllers;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.filters.UUIDService;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
+import uk.gov.hmcts.cp.hmac.services.EncodingService;
+import uk.gov.hmcts.cp.hmac.services.HmacKeyService;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.util.List;
@@ -49,7 +53,7 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.createdAt").exists())
                 .andExpect(jsonPath("$.hmac.keyId", matchesRegex("^kid-v1.*")))
                 .andExpect(jsonPath("$.hmac.secret", matchesRegex("[a-zA-Z0-9/+]*=")));
-        assertThatEventTypesAreSortedInDatabase();
+        assertDatabaseState();
     }
 
     @Test
@@ -61,9 +65,9 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                         .content(body))
                 .andExpect(status().isCreated());
 
-        List<ClientSubscriptionEntity> saved = subscriptionRepository.findAll();
+        List<ClientEventEntity> saved = clientEventRepository.findAll();
         assertThat(saved).hasSize(1);
-        String existingId = saved.get(0).getId().toString();
+        String existingId = saved.getFirst().getSubscriptionId().toString();
 
         mockMvc.perform(post("/client-subscriptions")
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
@@ -75,9 +79,16 @@ class SubscriptionCreateControllerIntegrationTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.message").value("subscription already exist with " + existingId));
     }
 
-    private void assertThatEventTypesAreSortedInDatabase() {
-        List<ClientSubscriptionEntity> entities = subscriptionRepository.findAll();
-        assertThat(entities).hasSize(1);
-        assertThat(entities.getFirst().getEventTypes().getFirst()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
+    private void assertDatabaseState() {
+        List<ClientEntity> clientEntities = clientRepository.findAll();
+        assertThat(clientEntities).hasSize(1);
+        assertThat(clientEntities.getFirst().getSubscriptionId()).isNotNull();
+
+        assertThat(clientHmacRepository.findAll()).hasSize(1);
+
+        List<ClientEventEntity> clientEventEntities = clientEventRepository.findAll();
+        assertThat(clientEventEntities).hasSize(1);
+        assertThat(clientEventEntities.getFirst().getSubscriptionId()).isNotNull();
+        assertThat(clientEventEntities.getFirst().getEventTypeId()).isEqualTo(1);
     }
 }

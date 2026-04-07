@@ -1,9 +1,10 @@
 package uk.gov.hmcts.cp.subscription.integration.repositories;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.annotation.Transactional;
-import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 
 import java.time.OffsetDateTime;
@@ -25,21 +26,21 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
     final ClientEventEntity event2 = getClientEventEntity(subscriptionId1, 2L);
     final ClientEventEntity event3 = getClientEventEntity(subscriptionId2, 3L);
 
+    @BeforeEach
+    void beforeEach() {
+        super.clearAllTables();
+    }
+
     @Transactional
     @Test
     void findClientEventsWithEventTypes_should_return_events_ordered_by_event_name() {
         saveClientAndEventInfoInDb(client1, List.of(event1, event2));
 
-        List<String> result = clientEventRepository.findEventNamesForClient(clientId1, subscriptionId1);
+        List<String> result = clientEventRepository.findEventNamesForSubscription(subscriptionId1);
 
         assertThat(result).hasSize(2);
         assertThat(result.getFirst()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
         assertThat(result.getLast()).isEqualTo("WEE_Layout5");
-    }
-
-    private void saveClientAndEventInfoInDb(ClientEntity client, List<ClientEventEntity> events) {
-        clientRepository.save(client);
-        clientEventRepository.saveAll(events);
     }
 
     @Transactional
@@ -64,6 +65,16 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
         assertThat(result.getFirst().getSubscriptionId()).isEqualTo(subscriptionId2);
     }
 
+    @Transactional
+    @Test
+    void get_client_for_event_type_should_return_client_list() {
+        saveClientAndEventInfoInDb(client1, List.of(event1));
+        saveClientAndEventInfoInDb(client2, List.of(event2));
+        List<ClientEntity> clients = clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED");
+        assertThat(clients).hasSize(1);
+        assertThat(clients.getFirst()).isEqualTo(client1);
+    }
+
     private static ClientEntity getClientEntity(UUID clientId, String callbackUrl, UUID subscriptionId) {
         return ClientEntity.builder()
                 .id(clientId)
@@ -79,5 +90,10 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
                 .subscriptionId(subscriptionId)
                 .eventTypeId(eventId)
                 .build();
+    }
+
+    private void saveClientAndEventInfoInDb(ClientEntity client, List<ClientEventEntity> events) {
+        clientRepository.save(client);
+        clientEventRepository.saveAll(events);
     }
 }

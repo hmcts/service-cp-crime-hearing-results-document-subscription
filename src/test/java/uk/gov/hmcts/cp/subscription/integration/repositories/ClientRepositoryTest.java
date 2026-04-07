@@ -20,6 +20,7 @@ class ClientRepositoryTest extends IntegrationTestBase {
 
     final ClientEntity client = getClientEntity(clientId, subscriptionId, "https://test.com/webhook", now);
 
+
     @Transactional
     @Test
     void findById_should_return_client_entity_when_exists() {

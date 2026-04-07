@@ -13,6 +13,7 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
@@ -33,10 +34,10 @@ import java.util.List;
 import java.util.UUID;
 
 
-@SpringBootTest
-@ContextConfiguration(initializers = TestContainersInitialise.class)
-@AutoConfigureMockMvc
 @Slf4j
+@SpringBootTest
+@AutoConfigureMockMvc
+@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false",
         "service-bus.enabled=false"
@@ -97,8 +98,8 @@ public abstract class IntegrationTestBase {
 
     protected void clearAllTables() {
         log.info("Clearing all tables");
-        clientEventRepository.deleteAll();
         clientHmacRepository.deleteAll();
+        clientEventRepository.deleteAll();
         clientRepository.deleteAll();
         subscriptionRepository.deleteAll();
         documentMappingRepository.deleteAll();
@@ -137,14 +138,19 @@ public abstract class IntegrationTestBase {
                                 .eventTypeId(eventTypeEntity.getId())
                                 .build())));
 
+        clientHmacRepository.save(ClientHmacEntity.builder()
+                .subscriptionId(subscription.getId())
+                .keyId("kid-v1-keyid")
+                .build());
+
         return subscription;
     }
 
-    protected ClientEntity insertClient(UUID clientId) {
+    protected ClientEntity insertClient(UUID clientId, UUID subscriptionId) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         ClientEntity client = ClientEntity.builder()
                 .id(clientId)
-                .subscriptionId(UUID.randomUUID())
+                .subscriptionId(subscriptionId)
                 .callbackUrl("https://callback")
                 .createdAt(now)
                 .updatedAt(now)
