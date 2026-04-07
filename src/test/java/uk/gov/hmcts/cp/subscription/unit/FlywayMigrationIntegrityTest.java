@@ -36,17 +36,18 @@ class FlywayMigrationIntegrityTest {
 
     private static final String MIGRATION_DIR = "/db/migration";
 
-    private static final Map<String, String> EXPECTED_CHECKSUMS = Map.of(
-            "V1.001__subscription_schema.sql", "973f11ddacfe34faa902b2250150acea1ae7992783ac452a1050b92deab4905b",
-            "V1.002__subscription_schema.sql", "ab12c12995a12e4f0dd97a14fd0cf0aef76e388d811a5029aa0e4e0fd64d4808",
-            "V1.003__documentmapping_schema.sql", "a23c3117fc6239aae93919b3f9cc7774c7ab286dc429449f528d003e5292c200",
-            "V1.004__add_client_id_to_client_subscription.sql", "566ad97c1692c14c02fdf896b6504c11215d8d6cf17dde08fc7168c0da941137",
-            "V1.005__add_event_type_table.sql", "c233451d0cabd305fbd6fd640ac67b5ce2bcce3ea7961dd078db004e9dcc06cc",
-            "V1.006__add_client_table.sql", "45f62b36b2574ba96b08fff58312580b61df92caf14e20224635b0130ccc96ac",
-            "V1.007__add_client_events_table.sql", "e473343cfd17fafb6a099f5ae6bd8551207f84a5caf9897e57043bd2f41ab175",
-            "V1.008__forward_fix_event_type.sql", "e8532eebb667c7ed413849dde905a7fc367ab7ba43d68be3dbad602d409e53aa",
-            "V1.009__restore_event_type_data.sql", "0ac839978f1efa8ae1c1dc956d561f75701102f7e2e16e2673147ac4d87dc2c9",
-            "V1.010__add_client_hmac.sql", "f6f57f6e526d9dc8cf7252f99f29556df0806178114cc007bc8db0c434a115e6"
+    private static final Map<String, String> EXPECTED_CHECKSUMS = Map.ofEntries(
+            Map.entry("V1.001__subscription_schema.sql", "973f11ddacfe34faa902b2250150acea1ae7992783ac452a1050b92deab4905b"),
+            Map.entry("V1.002__subscription_schema.sql", "ab12c12995a12e4f0dd97a14fd0cf0aef76e388d811a5029aa0e4e0fd64d4808"),
+            Map.entry("V1.003__documentmapping_schema.sql", "a23c3117fc6239aae93919b3f9cc7774c7ab286dc429449f528d003e5292c200"),
+            Map.entry("V1.004__add_client_id_to_client_subscription.sql", "566ad97c1692c14c02fdf896b6504c11215d8d6cf17dde08fc7168c0da941137"),
+            Map.entry("V1.005__add_event_type_table.sql", "c233451d0cabd305fbd6fd640ac67b5ce2bcce3ea7961dd078db004e9dcc06cc"),
+            Map.entry("V1.006__add_client_table.sql", "45f62b36b2574ba96b08fff58312580b61df92caf14e20224635b0130ccc96ac"),
+            Map.entry("V1.007__add_client_events_table.sql", "e473343cfd17fafb6a099f5ae6bd8551207f84a5caf9897e57043bd2f41ab175"),
+            Map.entry("V1.008__forward_fix_event_type.sql", "e8532eebb667c7ed413849dde905a7fc367ab7ba43d68be3dbad602d409e53aa"),
+            Map.entry("V1.009__restore_event_type_data.sql", "0ac839978f1efa8ae1c1dc956d561f75701102f7e2e16e2673147ac4d87dc2c9"),
+            Map.entry("V1.010__add_client_hmac.sql", "f6f57f6e526d9dc8cf7252f99f29556df0806178114cc007bc8db0c434a115e6"),
+            Map.entry("V1.011__drop_subscription_table.sql", "7de5768c9339f416919735fb096aa1fdcb776e89d9ccfbc6837953aac0128318")
     );
 
     @Test
