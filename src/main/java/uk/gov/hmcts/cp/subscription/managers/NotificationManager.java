@@ -10,7 +10,7 @@ import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionServiceV2;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
 
@@ -25,7 +25,7 @@ public class NotificationManager {
 
     private final NotificationService notificationService;
     private final DocumentService documentService;
-    private final SubscriptionServiceV2 subscriptionService;
+    private final SubscriptionService subscriptionService;
     private final CallbackDeliveryService callbackDeliveryService;
 
     public void processPcrNotification(final EventPayload eventPayload) {

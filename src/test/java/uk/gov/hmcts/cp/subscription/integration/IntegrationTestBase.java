@@ -23,7 +23,6 @@ import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
-import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 
 import java.io.IOException;
@@ -53,9 +52,6 @@ public abstract class IntegrationTestBase {
 
     @Resource
     protected MockMvc mockMvc;
-
-    @Autowired
-    protected SubscriptionRepository subscriptionRepository;
 
     @Autowired
     protected ClientHmacRepository clientHmacRepository;
@@ -88,7 +84,6 @@ public abstract class IntegrationTestBase {
         clientEventRepository.deleteAll();
         clientHmacRepository.deleteAll();
         clientRepository.deleteAll();
-        subscriptionRepository.deleteAll();
     }
 
     protected void clearDocumentMappingTable() {
@@ -101,7 +96,6 @@ public abstract class IntegrationTestBase {
         clientHmacRepository.deleteAll();
         clientEventRepository.deleteAll();
         clientRepository.deleteAll();
-        subscriptionRepository.deleteAll();
         documentMappingRepository.deleteAll();
     }
 
@@ -120,7 +114,6 @@ public abstract class IntegrationTestBase {
                 .updatedAt(now)
                 .hmacKeyId("integration-test-hmac-key")
                 .build();
-        subscriptionRepository.save(subscription);
 
         clientRepository.save(ClientEntity.builder()
                 .id(clientId)
