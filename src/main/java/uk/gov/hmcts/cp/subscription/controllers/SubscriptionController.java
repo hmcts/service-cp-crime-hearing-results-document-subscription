@@ -14,7 +14,7 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventTypeResponse;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionServiceV2;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
 
@@ -26,7 +26,7 @@ import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 @Slf4j
 public class SubscriptionController implements SubscriptionApi {
 
-    private final SubscriptionServiceV2 subscriptionService;
+    private final SubscriptionService subscriptionService;
     private final EventTypeService eventTypeService;
 
     @Override

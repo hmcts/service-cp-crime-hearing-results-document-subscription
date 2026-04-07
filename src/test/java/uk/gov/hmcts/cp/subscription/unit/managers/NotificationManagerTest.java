@@ -14,7 +14,7 @@ import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.NotificationService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionServiceV2;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.UUID;
 
@@ -36,7 +36,7 @@ class NotificationManagerTest {
     DocumentService documentService;
 
     @Mock
-    SubscriptionServiceV2 subscriptionService;
+    SubscriptionService subscriptionService;
 
     @Mock
     CallbackDeliveryService callbackDeliveryService;

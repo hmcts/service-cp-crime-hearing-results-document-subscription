@@ -11,72 +11,138 @@ import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
-import uk.gov.hmcts.cp.subscription.mappers.SubscriptionMapper;
-import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
+import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
+import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
+import uk.gov.hmcts.cp.subscription.mappers.ClientEntityMapper;
+import uk.gov.hmcts.cp.subscription.mappers.ClientEventEntityMapper;
+import uk.gov.hmcts.cp.subscription.mappers.ClientHmacMapper;
+import uk.gov.hmcts.cp.subscription.mappers.ClientSubscriptionMapper;
+import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
+import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
+import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Deprecated
 public class SubscriptionService {
 
+    private final ClientRepository clientRepository;
+    private final ClientHmacMapper clientHmacMapper;
+    private final ClientHmacRepository clientHmacRepository;
+    private final ClientEventRepository clientEventRepository;
+    private final EventTypeRepository eventTypeRepository;
+
+    private final ClientEntityMapper clientEntityMapper;
+    private final ClientEventEntityMapper clientEventEntityMapper;
+    private final ClientSubscriptionMapper clientSubscriptionMapper;
+
     private final ClockService clockService;
-    private final SubscriptionRepository subscriptionRepository;
-    private final EventTypeService eventTypeService;
-    private final SubscriptionMapper mapper;
     private final HmacManager hmacManager;
 
     @Transactional
-    public ClientSubscription createSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
-        validateEventsOrThrowError(request, clientId);
-        subscriptionRepository.findFirstByClientId(clientId).ifPresent(existing -> {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "subscription already exist with " + existing.getId());
-        });
+    public ClientSubscription createClientSubscription(final ClientSubscriptionRequest request, final UUID clientId) {
+        log.info("createClientSubscription clientId:{} eventTypeCount:{}", clientId, request.getEventTypes().size());
+        validateClientDoesNotExists(clientId);
+        final List<Long> eventIds = validateAndFetchEvents(request);
         final KeyPair keyPair = hmacManager.createAndStoreNewKey();
-        final ClientSubscriptionEntity entity = mapper.mapCreateRequestToEntity(clientId, keyPair.getKeyId(), request, clockService.nowOffsetUTC());
-        subscriptionRepository.save(entity);
-        return mapper.mapEntityToResponse(entity, keyPair);
+
+        final ClientEntity client = saveClientForCreateRequest(request, clientId);
+        saveClientEvents(client.getSubscriptionId(), eventIds);
+        saveClientHmac(client.getSubscriptionId(), keyPair.getKeyId());
+
+        final ClientSubscription result = clientSubscriptionMapper.toDto(client, request.getEventTypes(), keyPair);
+        log.info("createClientSubscription complete clientId:{} subscriptionId:{}", clientId, result.getClientSubscriptionId());
+        return result;
     }
 
     @Transactional
-    public ClientSubscription updateSubscription(final UUID clientSubscriptionId, final ClientSubscriptionRequest request, final UUID clientId) {
-        final ClientSubscriptionEntity existing = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        final ClientSubscriptionEntity entity = mapper.mapUpdateRequestToEntity(existing, request, clockService.nowOffsetUTC());
-        return mapper.mapEntityToResponse(subscriptionRepository.save(entity), null);
+    public ClientSubscription updateClientSubscription(final UUID clientId,
+                                                       final UUID subscriptionId,
+                                                       final ClientSubscriptionRequest request) {
+        log.info("updateClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
+        final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
+        final List<Long> eventIds = validateAndFetchEvents(request);
+
+        final ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
+        updateClientEvents(subscriptionId, eventIds);
+
+        return clientSubscriptionMapper.toDto(updatedClient, request.getEventTypes(), null);
+    }
+
+    public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
+        log.info("getClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
+        final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
+        final List<String> eventNames = clientEventRepository.findEventNamesForSubscription(subscriptionId);
+        return clientSubscriptionMapper.toDto(client, eventNames, null);
     }
 
     @Transactional
-    public ClientSubscription getSubscription(final UUID clientSubscriptionId, final UUID clientId) {
-        final ClientSubscriptionEntity entity = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        return mapper.mapEntityToResponse(entity, null);
+    public void deleteClientSubscription(final UUID clientId, final UUID subscriptionId) {
+        log.info("deleteClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
+        final ClientEntity client = validateAndFetchClient(clientId, subscriptionId);
+        clientHmacRepository.deleteAllBySubscriptionId(subscriptionId);
+        clientEventRepository.deleteBySubscriptionId(subscriptionId);
+        clientRepository.delete(client);
     }
 
-    @Transactional
-    public void deleteSubscription(final UUID clientSubscriptionId, final UUID clientId) {
-        final ClientSubscriptionEntity entity = subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
-                .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
-        subscriptionRepository.delete(entity);
+    public boolean hasAccess(final UUID subscriptionId,
+                             final String eventType) {
+        return clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, eventType) > 0;
     }
 
-    @Transactional
-    public boolean hasAccess(final UUID clientSubscriptionId, final UUID clientId, final String eventType) {
-        return subscriptionRepository.findByIdAndClientId(clientSubscriptionId, clientId)
-                .map(entity -> entity.getEventTypes() != null && entity.getEventTypes().contains(eventType))
-                .orElse(false);
+    private void validateClientDoesNotExists(final UUID clientId) {
+        final Optional<ClientEntity> existingClient = clientRepository.findById(clientId);
+        if (existingClient.isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "subscription already exist with " + existingClient.get().getSubscriptionId());
+        }
     }
 
-    public void validateEventsOrThrowError(final ClientSubscriptionRequest request, final UUID clientId) {
-        request.getEventTypes().forEach(eventType -> {
-            if (!eventTypeService.eventExists(eventType)) {
-                log.error("Got invalid event type '{}' for client '{}' in subscription request.", eventType, clientId);
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid event type: " + eventType);
-            }
-        });
+    private ClientEntity validateAndFetchClient(final UUID clientId, final UUID subscriptionId) {
+        return clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
+    }
+
+    private List<Long> validateAndFetchEvents(final ClientSubscriptionRequest request) {
+        return request.getEventTypes().stream()
+                .map(name -> eventTypeRepository.findByEventName(name)
+                        .orElseThrow(() -> new IllegalArgumentException("Invalid event type: " + name)))
+                .map(EventTypeEntity::getId)
+                .toList();
+    }
+
+    private void saveClientEvents(final UUID subscriptionId, final List<Long> eventIds) {
+        final List<ClientEventEntity> eventEntities = eventIds.stream()
+                .map(id -> clientEventEntityMapper.toEntity(subscriptionId, id))
+                .toList();
+        clientEventRepository.saveAll(eventEntities);
+    }
+
+    private void saveClientHmac(final UUID subscriptionId, final String hmacKeyId) {
+        final ClientHmacEntity clientHmacEntity = clientHmacMapper.toEntity(subscriptionId, hmacKeyId);
+        clientHmacRepository.save(clientHmacEntity);
+    }
+
+    private ClientEntity saveClientForCreateRequest(final ClientSubscriptionRequest request, final UUID clientId) {
+        final ClientEntity client = clientEntityMapper.toEntity(clockService, request, clientId);
+        return clientRepository.save(client);
+    }
+
+    private ClientEntity saveClientForUpdateRequest(final ClientSubscriptionRequest request, final ClientEntity client) {
+        final ClientEntity updatedClient = clientEntityMapper.mapUpdateRequestToEntity(client, clockService, request);
+        return clientRepository.save(updatedClient);
+    }
+
+    private void updateClientEvents(final UUID subscriptionId, final List<Long> eventIds) {
+        clientEventRepository.deleteBySubscriptionId(subscriptionId);
+        saveClientEvents(subscriptionId, eventIds);
     }
 }

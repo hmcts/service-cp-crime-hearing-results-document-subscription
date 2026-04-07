@@ -8,7 +8,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
@@ -96,13 +95,13 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     //   - stub - material-blob-auth-fail-mapping.json — any blob path → returns 403
     @Test
     void get_document_should_return_200_with_pdf_when_subscription_has_access() throws Exception {
-        ClientSubscriptionEntity subscription = insertSubscription(
+        UUID subscriptionId = insertSubscription(
                 CALLBACK_URL,
                 List.of("PRISON_COURT_REGISTER_GENERATED"));
         DocumentMappingEntity document = insertDocument(MATERIAL_ID, "PRISON_COURT_REGISTER_GENERATED");
 
         mockMvc.perform(get(DOCUMENT_URI,
-                        subscription.getId(), document.getDocumentId())
+                        subscriptionId, document.getDocumentId())
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isOk())

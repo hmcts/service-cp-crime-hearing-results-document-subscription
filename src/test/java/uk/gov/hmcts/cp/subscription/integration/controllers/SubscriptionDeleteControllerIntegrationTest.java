@@ -3,7 +3,6 @@ package uk.gov.hmcts.cp.subscription.integration.controllers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 
@@ -24,8 +23,8 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void delete_client_subscription_should_delete_subscription() throws Exception {
-        ClientSubscriptionEntity entity = insertSubscription("https://example.com/event", List.of("PRISON_COURT_REGISTER_GENERATED"));
-        mockMvc.perform(delete("/client-subscriptions/{id}", entity.getId())
+        UUID subscriptionId = insertSubscription("https://example.com/event", List.of("PRISON_COURT_REGISTER_GENERATED"));
+        mockMvc.perform(delete("/client-subscriptions/{id}", subscriptionId)
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -45,15 +44,15 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
     @Test
     void delete_subscription_belonging_to_different_client_should_return_404() throws Exception {
         UUID otherClientId = UUID.fromString("99999999-9999-9999-9999-999999999999");
-        ClientSubscriptionEntity otherClientSubscription = insertSubscription(
+        UUID otherSubscriptionId = insertSubscription(
                 otherClientId, List.of("PRISON_COURT_REGISTER_GENERATED"), "https://other-client.com/callback");
 
-        mockMvc.perform(delete("/client-subscriptions/{id}", otherClientSubscription.getId())
+        mockMvc.perform(delete("/client-subscriptions/{id}", otherSubscriptionId)
                         .header("Authorization", JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID.toString())))
                 .andDo(print())
                 .andExpect(status().isNotFound());
 
-        assertThat(clientRepository.findByIdAndSubscriptionId(otherClientId, otherClientSubscription.getId())).isPresent();
-        assertThat(clientEventRepository.findBySubscriptionId(otherClientSubscription.getId())).isPresent();
+        assertThat(clientRepository.findByIdAndSubscriptionId(otherClientId, otherSubscriptionId)).isPresent();
+        assertThat(clientEventRepository.findBySubscriptionId(otherSubscriptionId)).isPresent();
     }
 }

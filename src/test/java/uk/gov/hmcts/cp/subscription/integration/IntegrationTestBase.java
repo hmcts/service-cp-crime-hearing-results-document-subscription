@@ -14,7 +14,6 @@ import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientSubscriptionEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
@@ -23,7 +22,6 @@ import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
-import uk.gov.hmcts.cp.subscription.repositories.SubscriptionRepository;
 import uk.gov.hmcts.cp.subscription.services.ClockService;
 
 import java.io.IOException;
@@ -53,9 +51,6 @@ public abstract class IntegrationTestBase {
 
     @Resource
     protected MockMvc mockMvc;
-
-    @Autowired
-    protected SubscriptionRepository subscriptionRepository;
 
     @Autowired
     protected ClientHmacRepository clientHmacRepository;
@@ -88,7 +83,6 @@ public abstract class IntegrationTestBase {
         clientEventRepository.deleteAll();
         clientHmacRepository.deleteAll();
         clientRepository.deleteAll();
-        subscriptionRepository.deleteAll();
     }
 
     protected void clearDocumentMappingTable() {
@@ -101,30 +95,20 @@ public abstract class IntegrationTestBase {
         clientHmacRepository.deleteAll();
         clientEventRepository.deleteAll();
         clientRepository.deleteAll();
-        subscriptionRepository.deleteAll();
         documentMappingRepository.deleteAll();
     }
 
-    protected ClientSubscriptionEntity insertSubscription(String notificationUri, List<String> entityEventTypes) {
+    protected UUID insertSubscription(String notificationUri, List<String> entityEventTypes) {
         return insertSubscription(TEST_CLIENT_ID, entityEventTypes, notificationUri);
     }
 
-    protected ClientSubscriptionEntity insertSubscription(UUID clientId, List<String> entityEventTypes, String notificationUri) {
+    protected UUID insertSubscription(UUID clientId, List<String> entityEventTypes, String notificationUri) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
-        ClientSubscriptionEntity subscription = ClientSubscriptionEntity.builder()
-                .id(UUID.randomUUID())
-                .clientId(clientId)
-                .eventTypes(entityEventTypes)
-                .notificationEndpoint(notificationUri)
-                .createdAt(now)
-                .updatedAt(now)
-                .hmacKeyId("integration-test-hmac-key")
-                .build();
-        subscriptionRepository.save(subscription);
+        UUID subscriptionId = UUID.randomUUID();
 
         clientRepository.save(ClientEntity.builder()
                 .id(clientId)
-                .subscriptionId(subscription.getId())
+                .subscriptionId(subscriptionId)
                 .callbackUrl(notificationUri)
                 .createdAt(now)
                 .updatedAt(now)
@@ -134,16 +118,16 @@ public abstract class IntegrationTestBase {
         entityEventTypes.forEach(eventType ->
                 eventTypeRepository.findByEventName(eventType).ifPresent(eventTypeEntity ->
                         clientEventRepository.save(ClientEventEntity.builder()
-                                .subscriptionId(subscription.getId())
+                                .subscriptionId(subscriptionId)
                                 .eventTypeId(eventTypeEntity.getId())
                                 .build())));
 
         clientHmacRepository.save(ClientHmacEntity.builder()
-                .subscriptionId(subscription.getId())
+                .subscriptionId(subscriptionId)
                 .keyId("kid-v1-keyid")
                 .build());
 
-        return subscription;
+        return subscriptionId;
     }
 
     protected ClientEntity insertClient(UUID clientId, UUID subscriptionId) {

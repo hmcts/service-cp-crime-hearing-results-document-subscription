@@ -14,7 +14,7 @@ import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
-import uk.gov.hmcts.cp.subscription.services.SubscriptionServiceV2;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 class SubscriptionControllerTest {
 
     @Mock
-    SubscriptionServiceV2 subscriptionService;
+    SubscriptionService subscriptionService;
 
     @Mock
     EventTypeService eventTypeService;
