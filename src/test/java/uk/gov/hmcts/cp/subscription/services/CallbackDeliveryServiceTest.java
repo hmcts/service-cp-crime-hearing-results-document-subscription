@@ -70,7 +70,7 @@ class CallbackDeliveryServiceTest {
         when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
-        callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
+        callbackDeliveryService.submitOutboundEvents(eventPayload, documentId);
 
         verify(callbackService).sendToSubscriber(callbackUrl, payloadWrapper);
     }
@@ -85,7 +85,7 @@ class CallbackDeliveryServiceTest {
         when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
-        callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
+        callbackDeliveryService.submitOutboundEvents(eventPayload, documentId);
 
         verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));
     }
@@ -101,7 +101,7 @@ class CallbackDeliveryServiceTest {
         when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
-        callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
+        callbackDeliveryService.submitOutboundEvents(eventPayload, documentId);
 
         verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));}
 }

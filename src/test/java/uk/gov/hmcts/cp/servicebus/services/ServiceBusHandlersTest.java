@@ -30,13 +30,13 @@ class ServiceBusHandlersTest {
     ServiceBusHandlers serviceBusHandlers;
 
     @Test
-    void inbound_pcr_should_handle_ok() {
+    void inbound_notification_event_should_handle_ok() {
         EventPayload eventPayload = EventPayload.builder().build();
         when(jsonMapper.fromJson("pcr-json", EventPayload.class)).thenReturn(eventPayload);
 
         serviceBusHandlers.handleMessage(NOTIFICATIONS_INBOUND_QUEUE, null, "pcr-json");
 
-        verify(notificationManager).processPcrNotification(eventPayload);
+        verify(notificationManager).processNotification(eventPayload);
     }
 
     @Test

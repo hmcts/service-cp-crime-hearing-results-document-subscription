@@ -26,7 +26,7 @@ public class ServiceBusHandlers {
             case NOTIFICATIONS_INBOUND_QUEUE -> {
                 final EventPayload eventPayload = jsonMapper.fromJson(message, EventPayload.class);
                 log.info("handleMessageType {} eventId:{}", queueName, eventPayload.getEventId());
-                notificationManager.processPcrNotification(eventPayload);
+                notificationManager.processNotification(eventPayload);
             }
             case NOTIFICATIONS_OUTBOUND_QUEUE -> {
                 final EventNotificationPayloadWrapper wrapper = jsonMapper.fromJson(message, EventNotificationPayloadWrapper.class);

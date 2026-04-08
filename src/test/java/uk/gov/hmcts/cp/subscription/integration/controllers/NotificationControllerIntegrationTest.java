@@ -50,25 +50,25 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void prison_court_register_generated_should_return_success() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-prison-court-register.json");
+        String payload = loadPayload("stubs/requests/progression/pcr-request-prison-court-register.json");
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(pcrPayload))
+                        .content(payload))
                 .andExpect(status().isAccepted());
 
-        verify(callbackDeliveryService, times(1)).submitOutboundPcrEvents(any(EventPayload.class), any(UUID.class));
+        verify(callbackDeliveryService, times(1)).submitOutboundEvents(any(EventPayload.class), any(UUID.class));
     }
 
     @Test
     void material_metadata_not_found_should_return_504_after_timeout() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-material-not-found.json");
+        String payload = loadPayload("stubs/requests/progression/pcr-request-material-not-found.json");
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(pcrPayload))
+                        .content(payload))
                 .andExpect(status().isGatewayTimeout())
                 .andExpect(jsonPath("$.error").value("gateway_timeout"))
                 .andExpect(jsonPath("$.message").value("Material metadata not ready"));
@@ -76,13 +76,13 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
     void material_metadata_timeout_should_return_504_via_global_exception_handler() throws Exception {
-        String pcrPayload = loadPayload("stubs/requests/progression/pcr-request-material-timeout.json");
+        String payload = loadPayload("stubs/requests/progression/pcr-request-material-timeout.json");
 
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(pcrPayload))
+                        .content(payload))
                 .andExpect(status().isGatewayTimeout())
                 .andExpect(jsonPath("$.error").value("gateway_timeout"))
                 .andExpect(jsonPath("$.message").value("Material metadata not ready"));
