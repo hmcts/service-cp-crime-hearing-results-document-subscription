@@ -24,9 +24,12 @@ import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -112,9 +115,21 @@ public class SubscriptionService {
     }
 
     private List<Long> validateAndFetchEvents(final ClientSubscriptionRequest request) {
-        return request.getEventTypes().stream()
-                .map(name -> eventTypeRepository.findByEventName(name)
-                        .orElseThrow(() -> new IllegalArgumentException("Invalid event type: " + name)))
+        final Set<String> requestedTypes = new HashSet<>(request.getEventTypes());
+
+        final List<EventTypeEntity> foundEntities = eventTypeRepository.findByEventNameIn(requestedTypes);
+        final Set<String> foundTypes = foundEntities.stream()
+                .map(EventTypeEntity::getEventName)
+                .collect(Collectors.toSet());
+
+        final Set<String> invalidTypes = new HashSet<>(requestedTypes);
+        invalidTypes.removeAll(foundTypes);
+
+        if (!invalidTypes.isEmpty()) {
+            throw new IllegalArgumentException("Invalid event type(s): " + invalidTypes.stream().sorted().collect(Collectors.joining(", ")));
+        }
+
+        return foundEntities.stream()
                 .map(EventTypeEntity::getId)
                 .toList();
     }

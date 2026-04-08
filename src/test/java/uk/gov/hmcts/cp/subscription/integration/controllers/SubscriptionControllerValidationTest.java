@@ -37,7 +37,7 @@ class SubscriptionControllerValidationTest extends IntegrationTestBase {
                         .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("invalid_request"))
-                .andExpect(jsonPath("$.message").value("Invalid event type: BAD"));
+                .andExpect(jsonPath("$.message").value("Invalid event type(s): BAD"));
     }
 
     @Test
