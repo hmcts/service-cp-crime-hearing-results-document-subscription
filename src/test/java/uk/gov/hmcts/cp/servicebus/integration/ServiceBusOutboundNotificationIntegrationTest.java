@@ -39,7 +39,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
         "service-bus.retry-msecs=0"
 })
 @ExtendWith(MockitoExtension.class)
-public class ServiceBusPcrOutboundIntegrationTest extends ServiceBusIntegrationTestBase {
+public class ServiceBusOutboundNotificationIntegrationTest extends ServiceBusIntegrationTestBase {
 
     @MockitoBean
     CallbackClient callbackClient;

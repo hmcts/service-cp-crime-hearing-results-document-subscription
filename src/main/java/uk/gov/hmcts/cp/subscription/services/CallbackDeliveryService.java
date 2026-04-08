@@ -38,7 +38,7 @@ public class CallbackDeliveryService {
     private final CallbackService callbackService;
     private final HmacManager hmacManager;
 
-    public EventNotificationPayload submitOutboundPcrEvents(final EventPayload eventPayload, final UUID documentId) {
+    public EventNotificationPayload submitOutboundEvents(final EventPayload eventPayload, final UUID documentId) {
         final String eventType = eventPayload.getEventType();
         final List<ClientEntity> clients = clientEventRepository.findClientsByEventType(eventType);
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);

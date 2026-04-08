@@ -21,23 +21,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public final class SubscriptionStub {
 
     private static final String TEST_CLIENT_ID = "11111111-2222-3333-4444-555555555555";
-    private static final String SUBSCRIPTION_PCR_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
+    private static final String SUBSCRIPTION_REQUEST_PATH = "stubs/requests/subscription/subscription-pcr-request.json";
     private static final String PLACEHOLDER_CALLBACK_URL = "{{callback.url}}";
     public static final String CLIENT_SUBSCRIPTION_ID_FIELD = "clientSubscriptionId";
     public static JsonMapper jsonMapper = new JsonMapper();
 
-    public static String createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
-                                               String callbackBaseUrl, String callbackUri) throws Exception {
-        return createSubscriptionPcr(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, TEST_CLIENT_ID);
+    public static String createSubscription(MockMvc mockMvc, String clientSubscriptionsUri,
+                                            String callbackBaseUrl, String callbackUri) throws Exception {
+        return createSubscription(mockMvc, clientSubscriptionsUri, callbackBaseUrl, callbackUri, TEST_CLIENT_ID);
     }
 
-    public static String createSubscriptionPcr(MockMvc mockMvc, String clientSubscriptionsUri,
-                                               String callbackBaseUrl, String callbackUri,
-                                               String clientId) throws Exception {
+    public static String createSubscription(MockMvc mockMvc, String clientSubscriptionsUri,
+                                            String callbackBaseUrl, String callbackUri,
+                                            String clientId) throws Exception {
         String callbackUrl = callbackBaseUrl.endsWith("/")
                 ? callbackBaseUrl + callbackUri.substring(1)
                 : callbackBaseUrl + callbackUri;
-        String requestBody = loadPayload(SUBSCRIPTION_PCR_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
+        String requestBody = loadPayload(SUBSCRIPTION_REQUEST_PATH).replace(PLACEHOLDER_CALLBACK_URL, callbackUrl);
         String responseBody = postSubscriptionAndReturnJson(mockMvc, clientSubscriptionsUri, requestBody, clientId);
         log.info("got keyId:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/keyId"));
         log.info("got secret:{}", jsonMapper.getStringAtPath(responseBody, "/hmac/secret"));

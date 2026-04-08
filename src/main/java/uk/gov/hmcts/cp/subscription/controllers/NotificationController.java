@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +25,7 @@ import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
+import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.net.URLEncoder;
@@ -37,7 +37,7 @@ import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
 
 /**
- * Handles PCR notification events and document retrieval for subscribers.
+ * Handles notification events and document retrieval for subscribers.
  * Delegates orchestration to NotificationManager; builds HTTP responses only.
  */
 @RestController
@@ -47,9 +47,9 @@ public class NotificationController implements InternalApi, NotificationApi {
 
     private final ServiceBusProperties serviceBusConfig;
     private final ServiceBusClientService clientService;
+    private final EventTypeService eventTypeService;
     private final NotificationManager notificationManager;
     private final JsonMapper jsonMapper;
-    private final HttpServletRequest httpRequest;
 
     @Override
     public Optional<NativeWebRequest> getRequest() {
@@ -65,13 +65,19 @@ public class NotificationController implements InternalApi, NotificationApi {
                 eventPayload.getEventId(),
                 eventPayload.getMaterialId(),
                 eventPayload.getEventType());
-        if (serviceBusConfig.isEnabled()) {
-            final String pcrEventjson = jsonMapper.toJson(eventPayload);
-            clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, pcrEventjson, 0);
-            return new ResponseEntity<>(HttpStatus.ACCEPTED);
+
+        if (eventTypeService.eventExists(eventPayload.getEventType())) {
+            if (serviceBusConfig.isEnabled()) {
+                final String eventjson = jsonMapper.toJson(eventPayload);
+                clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
+                return new ResponseEntity<>(HttpStatus.ACCEPTED);
+            }
+            final EventNotificationPayload payload = notificationManager.processNotification(eventPayload);
+            return new ResponseEntity<>(payload, HttpStatus.ACCEPTED);
         }
-        final EventNotificationPayload payload = notificationManager.processPcrNotification(eventPayload);
-        return new ResponseEntity<>(payload, HttpStatus.ACCEPTED);
+
+        log.warn("Received notification with unknown event type: {}", eventPayload.getEventType());
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
     @Override
@@ -82,7 +88,7 @@ public class NotificationController implements InternalApi, NotificationApi {
         // TODO Validate clientId and subscriptionId MATCH UP
         final UUID clientId = UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID));
         log.info("getDocument request clientId:{} clientSubscriptionId:{} documentId:{}", clientId, clientSubscriptionId, documentId);
-        final DocumentContent content = notificationManager.getPcrDocumentContent(clientSubscriptionId, documentId);
+        final DocumentContent content = notificationManager.getDocumentContent(clientSubscriptionId, documentId);
         final Resource resource = new ByteArrayResource(content.getBody());
         final HttpHeaders headers = getHttpHeaders(content);
         return new ResponseEntity<>(resource, headers, HttpStatus.OK);
