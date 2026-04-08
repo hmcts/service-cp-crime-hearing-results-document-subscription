@@ -30,6 +30,7 @@ import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -104,8 +105,7 @@ class SubscriptionServiceTest {
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
         when(hmacManager.createAndStoreNewKey()).thenReturn(hmacKeyPair);
         when(clientSubscriptionMapper.toDto(clientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), hmacKeyPair)).thenReturn(response);
-        when(eventTypeRepository.findByEventName("PRISON_COURT_REGISTER_GENERATED")).thenReturn(Optional.of(eventTypeEntity));
-        when(clientRepository.save(clientEntity)).thenReturn(clientEntity);
+        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED"))).thenReturn(List.of(eventTypeEntity));        when(clientRepository.save(clientEntity)).thenReturn(clientEntity);
 
         ClientSubscription result = subscriptionService.createClientSubscription(createRequest, clientId);
 
@@ -132,16 +132,17 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void create_request_should_throw_bad_when_event_does_not_exists() {
-        ClientSubscriptionRequest createRequest = ClientSubscriptionRequest.builder()
+    void create_request_should_throw_bad_request_containing_all_invalid_event_types() {
+        ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
-                .eventTypes(List.of("BAD"))
+                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED", "BAD", "UNKNOWN_TYPE"))
                 .build();
-        when(eventTypeRepository.findByEventName("BAD")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> subscriptionService.createClientSubscription(createRequest, clientId))
+        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED", "BAD", "UNKNOWN_TYPE"))).thenReturn(List.of(eventTypeEntity));
+
+        assertThatThrownBy(() -> subscriptionService.createClientSubscription(request, clientId))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid event type: BAD");
+                .hasMessage("Invalid event type(s): BAD, UNKNOWN_TYPE");
 
         verify(clientRepository, never()).save(any());
         verify(clientEventRepository, never()).saveAll(any());
@@ -150,8 +151,7 @@ class SubscriptionServiceTest {
     @Test
     void update_request_should_update_existing_entity() {
         when(clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
-        when(eventTypeRepository.findByEventName("PRISON_COURT_REGISTER_GENERATED")).thenReturn(Optional.of(eventTypeEntity));
-        when(clientEntityMapper.mapUpdateRequestToEntity(clientEntity, clockService, updateRequest)).thenReturn(updatedClientEntity);
+        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED"))).thenReturn(List.of(eventTypeEntity));        when(clientEntityMapper.mapUpdateRequestToEntity(clientEntity, clockService, updateRequest)).thenReturn(updatedClientEntity);
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
         when(clientSubscriptionMapper.toDto(updatedClientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
         when(clientRepository.save(updatedClientEntity)).thenReturn(updatedClientEntity);
@@ -187,7 +187,6 @@ class SubscriptionServiceTest {
     @Test
     void hasAccess_should_return_true_when_matching_event_exists() {
         UUID subscriptionId = UUID.randomUUID();
-        UUID clientId = UUID.randomUUID();
 
         when(clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(1L);
 
@@ -198,7 +197,6 @@ class SubscriptionServiceTest {
     @Test
     void hasAccess_should_return_false_when_no_matching_event() {
         UUID subscriptionId = UUID.randomUUID();
-        UUID clientId = UUID.randomUUID();
 
         when(clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(0L);
 
