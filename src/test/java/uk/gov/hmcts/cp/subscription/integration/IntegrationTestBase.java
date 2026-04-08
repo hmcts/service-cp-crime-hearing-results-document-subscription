@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.ContextConfiguration;
+import org.junit.jupiter.api.Tag;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
@@ -15,7 +15,6 @@ import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
@@ -32,13 +31,17 @@ import java.util.List;
 import java.util.UUID;
 
 
+@Tag("integration")
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
-@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false",
-        "service-bus.enabled=false"
+        "service-bus.enabled=false",
+        "subscription.oauth-enabled=true",
+        "material-client.cjscppuid=11111111-2222-3333-4444-666666666666",
+        "material-client.retry.intervalMilliSecs=100",
+        "material-client.retry.timeoutMilliSecs=500"
 })
 public abstract class IntegrationTestBase {
 

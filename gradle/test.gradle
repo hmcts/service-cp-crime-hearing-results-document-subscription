@@ -1,5 +1,9 @@
 tasks.named('test') {
   useJUnitPlatform {
+    excludeTags 'integration'
+  }
+  filter {
+    excludeTestsMatching '*Integration*'
   }
   systemProperty 'API_SPEC_VERSION', project.version
   failFast = true

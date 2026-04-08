@@ -6,11 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminInterface;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 
 import java.util.List;
 
@@ -19,7 +17,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 @SpringBootTest
-@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false"
 })
