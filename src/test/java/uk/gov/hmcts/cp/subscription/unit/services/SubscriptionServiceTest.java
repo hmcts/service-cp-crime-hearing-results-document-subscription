@@ -105,7 +105,8 @@ class SubscriptionServiceTest {
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
         when(hmacManager.createAndStoreNewKey()).thenReturn(hmacKeyPair);
         when(clientSubscriptionMapper.toDto(clientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), hmacKeyPair)).thenReturn(response);
-        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED"))).thenReturn(List.of(eventTypeEntity));        when(clientRepository.save(clientEntity)).thenReturn(clientEntity);
+        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED"))).thenReturn(List.of(eventTypeEntity));
+        when(clientRepository.save(clientEntity)).thenReturn(clientEntity);
 
         ClientSubscription result = subscriptionService.createClientSubscription(createRequest, clientId);
 
@@ -132,17 +133,34 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void create_request_should_throw_bad_request_containing_all_invalid_event_types() {
+    void create_request_should_throw_bad_request_containing_any_invalid_event_types() {
         ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
                 .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
-                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED", "BAD", "UNKNOWN_TYPE"))
+                .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED", "BAD"))
                 .build();
 
-        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED", "BAD", "UNKNOWN_TYPE"))).thenReturn(List.of(eventTypeEntity));
+        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED", "BAD"))).thenReturn(List.of(eventTypeEntity));
 
         assertThatThrownBy(() -> subscriptionService.createClientSubscription(request, clientId))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid event type(s): BAD, UNKNOWN_TYPE");
+                .hasMessage("Invalid event type(s): BAD");
+
+        verify(clientRepository, never()).save(any());
+        verify(clientEventRepository, never()).saveAll(any());
+    }
+
+    @Test
+    void create_request_should_throw_bad_request_containing_all_invalid_event_types() {
+        ClientSubscriptionRequest request = ClientSubscriptionRequest.builder()
+                .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
+                .eventTypes(List.of("INVALID_TYPE", "BAD", "UNKNOWN_TYPE"))
+                .build();
+
+        when(eventTypeRepository.findByEventNameIn(Set.of("INVALID_TYPE", "BAD", "UNKNOWN_TYPE"))).thenReturn(List.of(eventTypeEntity));
+
+        assertThatThrownBy(() -> subscriptionService.createClientSubscription(request, clientId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContainingAll("Invalid event type(s):", "INVALID_TYPE", "BAD", "UNKNOWN_TYPE");
 
         verify(clientRepository, never()).save(any());
         verify(clientEventRepository, never()).saveAll(any());
@@ -151,7 +169,8 @@ class SubscriptionServiceTest {
     @Test
     void update_request_should_update_existing_entity() {
         when(clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
-        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED"))).thenReturn(List.of(eventTypeEntity));        when(clientEntityMapper.mapUpdateRequestToEntity(clientEntity, clockService, updateRequest)).thenReturn(updatedClientEntity);
+        when(eventTypeRepository.findByEventNameIn(Set.of("PRISON_COURT_REGISTER_GENERATED"))).thenReturn(List.of(eventTypeEntity));
+        when(clientEntityMapper.mapUpdateRequestToEntity(clientEntity, clockService, updateRequest)).thenReturn(updatedClientEntity);
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
         when(clientSubscriptionMapper.toDto(updatedClientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
         when(clientRepository.save(updatedClientEntity)).thenReturn(updatedClientEntity);
