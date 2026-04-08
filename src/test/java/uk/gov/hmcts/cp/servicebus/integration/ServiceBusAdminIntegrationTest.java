@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 @SpringBootTest

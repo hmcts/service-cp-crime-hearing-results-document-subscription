@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
@@ -28,11 +29,12 @@ public class NotificationManager {
     private final SubscriptionService subscriptionService;
     private final CallbackDeliveryService callbackDeliveryService;
 
-    public void processPcrNotification(final EventPayload eventPayload) {
+    public EventNotificationPayload processPcrNotification(final EventPayload eventPayload) {
         log.info("processPcrNotification eventId:{} materialId:{}", eventPayload.getEventId(), eventPayload.getMaterialId());
         final UUID documentId = notificationService.processInboundEvent(eventPayload);
-        callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
+        final EventNotificationPayload payload = callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
         log.info("processPcrNotification complete eventId:{} documentId:{}", eventPayload.getEventId(), documentId);
+        return payload;
     }
 
     public DocumentContent getPcrDocumentContent(final UUID clientSubscriptionId, final UUID documentId) {
