@@ -13,6 +13,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
+import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
@@ -62,20 +63,28 @@ class NotificationControllerTest {
 
     @SneakyThrows
     @Test
-    void service_bus_disabled_should_process_notification_synchronously() {
+    void service_bus_disabled_should_process_notification_synchronously_and_return_payload() {
+        final EventNotificationPayload expectedPayload = new EventNotificationPayload();
         when(configService.isEnabled()).thenReturn(false);
-        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
+        when(notificationManager.processPcrNotification(eq(payload))).thenReturn(expectedPayload);
+
+        ResponseEntity<EventNotificationPayload> response = notificationController.createNotification(payload, null);
+
         verify(notificationManager).processPcrNotification(eq(payload));
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
+        assertThat(response.getBody()).isEqualTo(expectedPayload);
     }
 
     @Test
-    void service_bus_enabled_should_queue_to_service_bus() {
+    void service_bus_enabled_should_queue_to_service_bus_and_return_202_no_body() {
         when(configService.isEnabled()).thenReturn(true);
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
-        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
+
+        ResponseEntity<EventNotificationPayload> response = notificationController.createNotification(payload, null);
+
         verify(clientService).queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, "payload-json", 0);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
+        assertThat(response.getBody()).isNull();
     }
 
     @Test

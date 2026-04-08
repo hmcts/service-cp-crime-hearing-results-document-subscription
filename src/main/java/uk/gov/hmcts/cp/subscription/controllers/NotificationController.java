@@ -20,6 +20,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
+import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
@@ -56,7 +57,7 @@ public class NotificationController implements InternalApi, NotificationApi {
     }
 
     @Override
-    public ResponseEntity<Void> createNotification(
+    public ResponseEntity<EventNotificationPayload> createNotification(
             @Valid @RequestBody final EventPayload eventPayload,
             // note the X-Correlation-Id is handled by TracingFilter but we need to declare it because its in the spec
             @RequestHeader(value = "X-Correlation-Id", required = false) final UUID xCorrelationId) {
@@ -67,10 +68,10 @@ public class NotificationController implements InternalApi, NotificationApi {
         if (serviceBusConfig.isEnabled()) {
             final String pcrEventjson = jsonMapper.toJson(eventPayload);
             clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, pcrEventjson, 0);
-        } else {
-            notificationManager.processPcrNotification(eventPayload);
+            return new ResponseEntity<>(HttpStatus.ACCEPTED);
         }
-        return new ResponseEntity<>(HttpStatus.ACCEPTED);
+        final EventNotificationPayload payload = notificationManager.processPcrNotification(eventPayload);
+        return new ResponseEntity<>(payload, HttpStatus.ACCEPTED);
     }
 
     @Override
