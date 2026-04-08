@@ -34,7 +34,7 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
         "service-bus.max-tries=2",
         "service-bus.retry-msecs=0"
 })
-public class ServiceBusPcrInboundIntegrationTest extends ServiceBusIntegrationTestBase {
+public class ServiceBusInboundNotificationIntegrationTest extends ServiceBusIntegrationTestBase {
 
     @MockitoBean
     MaterialService materialService;

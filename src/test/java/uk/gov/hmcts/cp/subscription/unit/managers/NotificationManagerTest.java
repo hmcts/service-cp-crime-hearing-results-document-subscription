@@ -60,32 +60,32 @@ class NotificationManagerTest {
             .build();
 
     @Test
-    void processPcrNotification_should_process_deliver() {
+    void processNotification_should_process_deliver() {
         when(notificationService.processInboundEvent(payload)).thenReturn(documentId);
 
-        notificationManager.processPcrNotification(payload);
+        notificationManager.processNotification(payload);
 
         verify(notificationService).processInboundEvent(eq(payload));
-        verify(callbackDeliveryService).submitOutboundPcrEvents(payload, documentId);
+        verify(callbackDeliveryService).submitOutboundEvents(payload, documentId);
     }
 
     @Test
-    void getPcrDocumentContent_should_return_content_when_subscription_has_access() {
+    void getDocumentContent_should_return_content_when_subscription_has_access() {
         when(documentService.getEventTypeForDocument(documentId)).thenReturn("PRISON_COURT_REGISTER_GENERATED");
         when(subscriptionService.hasAccess(subscriptionId, "PRISON_COURT_REGISTER_GENERATED")).thenReturn(true);
         when(documentService.getDocumentContent(documentId)).thenReturn(content);
 
-        DocumentContent result = notificationManager.getPcrDocumentContent(subscriptionId, documentId);
+        DocumentContent result = notificationManager.getDocumentContent(subscriptionId, documentId);
 
         assertThat(result).isEqualTo(content);
     }
 
     @Test
-    void getPcrDocumentContent_should_throw_forbidden_when_subscription_has_no_access() {
+    void getDocumentContent_should_throw_forbidden_when_subscription_has_no_access() {
         when(documentService.getEventTypeForDocument(documentId)).thenReturn("PRISON_COURT_REGISTER_GENERATED");
 
         ResponseStatusException thrown = assertThrows(ResponseStatusException.class,
-                () -> notificationManager.getPcrDocumentContent(subscriptionId, documentId));
+                () -> notificationManager.getDocumentContent(subscriptionId, documentId));
 
         assertThat(thrown.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(thrown.getReason()).contains("Access denied");

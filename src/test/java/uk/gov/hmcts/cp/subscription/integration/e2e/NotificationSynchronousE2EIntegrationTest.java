@@ -21,6 +21,7 @@ import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.io.IOException;
@@ -55,7 +56,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadataNoContent;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscription;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.deleteSubscription;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.SIGNATURE_HEADER;
@@ -86,8 +87,8 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
     private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
     private static final UUID DOCUMENT_ID = UUID.fromString("2c1b7ce5-af3a-4cec-bd9f-ac9aa939f86b");
-    private static final String PCR_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
-    private static final String PCR_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
+    private static final String NOTIFICATION_EVENT_PAYLOAD_PATH = "stubs/requests/progression/pcr-request-prison-court-register.json";
+    private static final String NOTIFICATION_EVENT_TIMEOUT_PATH = "stubs/requests/progression/pcr-request-material-timeout.json";
     private static final String CALLBACK_URI_OTHER = "/callback/other";
     private static final String CALLBACK_URI_LATE = "/callback/late";
 
@@ -127,7 +128,7 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 
-        when_a_pcr_event_is_posted();
+        when_a_notification_event_is_posted();
         when_material_service_responds();
 
         then_the_subscriber_receives_a_callback();
@@ -141,7 +142,7 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_not_found();
 
-        when_a_pcr_event_is_posted_with_timeout();
+        when_a_notification_event_is_posted_with_timeout();
         when_material_service_responds();
 
         then_the_material_api_was_polled();
@@ -154,18 +155,18 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
 
-        when_a_pcr_event_is_posted_expect_callback_delivery_timeout();
+        when_a_notification_event_is_posted_expect_callback_delivery_timeout();
 
         then_callback_was_attempted();
     }
 
     @Test
-    void subscriber_lost_access_after_pcr_delivered_should_return_403() throws Exception {
+    void subscriber_lost_access_after_notification_event_delivered_should_return_403() throws Exception {
         given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 
-        when_a_pcr_event_is_posted();
+        when_a_notification_event_is_posted();
         when_material_service_responds();
         then_the_subscriber_receives_a_callback();
 
@@ -175,13 +176,13 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void other_subscription_without_pcr_attempting_document_retrieval_should_return_403() throws Exception {
+    void other_subscription_without_notification_event_attempting_document_retrieval_should_return_403() throws Exception {
         given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
         given_another_subscription_with_custodial_only();
 
-        when_a_pcr_event_is_posted();
+        when_a_notification_event_is_posted();
         when_material_service_responds();
         then_the_subscriber_receives_a_callback();
 
@@ -189,23 +190,23 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void late_subscriber_with_pcr_should_retrieve_document_when_access_is_by_event_type() throws Exception {
+    void late_subscriber_with_notification_event_should_retrieve_document_when_access_is_by_event_type() throws Exception {
         given_i_create_a_new_subscription();
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 
-        when_a_pcr_event_is_posted();
+        when_a_notification_event_is_posted();
         when_material_service_responds();
         then_the_subscriber_receives_a_callback();
         then_the_subscriber_can_retrieve_the_document();
 
-        given_late_subscriber_with_pcr();
+        given_late_subscriber_with_notification_event();
 
         then_late_subscriber_can_retrieve_document();
     }
 
     private void given_i_create_a_new_subscription() throws Exception {
-        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        String responseBody = SubscriptionStub.createSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
         subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
         hmacKeyId = jsonMapper.getStringAtPath(responseBody, "/hmac/keyId");
         hmacSecret = jsonMapper.getStringAtPath(responseBody, "/hmac/secret");
@@ -231,8 +232,8 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
         stubCallbackEndpointReturnsServerError(callbackWireMock, CALLBACK_URI);
     }
 
-    private void when_a_pcr_event_is_posted_expect_callback_delivery_timeout() throws Exception {
-        postPcrEvent(PCR_EVENT_PAYLOAD_PATH)
+    private void when_a_notification_event_is_posted_expect_callback_delivery_timeout() throws Exception {
+        postNotificationEvent(NOTIFICATION_EVENT_PAYLOAD_PATH)
                 .andExpect(status().isGatewayTimeout())
                 .andExpect(jsonPath("$.error").value("gateway_timeout"))
                 .andExpect(jsonPath("$.message").value("Callback is not ready"));
@@ -242,19 +243,19 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
         callbackWireMock.verify(moreThanOrExactly(1), postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
     }
 
-    private void when_a_pcr_event_is_posted() throws Exception {
-        postPcrEvent(PCR_EVENT_PAYLOAD_PATH).andExpect(status().isAccepted());
+    private void when_a_notification_event_is_posted() throws Exception {
+        postNotificationEvent(NOTIFICATION_EVENT_PAYLOAD_PATH).andExpect(status().isAccepted());
     }
 
-    private void when_a_pcr_event_is_posted_with_timeout() throws Exception {
-        postPcrEvent(PCR_EVENT_TIMEOUT_PATH)
+    private void when_a_notification_event_is_posted_with_timeout() throws Exception {
+        postNotificationEvent(NOTIFICATION_EVENT_TIMEOUT_PATH)
                 .andDo(print())
                 .andExpect(status().isGatewayTimeout())
                 .andExpect(jsonPath("$.error").value("gateway_timeout"))
                 .andExpect(jsonPath("$.message").value("Material metadata not ready"));
     }
 
-    private ResultActions postPcrEvent(String payloadPath) throws Exception {
+    private ResultActions postNotificationEvent(String payloadPath) throws Exception {
         return mockMvc.perform(post(NOTIFICATIONS_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Accept", MediaType.APPLICATION_JSON_VALUE)
@@ -337,8 +338,8 @@ class NotificationSynchronousE2EIntegrationTest extends IntegrationTestBase {
                 UUID.fromString(CLIENT_ID_OTHER), List.of(), callbackBaseUrl + CALLBACK_URI_OTHER);
     }
 
-    private void given_late_subscriber_with_pcr() throws Exception {
-        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_LATE, CLIENT_ID_LATE);
+    private void given_late_subscriber_with_notification_event() throws Exception {
+        String responseBody = createSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI_LATE, CLIENT_ID_LATE);
         lateSubscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
     }
 

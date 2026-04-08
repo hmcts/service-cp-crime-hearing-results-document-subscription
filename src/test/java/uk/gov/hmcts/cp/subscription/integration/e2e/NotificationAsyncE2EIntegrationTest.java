@@ -26,6 +26,7 @@ import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.io.IOException;
@@ -54,7 +55,7 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscriptionPcr;
+import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscription;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.SIGNATURE_HEADER;
 
@@ -96,7 +97,7 @@ class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
 
     private static final UUID materialId = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String documentUri = CLIENT_SUBSCRIPTIONS_URI + "/{clientSubscriptionId}/documents/{documentId}";
-    private static final String pcrEventPayloadPath = "stubs/requests/progression/pcr-request-prison-court-register.json";
+    private static final String eventPayloadPath = "stubs/requests/progression/pcr-request-prison-court-register.json";
 
     @InjectWireMock("callback-client")
     private WireMockServer callbackWireMock;
@@ -141,7 +142,7 @@ class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
         given_i_have_a_callback_endpoint();
         given_material_service_returns_document_success();
 
-        when_a_pcr_event_is_posted();
+        when_a_notification_event_is_posted();
         when_material_service_responds();
 
         then_the_subscriber_receives_a_callback();
@@ -155,7 +156,7 @@ class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
         given_callback_endpoint_returns_server_error();
         given_material_service_returns_document_success();
 
-        when_a_pcr_event_is_posted();
+        when_a_notification_event_is_posted();
         when_material_service_responds();
 
         Thread.sleep(4000);
@@ -164,7 +165,7 @@ class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
     }
 
     private void given_i_create_a_new_subscription() throws Exception {
-        String responseBody = createSubscriptionPcr(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
+        String responseBody = SubscriptionStub.createSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, callbackBaseUrl, CALLBACK_URI);
         subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
         subscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
         hmacKeyId = jsonMapper.getStringAtPath(responseBody, "/hmac/keyId");
@@ -190,11 +191,11 @@ class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
         callbackWireMock.verify(exactly(numberOfTries), postRequestedFor(urlPathEqualTo(CALLBACK_URI)));
     }
 
-    private void when_a_pcr_event_is_posted() throws Exception {
-        postPcrEvent(pcrEventPayloadPath).andExpect(status().isAccepted());
+    private void when_a_notification_event_is_posted() throws Exception {
+        postNotificationEvent(eventPayloadPath).andExpect(status().isAccepted());
     }
 
-    private ResultActions postPcrEvent(String payloadPath) throws Exception {
+    private ResultActions postNotificationEvent(String payloadPath) throws Exception {
         return mockMvc.perform(post(NOTIFICATIONS_URI)
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("Accept", MediaType.APPLICATION_JSON_VALUE)

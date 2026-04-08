@@ -19,6 +19,7 @@ import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
+import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
 import java.util.UUID;
@@ -26,6 +27,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.ACCEPTED;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
@@ -39,6 +41,8 @@ class NotificationControllerTest {
     JsonMapper jsonMapper;
     @Mock
     ServiceBusClientService clientService;
+    @Mock
+    EventTypeService eventTypeService;
     @Mock
     NotificationManager notificationManager;
 
@@ -64,8 +68,9 @@ class NotificationControllerTest {
     @Test
     void service_bus_disabled_should_process_notification_synchronously() {
         when(configService.isEnabled()).thenReturn(false);
+        when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
         ResponseEntity<Void> response = notificationController.createNotification(payload, null);
-        verify(notificationManager).processPcrNotification(eq(payload));
+        verify(notificationManager).processNotification(eq(payload));
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
 
@@ -73,20 +78,29 @@ class NotificationControllerTest {
     void service_bus_enabled_should_queue_to_service_bus() {
         when(configService.isEnabled()).thenReturn(true);
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
+        when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
         ResponseEntity<Void> response = notificationController.createNotification(payload, null);
         verify(clientService).queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, "payload-json", 0);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }
 
     @Test
-    void get_pcr_document_should_return_200_with_content_from_manager() throws Exception {
+    void invalid_event_payload_is_silently_ignored() {
+        when(eventTypeService.eventExists(payload.getEventType())).thenReturn(false);
+        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
+        verifyNoInteractions(clientService);
+        assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
+    }
+
+    @Test
+    void get_notification_event_document_should_return_200_with_content_from_manager() throws Exception {
         byte[] pdfBody = "PDF content".getBytes();
         DocumentContent content = DocumentContent.builder()
                 .body(pdfBody)
                 .contentType(MediaType.APPLICATION_PDF)
                 .fileName("PrisonCourtRegister.pdf")
                 .build();
-        when(notificationManager.getPcrDocumentContent(subscriptionId, documentId)).thenReturn(content);
+        when(notificationManager.getDocumentContent(subscriptionId, documentId)).thenReturn(content);
 
         ResponseEntity<Resource> response = notificationController.getDocument(subscriptionId, documentId, null);
 
@@ -95,6 +109,6 @@ class NotificationControllerTest {
         assertThat(response.getBody().getInputStream().readAllBytes()).isEqualTo(pdfBody);
         assertThat(response.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_PDF);
         assertThat(response.getHeaders().getFirst("Content-Disposition")).contains("PrisonCourtRegister.pdf");
-        verify(notificationManager).getPcrDocumentContent(subscriptionId, documentId);
+        verify(notificationManager).getDocumentContent(subscriptionId, documentId);
     }
 }

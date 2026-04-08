@@ -27,9 +27,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class NotificationControllerValidationTest extends IntegrationTestBase {
 
     private static final String NOTIFICATION_URI = "/notifications";
-    private static final String PCR_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
-    private static final String PCR_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
-    private static final String PCR_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
+    private static final String NOTIFICATION_REQUEST_VALID = "stubs/requests/progression/pcr-request-valid.json";
+    private static final String NOTIFICATION_REQUEST_MISSING_MATERIAL = "stubs/requests/progression/pcr-request-missing-material.json";
+    private static final String NOTIFICATION_REQUEST_MISSING_EVENT = "stubs/requests/progression/pcr-request-missing-event.json";
     private static final String SUBSCRIPTION_DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @Autowired
@@ -43,33 +43,33 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
 
     @Test
     void bad_content_type_should_return_415() throws Exception {
-        String pcrPayload = loadPayload(PCR_REQUEST_VALID);
+        String payload = loadPayload(NOTIFICATION_REQUEST_VALID);
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.TEXT_PLAIN)
-                        .content(pcrPayload))
+                        .content(payload))
                 .andDo(print())
                 .andExpect(status().isUnsupportedMediaType());
     }
 
     @Test
     void invalid_payload_missing_materialid_should_return_400() throws Exception {
-        String pcrPayload = loadPayload(PCR_REQUEST_MISSING_MATERIAL);
+        String payload = loadPayload(NOTIFICATION_REQUEST_MISSING_MATERIAL);
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(pcrPayload))
+                        .content(payload))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void invalid_payload_missing_eventid_should_return_400() throws Exception {
-        String pcrPayload = loadPayload(PCR_REQUEST_MISSING_EVENT);
+        String payload = loadPayload(NOTIFICATION_REQUEST_MISSING_EVENT);
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(pcrPayload))
+                        .content(payload))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }
@@ -105,7 +105,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_403_when_subscription_does_not_have_access() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document"))
-                .when(notificationManager).getPcrDocumentContent(subscriptionId, documentId);
+                .when(notificationManager).getDocumentContent(subscriptionId, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         subscriptionId, documentId)
@@ -137,7 +137,7 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
     @Test
     void get_document_should_return_404_when_document_not_found() throws Exception {
         doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId))
-                .when(notificationManager).getPcrDocumentContent(subscriptionId, documentId);
+                .when(notificationManager).getDocumentContent(subscriptionId, documentId);
 
         mockMvc.perform(get(SUBSCRIPTION_DOCUMENT_URI,
                         subscriptionId, documentId)
@@ -148,14 +148,14 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
 
     @Test
     void callbackUrl_delivery_failure_should_return_502() throws Exception {
-        String pcrPayload = loadPayload(PCR_REQUEST_VALID);
+        String payload = loadPayload(NOTIFICATION_REQUEST_VALID);
 
         doThrow(new ResponseStatusException(HttpStatus.BAD_GATEWAY, "CallbackUrl delivery failed"))
-                .when(notificationManager).processPcrNotification(any());
+                .when(notificationManager).processNotification(any());
 
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(pcrPayload))
+                        .content(payload))
                 .andDo(print())
                 .andExpect(status().isBadGateway());
     }

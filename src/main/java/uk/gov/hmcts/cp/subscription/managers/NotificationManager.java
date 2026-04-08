@@ -28,18 +28,18 @@ public class NotificationManager {
     private final SubscriptionService subscriptionService;
     private final CallbackDeliveryService callbackDeliveryService;
 
-    public void processPcrNotification(final EventPayload eventPayload) {
-        log.info("processPcrNotification eventId:{} materialId:{}", eventPayload.getEventId(), eventPayload.getMaterialId());
+    public void processNotification(final EventPayload eventPayload) {
+        log.info("processNotification eventId:{} materialId:{}", eventPayload.getEventId(), eventPayload.getMaterialId());
         final UUID documentId = notificationService.processInboundEvent(eventPayload);
-        callbackDeliveryService.submitOutboundPcrEvents(eventPayload, documentId);
-        log.info("processPcrNotification complete eventId:{} documentId:{}", eventPayload.getEventId(), documentId);
+        callbackDeliveryService.submitOutboundEvents(eventPayload, documentId);
+        log.info("processNotification complete eventId:{} documentId:{}", eventPayload.getEventId(), documentId);
     }
 
-    public DocumentContent getPcrDocumentContent(final UUID clientSubscriptionId, final UUID documentId) {
-        log.info("getPcrDocumentContent clientSubscriptionId:{} documentId:{}", clientSubscriptionId, documentId);
+    public DocumentContent getDocumentContent(final UUID clientSubscriptionId, final UUID documentId) {
+        log.info("getDocumentContent clientSubscriptionId:{} documentId:{}", clientSubscriptionId, documentId);
         final String eventType = documentService.getEventTypeForDocument(documentId);
         if (!subscriptionService.hasAccess(clientSubscriptionId, eventType)) {
-            log.warn("getPcrDocumentContent access denied clientSubscriptionId:{} eventType:{}", clientSubscriptionId, eventType);
+            log.warn("getDocumentContent access denied clientSubscriptionId:{} eventType:{}", clientSubscriptionId, eventType);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
         return documentService.getDocumentContent(documentId);
