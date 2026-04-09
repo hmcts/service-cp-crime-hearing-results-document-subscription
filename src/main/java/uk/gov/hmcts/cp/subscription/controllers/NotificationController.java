@@ -21,7 +21,6 @@ import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
@@ -38,14 +37,13 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
 
 /**
  * Handles notification events and document retrieval for subscribers.
- * Delegates orchestration to NotificationManager; builds HTTP responses only.
+ * Inbound notifications are queued to Service Bus for asynchronous processing.
  */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationController implements InternalApi, NotificationApi {
 
-    private final ServiceBusProperties serviceBusConfig;
     private final ServiceBusClientService clientService;
     private final EventTypeService eventTypeService;
     private final NotificationManager notificationManager;
@@ -66,17 +64,13 @@ public class NotificationController implements InternalApi, NotificationApi {
                 eventPayload.getMaterialId(),
                 eventPayload.getEventType());
 
-        if(!eventTypeService.eventExists(eventPayload.getEventType())) {
+        if (!eventTypeService.eventExists(eventPayload.getEventType())) {
             log.warn("Received notification with unknown event type: {}", eventPayload.getEventType());
             return new ResponseEntity<>(HttpStatus.ACCEPTED);
-        } else if (serviceBusConfig.isEnabled()) {
-            final String eventjson = jsonMapper.toJson(eventPayload);
-            clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
-            return new ResponseEntity<>(HttpStatus.ACCEPTED);
         }
-
-        final EventNotificationPayload payload = notificationManager.processNotification(eventPayload);
-        return new ResponseEntity<>(payload, HttpStatus.ACCEPTED);
+        final String eventjson = jsonMapper.toJson(eventPayload);
+        clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 
     @Override

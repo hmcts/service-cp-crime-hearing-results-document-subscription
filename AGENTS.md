@@ -14,18 +14,16 @@ This is a **Spring Boot 4.0** event subscription microservice for criminal court
 PCR Inbound Event (from Progression)
     ↓
 NotificationController.createNotification()
-    ↓ [if ServiceBus enabled → queued to PCR_INBOUND_TOPIC]
-    ↓ [else → synchronous]
-NotificationManager.processPcrNotification()
+    ↓ [queued to NOTIFICATIONS_INBOUND_QUEUE]
+ServiceBusHandlers (inbound queue) → NotificationManager.processNotification()
     ↓
 NotificationService.processInboundEvent()
-    ├→ MaterialService.waitForMaterialMetadata() [polls Material service with retry]
+    ├→ MaterialService.getMaterialMetadata() [single fetch; material should be ready for async pipeline]
     └→ DocumentService.saveDocumentMapping()
     ↓
-CallbackDeliveryService.submitOutboundPcrEvents()
+CallbackDeliveryService.submitOutboundEvents()
     ├→ Query subscriptions by event type
-    └→ [if ServiceBus enabled → queue to PCR_OUTBOUND_TOPIC per subscriber]
-        [else → CallbackService.sendToSubscriber()]
+    └→ queue to NOTIFICATIONS_OUTBOUND_QUEUE per subscriber (skipped for example.com callbacks)
 ```
 
 ### Key Components
@@ -35,15 +33,15 @@ CallbackDeliveryService.submitOutboundPcrEvents()
 - **Services**: 
   - `NotificationService`, `SubscriptionService`, `DocumentService` - domain logic
   - `MaterialService` - polls Material API with exponential backoff
-  - `CallbackDeliveryService` - routes notifications to subscribers
-  - `CallbackService` - HTTP delivery to callback URLs
+  - `CallbackDeliveryService` - queues outbound notifications per subscriber
+  - `CallbackService` - HTTP delivery used by the outbound queue consumer (`CallbackClient`) to POST to subscriber URLs
 - **Entities**: `ClientSubscriptionEntity`, `ClientEventEntity`, `DocumentMappingEntity`, `EventTypeEntity`
 - **Clients**: `MaterialClient`, `CallbackClient` - external HTTP integrations
 - **Repositories**: Spring Data JPA extending `JpaRepository<Entity, UUID>`
 
 ### Critical Design Decisions
 
-1. **Async vs Sync**: Service Bus (Azure) integration toggles async processing. When disabled, same-thread processing. See `application.yaml` `service-bus.enabled`.
+1. **Service Bus**: Inbound and outbound notifications always use Azure Service Bus queues. Most integration tests mock `ServiceBusProcessorService` via `IntegrationTestBase`; async E2E tests extend `AbstractSubscriptionIntegrationTest` with a live emulator.
 2. **MaterialService polling**: Uses `awaitility` library with configurable retry intervals/timeouts (not exponential backoff). See `src/main/java/uk/gov/hmcts/cp/subscription/config/AppProperties.java`.
 3. **Manager pattern**: Orchestration logic in `NotificationManager` keeps controllers thin and services focused.
 4. **Multi-tenant subscriptions**: Each client has multiple subscriptions; each subscription filters event types. Enforce client ID in all queries via MDC (`ClientIdResolutionFilter.MDC_CLIENT_ID`).
@@ -104,16 +102,15 @@ curl http://localhost:4550/actuator/health
 
 | Service | Config | Use Case | Retry Strategy |
 |---------|--------|----------|-----------------|
-| Material API | `MATERIAL_CLIENT_URL` (default: `http://localhost:8081`) | Fetch material metadata when PCR event arrives | `MaterialService.waitForMaterialMetadata()` uses awaitility (interval: `MATERIAL_CLIENT_INTERVAL_MSECS`, timeout: `MATERIAL_CLIENT_TIMEOUT_MSECS`) |
+| Material API | `MATERIAL_CLIENT_URL` (default: `http://localhost:8081`) | Fetch material metadata when processing queued inbound notification | `NotificationService` uses `MaterialService.getMaterialMetadata()` (single request). `waitForMaterialMetadata()` remains for tests and non-notification callers |
 | Document Service | `DOCUMENT_SERVICE_URL` (default: `http://localhost:8082`) | Retrieve document content for subscribers | Configured via `DocumentService` |
 | Callback URLs | `ClientSubscriptionEntity.notificationEndpoint` | Deliver notifications to subscribers | Configurable retry in `callback-client.retry` (interval/timeout milliseconds) |
 
-### Azure Service Bus (Optional)
+### Azure Service Bus
 
-- **Enable**: Set `AZURE_SERVICE_BUS_ENABLED=true`
-- **Config**: `AZURE_SERVICEBUS_URI` (connection string), `AZURE_SERVICE_BUS_ADMIN_URI`
-- **Topics**: `PCR_INBOUND_TOPIC` (inbound), `PCR_OUTBOUND_TOPIC` (outbound notifications)
-- **Queuing**: When enabled, inbound PCR events and outbound notifications are queued separately
+- **Config**: `AZURE_SERVICE_BUS_URI` (connection string), `AZURE_SERVICE_BUS_ADMIN_URI`
+- **Queues**: Inbound (`hces.notifications.inbound`) and outbound (`hces.notifications.outbound`) notification pipelines
+- **Queuing**: Inbound events and per-subscriber outbound deliveries are queued separately
 - **Retries**: Configurable via `SERVICE_BUS_RETRY_SECONDS` (comma-separated list, e.g., "0,1000,2000,10000") and `SERVICE_BUS_MAX_TRIES`
 
 ### Database
@@ -238,7 +235,7 @@ curl http://localhost:4550/actuator/health
 - **Material API timeout**: Adjust `MATERIAL_CLIENT_TIMEOUT_MSECS`, `MATERIAL_CLIENT_INTERVAL_MSECS`
 - **PMD failures**: Check `.github/pmd-ruleset.xml` rules; common: cyclomatic complexity, method naming
 - **Test failures**: Run with `-i` flag for interactive debugging; check MDC setup in filters
-- **Service Bus issues**: Enable/disable via `AZURE_SERVICE_BUS_ENABLED`; check connection strings in logs
+- **Service Bus issues**: Check connection strings in logs and emulator/Azure connectivity
 
 ## Resources
 
