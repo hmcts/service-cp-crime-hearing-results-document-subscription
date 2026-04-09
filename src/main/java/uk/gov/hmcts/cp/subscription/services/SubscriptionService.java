@@ -38,14 +38,15 @@ public class SubscriptionService {
 
     private final ClockService clockService;
     private final HmacManager hmacManager;
+    private final SubscriptionValidationService subscriptionValidationService;
 
     @Transactional
     public ClientSubscription createClientSubscription(final ClientSubscriptionRequest request,
-                                                       final UUID clientId,
-                                                       final List<Long> eventIds) {
+                                                       final UUID clientId) {
         log.info("createClientSubscription clientId:{} eventTypeCount:{}", clientId, request.getEventTypes().size());
-        final KeyPair keyPair = hmacManager.createAndStoreNewKey();
+        final List<Long> eventIds = subscriptionValidationService.validateAndFetchEventIds(request);
 
+        final KeyPair keyPair = hmacManager.createAndStoreNewKey();
         final ClientEntity client = saveClientForCreateRequest(request, clientId);
         saveClientEvents(client.getSubscriptionId(), eventIds);
         saveClientHmac(client.getSubscriptionId(), keyPair.getKeyId());
@@ -57,24 +58,29 @@ public class SubscriptionService {
 
     @Transactional
     public ClientSubscription updateClientSubscription(final ClientSubscriptionRequest request,
-                                                       final ClientEntity client,
-                                                       final List<Long> eventIds) {
-        log.info("updateClientSubscription clientId:{} subscriptionId:{}", client.getClientId(), client.getSubscriptionId());
+                                                       final UUID clientId,
+                                                       final UUID subscriptionId) {
+        log.info("updateClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
+        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId);
+        final List<Long> eventIds = subscriptionValidationService.validateAndFetchEventIds(request);
+
         final ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
         updateClientEvents(client.getSubscriptionId(), eventIds);
 
         return clientSubscriptionMapper.toDto(updatedClient, request.getEventTypes(), null);
     }
 
-    public ClientSubscription getClientSubscription(final ClientEntity client) {
-        log.info("getClientSubscription clientId:{} subscriptionId:{}", client.getClientId(), client.getSubscriptionId());
+    public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
+        log.info("getClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
+        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId);
         final List<String> eventNames = clientEventRepository.findEventNamesForSubscription(client.getSubscriptionId());
         return clientSubscriptionMapper.toDto(client, eventNames, null);
     }
 
     @Transactional
-    public void deleteClientSubscription(final ClientEntity client) {
-        log.info("deleteClientSubscription clientId:{} subscriptionId:{}", client.getClientId(), client.getSubscriptionId());
+    public void deleteClientSubscription(final UUID clientId, final UUID subscriptionId) {
+        log.info("deleteClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
+        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId);
         clientHmacRepository.deleteAllBySubscriptionId(client.getSubscriptionId());
         clientEventRepository.deleteBySubscriptionId(client.getSubscriptionId());
         clientRepository.delete(client);

@@ -13,7 +13,6 @@ import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventTypeResponse;
-import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionValidationService;
@@ -41,8 +40,7 @@ public class SubscriptionController implements SubscriptionApi {
         log.info("createClientSubscription callbackUrl:{} clientId:{}",
                 Encode.forJava(clientSubscriptionRequest.getNotificationEndpoint().getCallbackUrl()), clientId);
         subscriptionValidationService.validateClientDoesNotExist(clientId);
-        final List<Long> eventIds = subscriptionValidationService.validateAndFetchEventIds(clientSubscriptionRequest);
-        final ClientSubscription response = subscriptionService.createClientSubscription(clientSubscriptionRequest, clientId, eventIds);
+        final ClientSubscription response = subscriptionService.createClientSubscription(clientSubscriptionRequest, clientId);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -54,9 +52,8 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, clientSubscriptionId);
-        final List<Long> eventIds = subscriptionValidationService.validateAndFetchEventIds(clientSubscriptionRequest);
-        final ClientSubscription response = subscriptionService.updateClientSubscription(clientSubscriptionRequest, client, eventIds);
+        subscriptionValidationService.validateClientExists(clientId);
+        final ClientSubscription response = subscriptionService.updateClientSubscription(clientSubscriptionRequest, clientId, clientSubscriptionId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -66,8 +63,8 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("getClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, clientSubscriptionId);
-        final ClientSubscription response = subscriptionService.getClientSubscription(client);
+        subscriptionValidationService.validateClientExists(clientId);
+        final ClientSubscription response = subscriptionService.getClientSubscription(clientId, clientSubscriptionId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -77,8 +74,8 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, clientSubscriptionId);
-        subscriptionService.deleteClientSubscription(client);
+        subscriptionValidationService.validateClientExists(clientId);
+        subscriptionService.deleteClientSubscription(clientId, clientSubscriptionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

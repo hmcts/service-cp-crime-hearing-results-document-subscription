@@ -33,6 +33,12 @@ public class SubscriptionValidationService {
         }
     }
 
+    public void validateClientExists(final UUID clientId) {
+        if (clientRepository.existsById(clientId)) {
+            new EntityNotFoundException("Client not found for the provided clientId");
+        }
+    }
+
     public ClientEntity validateAndFetchClient(final UUID clientId, final UUID subscriptionId) {
         return clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)
                 .orElseThrow(() ->
