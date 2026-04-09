@@ -107,7 +107,7 @@ public abstract class IntegrationTestBase {
         UUID subscriptionId = UUID.randomUUID();
 
         clientRepository.save(ClientEntity.builder()
-                .id(clientId)
+                .clientId(clientId)
                 .subscriptionId(subscriptionId)
                 .callbackUrl(notificationUri)
                 .createdAt(now)
@@ -133,7 +133,7 @@ public abstract class IntegrationTestBase {
     protected ClientEntity insertClient(UUID clientId, UUID subscriptionId) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         ClientEntity client = ClientEntity.builder()
-                .id(clientId)
+                .clientId(clientId)
                 .subscriptionId(subscriptionId)
                 .callbackUrl("https://callback")
                 .createdAt(now)

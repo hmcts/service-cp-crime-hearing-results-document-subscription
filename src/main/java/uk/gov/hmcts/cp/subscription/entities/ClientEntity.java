@@ -24,7 +24,7 @@ public class ClientEntity {
 
     @Id
     @Column(name = "client_id")
-    private UUID id;
+    private UUID clientId;
 
     @Column(name =  "subscription_id")
     private UUID subscriptionId;

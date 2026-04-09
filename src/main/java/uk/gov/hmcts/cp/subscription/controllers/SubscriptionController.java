@@ -13,9 +13,12 @@ import uk.gov.hmcts.cp.openapi.api.SubscriptionApi;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventTypeResponse;
+import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionValidationService;
 
+import java.util.List;
 import java.util.UUID;
 
 import static uk.gov.hmcts.cp.filters.ClientIdResolutionFilter.MDC_CLIENT_ID;
@@ -28,6 +31,7 @@ public class SubscriptionController implements SubscriptionApi {
 
     private final SubscriptionService subscriptionService;
     private final EventTypeService eventTypeService;
+    private final SubscriptionValidationService subscriptionValidationService;
 
     @Override
     public ResponseEntity<ClientSubscription> createClientSubscription(
@@ -36,7 +40,9 @@ public class SubscriptionController implements SubscriptionApi {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("createClientSubscription callbackUrl:{} clientId:{}",
                 Encode.forJava(clientSubscriptionRequest.getNotificationEndpoint().getCallbackUrl()), clientId);
-        final ClientSubscription response = subscriptionService.createClientSubscription(clientSubscriptionRequest, clientId);
+        subscriptionValidationService.validateClientDoesNotExist(clientId);
+        final List<Long> eventIds = subscriptionValidationService.validateAndFetchEventIds(clientSubscriptionRequest);
+        final ClientSubscription response = subscriptionService.createClientSubscription(clientSubscriptionRequest, clientId, eventIds);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -48,7 +54,9 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        final ClientSubscription response = subscriptionService.updateClientSubscription(clientId, clientSubscriptionId, clientSubscriptionRequest);
+        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, clientSubscriptionId);
+        final List<Long> eventIds = subscriptionValidationService.validateAndFetchEventIds(clientSubscriptionRequest);
+        final ClientSubscription response = subscriptionService.updateClientSubscription(clientSubscriptionRequest, client, eventIds);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -58,7 +66,8 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("getClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        final ClientSubscription response = subscriptionService.getClientSubscription(clientId, clientSubscriptionId);
+        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, clientSubscriptionId);
+        final ClientSubscription response = subscriptionService.getClientSubscription(client);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -68,7 +77,8 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        subscriptionService.deleteClientSubscription(clientId, clientSubscriptionId);
+        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, clientSubscriptionId);
+        subscriptionService.deleteClientSubscription(client);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

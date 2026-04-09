@@ -39,7 +39,7 @@ class ClientEntityMapperTest {
 
         ClientEntity result = clientMapper.toEntity(clockService, clientSubscription, clientId);
 
-        assertThat(result.getId()).isEqualTo(clientId);
+        assertThat(result.getClientId()).isEqualTo(clientId);
         assertThat(result.getSubscriptionId()).isNotNull(); // Subscription ID should be generated
         assertThat(result.getCallbackUrl()).isEqualTo(callbackUrl);
         assertThat(result.getCreatedAt()).isEqualTo(now);
@@ -56,7 +56,7 @@ class ClientEntityMapperTest {
 
         ClientEntity existing = ClientEntity.builder()
                 .callbackUrl("https://example.com/callback")
-                .id(clientId)
+                .clientId(clientId)
                 .subscriptionId(subsciptionId)
                 .createdAt(now.minusMinutes(10))
                 .build();
@@ -69,7 +69,7 @@ class ClientEntityMapperTest {
 
         ClientEntity result = clientMapper.mapUpdateRequestToEntity(existing, clockService, clientSubscription);
 
-        assertThat(result.getId()).isEqualTo(clientId);
+        assertThat(result.getClientId()).isEqualTo(clientId);
         assertThat(result.getSubscriptionId()).isEqualTo(subsciptionId);
         assertThat(result.getCallbackUrl()).isEqualTo("https://updated.com/callback");
         assertThat(result.getCreatedAt()).isEqualTo(existing.getCreatedAt());
