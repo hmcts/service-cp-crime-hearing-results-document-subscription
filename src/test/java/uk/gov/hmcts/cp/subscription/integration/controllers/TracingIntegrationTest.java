@@ -21,7 +21,7 @@ import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
         properties = {
                 "jwt.filter.enabled=false",
                 "management.tracing.enabled=true",
-                "spring.application.name=cp-crime-hearing-case-event-subscription"
+                "spring.application.name=cp-crime-hearing-results-document-subscription"
         }
 )
 @AutoConfigureMockMvc
@@ -50,6 +50,6 @@ class TracingIntegrationTest extends IntegrationTestBase {
 
         String responseCorrelationId = result.getResponse().getHeader(CORRELATION_ID_KEY);
         assertThat(responseCorrelationId).isEqualTo(TEST_CORRELATION_ID);
-        assertThat(springApplicationName).isEqualTo("cp-crime-hearing-case-event-subscription");
+        assertThat(springApplicationName).isEqualTo("cp-crime-hearing-results-document-subscription");
     }
 }

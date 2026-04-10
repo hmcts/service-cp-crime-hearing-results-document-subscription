@@ -45,7 +45,7 @@ services:
       - "--verbose"
 
   app1:
-    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
+    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-results-document-subscription:local}
     build:
       context: ..
     environment:
