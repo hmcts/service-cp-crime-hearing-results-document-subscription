@@ -189,14 +189,22 @@ jobs:
           fi
 
           echo "Publishing artefact for version: $ARTEFACT_VERSION"
-          
-          ./gradlew publish \
+
+          set +e
+          output=$(./gradlew publish \
             -DARTEFACT_VERSION=$ARTEFACT_VERSION \
             -DGITHUB_REPOSITORY=${{ github.repository }} \
             -DGITHUB_ACTOR=${{ github.actor }} \
             -DGITHUB_TOKEN=$GITHUB_TOKEN \
             -DAZURE_DEVOPS_ARTIFACT_USERNAME=$AZURE_DEVOPS_ARTIFACT_USERNAME \
-            -DAZURE_DEVOPS_ARTIFACT_TOKEN=$AZURE_DEVOPS_ARTIFACT_TOKEN
+            -DAZURE_DEVOPS_ARTIFACT_TOKEN=$AZURE_DEVOPS_ARTIFACT_TOKEN 2>&1)
+          exit_code=$?
+          echo "$output"
+          if [ $exit_code -ne 0 ] && echo "$output" | grep -q "status code 409\|already contains"; then
+            echo "Artefact already exists in feed (409 Conflict) — treating as success"
+            exit 0
+          fi
+          exit $exit_code
 
   push-ghcr:
     needs: [ publish-artefact, build, version ]
