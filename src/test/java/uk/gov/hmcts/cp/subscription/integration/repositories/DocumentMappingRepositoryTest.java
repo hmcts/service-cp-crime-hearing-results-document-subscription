@@ -25,7 +25,6 @@ class DocumentMappingRepositoryTest extends IntegrationTestBase {
     @Test
     void findByMaterialId_should_save_and_return_document() {
         DocumentMappingEntity saved = insertDocument(MATERIAL_ID);
-        documentMappingRepository.findById(saved.getDocumentId());
 
         Optional<DocumentMappingEntity> found = documentMappingRepository.findByDocumentId(saved.getDocumentId());
 
