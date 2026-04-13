@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import uk.gov.hmcts.cp.subscription.config.AppProperties;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
@@ -16,6 +17,7 @@ import java.time.OffsetDateTime;
 @Service
 @AllArgsConstructor
 public class PostStartup {
+    private AppProperties appProperties;
     private EventTypeRepository eventTypeRepository;
     private DocumentMappingRepository documentMappingRepository;
 
@@ -26,7 +28,8 @@ public class PostStartup {
     }
 
     private void logRecentDocumentMappings() {
-        OffsetDateTime lastMonthDate = OffsetDateTime.now().minusMonths(1);
+        log.info("PostStartup Database contains {} document mappings", documentMappingRepository.count());
+        final OffsetDateTime lastMonthDate = OffsetDateTime.now().minusMonths(1);
         documentMappingRepository.findAll().stream().filter(d -> d.getCreatedAt().isAfter(lastMonthDate)).forEach(
                 d -> log.info("PostStartup Database contains documentId:{} materialId:{} createdAt:{}", d.getDocumentId(), d.getMaterialId(), d.getCreatedAt())
         );

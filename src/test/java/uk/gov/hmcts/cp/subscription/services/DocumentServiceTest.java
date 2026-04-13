@@ -66,7 +66,7 @@ class DocumentServiceTest {
 
     @Test
     void get_document_content_should_return_response() {
-        when(documentMappingRepository.findById(documentId)).thenReturn(Optional.of(documentMappingEntity));
+        when(documentMappingRepository.findByDocumentId(documentId)).thenReturn(Optional.of(documentMappingEntity));
         when(materialClient.getMetadata(materialId)).thenReturn(createMetadata());
         when(materialClient.getContentUrl(materialId)).thenReturn(materialUrl);
         ResponseEntity<byte[]> document = ResponseEntity.ok("pdfcontent".getBytes());
