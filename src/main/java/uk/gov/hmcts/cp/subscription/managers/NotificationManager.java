@@ -41,7 +41,7 @@ public class NotificationManager {
         log.info("getDocumentContent clientSubscriptionId:{} documentId:{}", clientSubscriptionId, documentId);
         final String eventType = documentService.getEventTypeForDocument(documentId);
         if (!subscriptionService.hasAccess(clientSubscriptionId, eventType)) {
-            log.warn("getDocumentContent access denied clientSubscriptionId:{} eventType:{}", clientSubscriptionId, eventType);
+            log.error("getDocumentContent access denied clientSubscriptionId:{} eventType:{}", clientSubscriptionId, eventType);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: subscription does not have access to this document");
         }
         return documentService.getDocumentContent(documentId);

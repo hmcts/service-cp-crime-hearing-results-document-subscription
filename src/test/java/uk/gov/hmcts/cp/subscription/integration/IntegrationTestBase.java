@@ -78,18 +78,6 @@ public abstract class IntegrationTestBase {
             .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
 
-    protected void clearClientSubscriptionTable() {
-        log.info("Clearing client_subscription table and related client/client_events/client_hmac rows");
-        clientEventRepository.deleteAll();
-        clientHmacRepository.deleteAll();
-        clientRepository.deleteAll();
-    }
-
-    protected void clearDocumentMappingTable() {
-        log.info("Clearing document_mapping table");
-        documentMappingRepository.deleteAll();
-    }
-
     protected void clearAllTables() {
         log.info("Clearing all tables");
         clientHmacRepository.deleteAll();
