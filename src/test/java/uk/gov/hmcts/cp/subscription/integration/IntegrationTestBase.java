@@ -137,8 +137,7 @@ public abstract class IntegrationTestBase {
 
     protected DocumentMappingEntity insertDocument(UUID materialId, String eventType) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
-        EventTypeEntity eventTypeEntity = eventTypeRepository.findByEventName(eventType)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown event type: " + eventType));
+        EventTypeEntity eventTypeEntity = eventTypeRepository.findByEventName(eventType).get();
         DocumentMappingEntity document = DocumentMappingEntity.builder()
                 .documentId(UUID.randomUUID())
                 .materialId(materialId)
