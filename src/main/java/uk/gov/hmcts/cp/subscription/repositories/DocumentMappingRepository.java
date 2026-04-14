@@ -10,6 +10,6 @@ import java.util.UUID;
 @Repository
 public interface DocumentMappingRepository extends JpaRepository<DocumentMappingEntity, UUID> {
 
-    Optional<DocumentMappingEntity> findByMaterialId(UUID materialId);
+    Optional<DocumentMappingEntity> findByDocumentId(UUID documentId);
 }
 

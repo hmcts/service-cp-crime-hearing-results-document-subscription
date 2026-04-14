@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
 import static org.mockito.Mockito.verify;
@@ -12,6 +13,8 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class PostStartupTest {
 
+    @Mock
+    DocumentMappingRepository documentMappingRepository;
     @Mock
     EventTypeRepository eventTypeRepository;
 
@@ -22,5 +25,11 @@ class PostStartupTest {
     void post_startup_should_log_event_type_count() {
         postStartup.postStartupLogging();
         verify(eventTypeRepository).count();
+    }
+
+    @Test
+    void post_startup_should_log_document_mappings() {
+        postStartup.postStartupLogging();
+        verify(documentMappingRepository).findAll();
     }
 }
