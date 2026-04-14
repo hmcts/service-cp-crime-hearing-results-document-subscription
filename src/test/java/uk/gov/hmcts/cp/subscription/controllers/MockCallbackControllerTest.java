@@ -14,6 +14,7 @@ import uk.gov.hmcts.cp.subscription.config.EnvironmentName;
 import uk.gov.hmcts.cp.vault.SecretStoreServiceInterface;
 
 import java.security.InvalidKeyException;
+import java.util.Base64;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,8 +26,8 @@ import static org.mockito.Mockito.when;
 class MockCallbackControllerTest {
 
     private static final String KEY_ID = "kid-v1-test-key";
-    private static final String ENCODED_SECRET = "dGVzdC1zZWNyZXQtMzItYnl0ZXMtbG9uZw==";
     private static final byte[] DECODED_SECRET = "test-secret-32-bytes-long".getBytes();
+    private static final String ENCODED_SECRET = Base64.getEncoder().encodeToString(DECODED_SECRET);
     private static final String SIGNATURE = "validSignature==";
     private static final String BODY = "{\"eventId\":\"123\"}";
 
