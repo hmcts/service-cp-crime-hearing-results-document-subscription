@@ -51,8 +51,8 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        subscriptionValidationService.validateClientExists(clientId);
-        final ClientSubscription response = subscriptionService.updateClientSubscription(clientSubscriptionRequest, clientId, clientSubscriptionId);
+        subscriptionValidationService.validateClientSubscriptionExists(clientId, clientSubscriptionId);
+        final ClientSubscription response = subscriptionService.updateClientSubscription(clientId, clientSubscriptionId, clientSubscriptionRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -62,7 +62,7 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("getClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        subscriptionValidationService.validateClientExists(clientId);
+        subscriptionValidationService.validateClientSubscriptionExists(clientId, clientSubscriptionId);
         final ClientSubscription response = subscriptionService.getClientSubscription(clientId, clientSubscriptionId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -73,7 +73,7 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
-        subscriptionValidationService.validateClientExists(clientId);
+        subscriptionValidationService.validateClientSubscriptionExists(clientId, clientSubscriptionId);
         subscriptionService.deleteClientSubscription(clientId, clientSubscriptionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

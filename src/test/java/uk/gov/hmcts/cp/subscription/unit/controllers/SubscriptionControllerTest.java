@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,6 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
 import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
-import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionValidationService;
@@ -27,9 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,10 +65,6 @@ class SubscriptionControllerTest {
             .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
     UUID subscriptionId = UUID.randomUUID();
-    ClientEntity clientEntity = ClientEntity.builder()
-            .clientId(TEST_CLIENT_UUID)
-            .subscriptionId(subscriptionId)
-            .build();
 
     @Test
     void create_controller_should_call_service() {
@@ -92,7 +84,7 @@ class SubscriptionControllerTest {
         ResponseStatusException conflict = new ResponseStatusException(HttpStatus.CONFLICT,
                 "subscription already exist with " + subscriptionId);
         doThrow(conflict)
-                .when(subscriptionService).createClientSubscription(createRequest, TEST_CLIENT_UUID);
+                .when(subscriptionValidationService).validateClientDoesNotExist(TEST_CLIENT_UUID);
 
         assertThatThrownBy(() -> subscriptionController.createClientSubscription(createRequest, null))
                 .isInstanceOf(ResponseStatusException.class)
@@ -112,36 +104,14 @@ class SubscriptionControllerTest {
     @Test
     void update_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
-        when(subscriptionService.updateClientSubscription(updateRequest, TEST_CLIENT_UUID, subscriptionId)).thenReturn(response);
+        when(subscriptionService.updateClientSubscription(TEST_CLIENT_UUID, subscriptionId, updateRequest)).thenReturn(response);
 
         var result = subscriptionController.updateClientSubscription(subscriptionId, updateRequest, null);
 
-        verify(subscriptionValidationService).validateClientExists(TEST_CLIENT_UUID);
-        verify(subscriptionService).updateClientSubscription(updateRequest, TEST_CLIENT_UUID, subscriptionId);
+        verify(subscriptionValidationService).validateClientSubscriptionExists(TEST_CLIENT_UUID, subscriptionId);
+        verify(subscriptionService).updateClientSubscription(TEST_CLIENT_UUID, subscriptionId, updateRequest);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
-    }
-
-    @Test
-    void update_controller_should_throw_when_client_not_found() {
-        doThrow(new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"))
-                .when(subscriptionService).updateClientSubscription(updateRequest, TEST_CLIENT_UUID, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionController.updateClientSubscription(subscriptionId, updateRequest, null))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Client not found for the provided clientId and subscriptionId");
-
-        verify(subscriptionService, never()).createClientSubscription(any(), any());
-    }
-
-    @Test
-    void update_controller_should_throw_when_event_types_are_invalid() {
-        doThrow(new IllegalArgumentException("Invalid event type(s): BAD"))
-                .when(subscriptionService).updateClientSubscription(updateRequest, TEST_CLIENT_UUID, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionController.updateClientSubscription(subscriptionId, updateRequest, null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid event type(s): BAD");
     }
 
     @Test
@@ -151,39 +121,19 @@ class SubscriptionControllerTest {
 
         var result = subscriptionController.getClientSubscription(subscriptionId, null);
 
-        verify(subscriptionValidationService).validateClientExists(TEST_CLIENT_UUID);
+        verify(subscriptionValidationService).validateClientSubscriptionExists(TEST_CLIENT_UUID, subscriptionId);
         verify(subscriptionService).getClientSubscription(TEST_CLIENT_UUID, subscriptionId);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
     }
 
     @Test
-    void get_controller_should_throw_when_client_not_found() {
-        doThrow(new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"))
-                .when(subscriptionService).getClientSubscription(TEST_CLIENT_UUID, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionController.getClientSubscription(subscriptionId, null))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Client not found for the provided clientId and subscriptionId");
-    }
-
-    @Test
     void delete_controller_should_call_service() {
         var result = subscriptionController.deleteClientSubscription(subscriptionId, null);
 
-        verify(subscriptionValidationService).validateClientExists(TEST_CLIENT_UUID);
+        verify(subscriptionValidationService).validateClientSubscriptionExists(TEST_CLIENT_UUID, subscriptionId);
         verify(subscriptionService).deleteClientSubscription(TEST_CLIENT_UUID, subscriptionId);
         assertThat(result.getStatusCode().value()).isEqualTo(204);
-    }
-
-    @Test
-    void delete_controller_should_throw_when_client_not_found() {
-        doThrow(new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"))
-                .when(subscriptionService).deleteClientSubscription(TEST_CLIENT_UUID, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionController.deleteClientSubscription(subscriptionId, null))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Client not found for the provided clientId and subscriptionId");
     }
 
     @Test

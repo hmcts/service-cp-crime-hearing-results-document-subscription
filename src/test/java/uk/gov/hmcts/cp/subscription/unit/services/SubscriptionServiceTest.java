@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.unit.services;
 
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -27,6 +26,7 @@ import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionValidationService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -121,74 +121,43 @@ class SubscriptionServiceTest {
 
     @Test
     void update_request_should_update_existing_entity() {
-        when(subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId)).thenReturn(clientEntity);
         when(subscriptionValidationService.validateAndFetchEventIds(updateRequest)).thenReturn(List.of(1L));
         when(clientEntityMapper.mapUpdateRequestToEntity(clientEntity, clockService, updateRequest)).thenReturn(updatedClientEntity);
         when(clientEventEntityMapper.toEntity(subscriptionId, 1L)).thenReturn(clientEventEntity);
+        when(clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
         when(clientSubscriptionMapper.toDto(updatedClientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
         when(clientRepository.save(updatedClientEntity)).thenReturn(updatedClientEntity);
 
-        ClientSubscription result = subscriptionService.updateClientSubscription(updateRequest, clientId, subscriptionId);
+        ClientSubscription result = subscriptionService.updateClientSubscription(clientId, subscriptionId, updateRequest);
 
         assertThat(result).isEqualTo(response);
-        verify(subscriptionValidationService).validateAndFetchClient(clientId, subscriptionId);
+        verify(clientRepository).findByClientIdAndSubscriptionId(clientId, subscriptionId);
         verify(subscriptionValidationService).validateAndFetchEventIds(updateRequest);
         verify(clientRepository).save(updatedClientEntity);
         verify(clientEventRepository).saveAll(List.of(clientEventEntity));
     }
 
     @Test
-    void update_request_should_throw_when_client_not_found() {
-        doThrow(new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"))
-                .when(subscriptionValidationService).validateAndFetchClient(clientId, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionService.updateClientSubscription(updateRequest, clientId, subscriptionId))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Client not found for the provided clientId and subscriptionId");
-    }
-
-    @Test
     void get_should_return_subscription_when_owned_by_client() {
-        when(subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId)).thenReturn(clientEntity);
         when(clientEventRepository.findEventNamesForSubscription(subscriptionId)).thenReturn(List.of("PRISON_COURT_REGISTER_GENERATED"));
+        when(clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
         when(clientSubscriptionMapper.toDto(clientEntity, List.of("PRISON_COURT_REGISTER_GENERATED"), null)).thenReturn(response);
 
         ClientSubscription result = subscriptionService.getClientSubscription(clientId, subscriptionId);
 
         assertThat(result).isEqualTo(response);
-        verify(subscriptionValidationService).validateAndFetchClient(clientId, subscriptionId);
-    }
-
-    @Test
-    void get_should_throw_when_client_not_found() {
-        doThrow(new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"))
-                .when(subscriptionValidationService).validateAndFetchClient(clientId, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionService.getClientSubscription(clientId, subscriptionId))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Client not found for the provided clientId and subscriptionId");
+        verify(clientRepository).findByClientIdAndSubscriptionId(clientId, subscriptionId);
     }
 
     @Test
     void delete_should_delete_entity_when_owned_by_client() {
-        when(subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId)).thenReturn(clientEntity);
-
+        when(clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
         subscriptionService.deleteClientSubscription(clientId, subscriptionId);
 
-        verify(subscriptionValidationService).validateAndFetchClient(clientId, subscriptionId);
+        verify(clientRepository).findByClientIdAndSubscriptionId(clientId, subscriptionId);
         InOrder inOrder = inOrder(clientEventRepository, clientRepository);
         inOrder.verify(clientEventRepository).deleteBySubscriptionId(subscriptionId);
         inOrder.verify(clientRepository).delete(clientEntity);
-    }
-
-    @Test
-    void delete_should_throw_when_client_not_found() {
-        doThrow(new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"))
-                .when(subscriptionValidationService).validateAndFetchClient(clientId, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionService.deleteClientSubscription(clientId, subscriptionId))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Client not found for the provided clientId and subscriptionId");
     }
 
     @Test

@@ -52,15 +52,15 @@ class SubscriptionValidationServiceTest {
 
     @Test
     void validateClientDoesNotExist_should_pass_when_no_existing_client() {
-        when(clientRepository.findById(clientId)).thenReturn(Optional.empty());
+        when(clientRepository.findByClientId(clientId)).thenReturn(Optional.empty());
 
         validationService.validateClientDoesNotExist(clientId);
-        verify(clientRepository).findById(clientId);
+        verify(clientRepository).findByClientId(clientId);
     }
 
     @Test
     void validateClientDoesNotExist_should_throw_conflict_when_client_already_exists() {
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(clientEntity));
+        when(clientRepository.findByClientId(clientId)).thenReturn(Optional.of(clientEntity));
 
         assertThatThrownBy(() -> validationService.validateClientDoesNotExist(clientId))
                 .isInstanceOf(ResponseStatusException.class)
@@ -72,32 +72,15 @@ class SubscriptionValidationServiceTest {
     }
 
     @Test
-    void validateClientExists_should_pass_when_client_exists() {
-        when(clientRepository.existsById(clientId)).thenReturn(true);
-        assertDoesNotThrow(() -> validationService.validateClientExists(clientId));
-    }
-
-    @Test
-    void validateClientExists_should_throw_when_client_not_found() {
-        when(clientRepository.existsById(clientId)).thenReturn(false);
-        assertThatThrownBy(() -> validationService.validateClientExists(clientId))
-                .isInstanceOf(EntityNotFoundException.class)
-                .hasMessage("Client not found for the provided clientId");
-    }
-
-    @Test
-    void validateAndFetchClient_should_return_client_when_found() {
+    void validateClientExists_should_pass_when_client_Subscription_exists() {
         when(clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
-
-        ClientEntity result = validationService.validateAndFetchClient(clientId, subscriptionId);
-        assertThat(result).isEqualTo(clientEntity);
+        assertDoesNotThrow(() -> validationService.validateClientSubscriptionExists(clientId, subscriptionId));
     }
 
     @Test
-    void validateAndFetchClient_should_throw_entity_not_found_when_client_missing() {
+    void validateClientExists_should_throw_when_client_Subscription_not_found() {
         when(clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> validationService.validateAndFetchClient(clientId, subscriptionId))
+        assertThatThrownBy(() -> validationService.validateClientSubscriptionExists(clientId, subscriptionId))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Client not found for the provided clientId and subscriptionId");
     }

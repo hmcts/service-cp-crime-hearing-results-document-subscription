@@ -1,5 +1,6 @@
 package uk.gov.hmcts.cp.subscription.services;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -57,11 +58,9 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public ClientSubscription updateClientSubscription(final ClientSubscriptionRequest request,
-                                                       final UUID clientId,
-                                                       final UUID subscriptionId) {
+    public ClientSubscription updateClientSubscription(final UUID clientId, final UUID subscriptionId, final ClientSubscriptionRequest request) {
         log.info("updateClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
-        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId);
+        final ClientEntity client = fetchClient(clientId, subscriptionId);
         final List<Long> eventIds = subscriptionValidationService.validateAndFetchEventIds(request);
 
         final ClientEntity updatedClient = saveClientForUpdateRequest(request, client);
@@ -70,10 +69,9 @@ public class SubscriptionService {
         return clientSubscriptionMapper.toDto(updatedClient, request.getEventTypes(), null);
     }
 
-    @Transactional(readOnly = true)
     public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
         log.info("getClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
-        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId);
+        final ClientEntity client = fetchClient(clientId, subscriptionId);
         final List<String> eventNames = clientEventRepository.findEventNamesForSubscription(client.getSubscriptionId());
         return clientSubscriptionMapper.toDto(client, eventNames, null);
     }
@@ -81,7 +79,7 @@ public class SubscriptionService {
     @Transactional
     public void deleteClientSubscription(final UUID clientId, final UUID subscriptionId) {
         log.info("deleteClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
-        final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId);
+        final ClientEntity client = fetchClient(clientId, subscriptionId);
         clientHmacRepository.deleteAllBySubscriptionId(client.getSubscriptionId());
         clientEventRepository.deleteBySubscriptionId(client.getSubscriptionId());
         clientRepository.delete(client);
@@ -118,5 +116,11 @@ public class SubscriptionService {
     private void updateClientEvents(final UUID subscriptionId, final List<Long> eventIds) {
         clientEventRepository.deleteBySubscriptionId(subscriptionId);
         saveClientEvents(subscriptionId, eventIds);
+    }
+
+    private ClientEntity fetchClient(final UUID clientId, final UUID subscriptionId) {
+        return clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
     }
 }

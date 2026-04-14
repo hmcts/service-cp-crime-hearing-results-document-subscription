@@ -26,23 +26,17 @@ public class SubscriptionValidationService {
     private final EventTypeRepository eventTypeRepository;
 
     public void validateClientDoesNotExist(final UUID clientId) {
-        final Optional<ClientEntity> existingClient = clientRepository.findById(clientId);
+        final Optional<ClientEntity> existingClient = clientRepository.findByClientId(clientId);
         if (existingClient.isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "subscription already exist with " + existingClient.get().getSubscriptionId());
         }
     }
 
-    public void validateClientExists(final UUID clientId) {
-        if (!clientRepository.existsById(clientId)) {
-            throw new EntityNotFoundException("Client not found for the provided clientId");
+    public void validateClientSubscriptionExists(final UUID clientId, final UUID subscriptionId) {
+        if (clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId).isEmpty()) {
+            throw new EntityNotFoundException("Client not found for the provided clientId and subscriptionId");
         }
-    }
-
-    public ClientEntity validateAndFetchClient(final UUID clientId, final UUID subscriptionId) {
-        return clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)
-                .orElseThrow(() ->
-                        new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
     }
 
     public List<Long> validateAndFetchEventIds(final ClientSubscriptionRequest request) {
