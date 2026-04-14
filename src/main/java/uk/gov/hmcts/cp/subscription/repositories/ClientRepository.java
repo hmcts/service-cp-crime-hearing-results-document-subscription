@@ -10,5 +10,5 @@ import java.util.UUID;
 @Repository
 public interface ClientRepository extends JpaRepository<ClientEntity, UUID> {
 
-    Optional<ClientEntity> findByIdAndSubscriptionId(UUID id, UUID subscriptionId);
+    Optional<ClientEntity> findByClientIdAndSubscriptionId(UUID clientId, UUID subscriptionId);
 }

@@ -26,9 +26,9 @@ class ClientRepositoryTest extends IntegrationTestBase {
     void findById_should_return_client_entity_when_exists() {
         clientRepository.save(client);
 
-        Optional<ClientEntity> found = clientRepository.findByIdAndSubscriptionId(clientId, subscriptionId);
+        Optional<ClientEntity> found = clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId);
         assertThat(found.isPresent()).isTrue();
-        assertThat(found.get().getId()).isEqualTo(clientId);
+        assertThat(found.get().getClientId()).isEqualTo(clientId);
         assertThat(found.get().getSubscriptionId()).isEqualTo(subscriptionId);
         assertThat(found.get().getCallbackUrl()).isEqualTo("https://test.com/webhook");
     }
@@ -39,13 +39,13 @@ class ClientRepositoryTest extends IntegrationTestBase {
         UUID nonExistentId = UUID.randomUUID();
         clientRepository.save(client);
 
-        Optional<ClientEntity> found = clientRepository.findByIdAndSubscriptionId(nonExistentId, subscriptionId);
+        Optional<ClientEntity> found = clientRepository.findByClientIdAndSubscriptionId(nonExistentId, subscriptionId);
         assertThat(found).isEmpty();
     }
 
     private static ClientEntity getClientEntity(UUID clientId, UUID subscriptionId, String callbackUrl, OffsetDateTime originalTime) {
         return ClientEntity.builder()
-                .id(clientId)
+                .clientId(clientId)
                 .subscriptionId(subscriptionId)
                 .callbackUrl(callbackUrl)
                 .createdAt(originalTime)

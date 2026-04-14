@@ -77,7 +77,7 @@ class ClientEventRepositoryTest extends IntegrationTestBase {
 
     private static ClientEntity getClientEntity(UUID clientId, String callbackUrl, UUID subscriptionId) {
         return ClientEntity.builder()
-                .id(clientId)
+                .clientId(clientId)
                 .subscriptionId(subscriptionId)
                 .callbackUrl(callbackUrl)
                 .createdAt(OffsetDateTime.now(ZoneOffset.UTC))
