@@ -1,6 +1,8 @@
 server:
   port: ${SERVER_PORT:4550}
 
+environment:
+  name: ${ENVIRONMENT_NAME:UNKNOWN}
 spring:
   application:
     name: service-cp-crime-hearing-results-document-subscription

@@ -340,7 +340,7 @@ jobs:
       - name: Deploy via ADO pipeline
         uses: hmcts/action-ado-deploy@v1
         with:
-          service_name: ${{ needs.build.outputs.repo_name }}
+          service_name: hearing-results-document-subscription
           image_tag: ${{ needs.version.outputs.artefact_version }}
           tag_suffix: ${{ steps.date.outputs.suffix }}
           app_id: ${{ secrets.DEPLOYMENT_APP_ID }}

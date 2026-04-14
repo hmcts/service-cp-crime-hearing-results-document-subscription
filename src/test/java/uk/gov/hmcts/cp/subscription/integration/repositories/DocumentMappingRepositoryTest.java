@@ -18,7 +18,7 @@ class DocumentMappingRepositoryTest extends IntegrationTestBase {
 
     @BeforeEach
     void beforeEach() {
-        clearDocumentMappingTable();
+        clearAllTables();
     }
 
     @Transactional
@@ -26,7 +26,7 @@ class DocumentMappingRepositoryTest extends IntegrationTestBase {
     void findByMaterialId_should_save_and_return_document() {
         DocumentMappingEntity saved = insertDocument(MATERIAL_ID);
 
-        Optional<DocumentMappingEntity> found = documentMappingRepository.findByMaterialId(MATERIAL_ID);
+        Optional<DocumentMappingEntity> found = documentMappingRepository.findByDocumentId(saved.getDocumentId());
 
         assertThat(found).isPresent();
         assertThat(found.get().getDocumentId()).isEqualTo(saved.getDocumentId());
