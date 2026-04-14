@@ -40,6 +40,6 @@ class SubscriptionGetControllerIntegrationTest extends IntegrationTestBase {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("not_found"))
-                .andExpect(jsonPath("$.message").value("Client not found for the provided clientId"));
+                .andExpect(jsonPath("$.message").value("Client not found for the provided clientId and subscriptionId"));
     }
 }
