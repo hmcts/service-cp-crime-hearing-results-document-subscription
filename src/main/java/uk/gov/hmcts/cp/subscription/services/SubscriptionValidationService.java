@@ -34,8 +34,8 @@ public class SubscriptionValidationService {
     }
 
     public void validateClientExists(final UUID clientId) {
-        if (clientRepository.existsById(clientId)) {
-            new EntityNotFoundException("Client not found for the provided clientId");
+        if (!clientRepository.existsById(clientId)) {
+            throw new EntityNotFoundException("Client not found for the provided clientId");
         }
     }
 

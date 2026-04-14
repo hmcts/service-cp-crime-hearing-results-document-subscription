@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,6 +69,20 @@ class SubscriptionValidationServiceTest {
                     assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
                     assertThat(ex.getReason()).isEqualTo("subscription already exist with " + subscriptionId);
                 });
+    }
+
+    @Test
+    void validateClientExists_should_pass_when_client_exists() {
+        when(clientRepository.existsById(clientId)).thenReturn(true);
+        assertDoesNotThrow(() -> validationService.validateClientExists(clientId));
+    }
+
+    @Test
+    void validateClientExists_should_throw_when_client_not_found() {
+        when(clientRepository.existsById(clientId)).thenReturn(false);
+        assertThatThrownBy(() -> validationService.validateClientExists(clientId))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("Client not found for the provided clientId");
     }
 
     @Test

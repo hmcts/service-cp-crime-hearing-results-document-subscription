@@ -70,6 +70,7 @@ public class SubscriptionService {
         return clientSubscriptionMapper.toDto(updatedClient, request.getEventTypes(), null);
     }
 
+    @Transactional(readOnly = true)
     public ClientSubscription getClientSubscription(final UUID clientId, final UUID subscriptionId) {
         log.info("getClientSubscription clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = subscriptionValidationService.validateAndFetchClient(clientId, subscriptionId);
@@ -86,6 +87,7 @@ public class SubscriptionService {
         clientRepository.delete(client);
     }
 
+    @Transactional(readOnly = true)
     public boolean hasAccess(final UUID subscriptionId,
                              final String eventType) {
         return clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, eventType) > 0;
