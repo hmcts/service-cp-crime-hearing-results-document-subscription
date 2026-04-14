@@ -12,10 +12,12 @@ import uk.gov.hmcts.cp.filters.UUIDService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.clients.MaterialDocumentClient;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
+import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
 import uk.gov.hmcts.cp.subscription.mappers.DocumentMapper;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
+import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
 import java.net.URI;
 import java.util.UUID;
@@ -26,6 +28,7 @@ import java.util.UUID;
 public class DocumentService {
 
     private final DocumentMappingRepository documentMappingRepository;
+    private final EventTypeRepository eventTypeRepository;
     private final ClockService clockService;
     private final DocumentMapper documentMapper;
     private final MaterialClient materialClient;
@@ -34,8 +37,10 @@ public class DocumentService {
 
     @Transactional
     public UUID saveDocumentMapping(final UUID materialId, final String eventType) {
+        final EventTypeEntity eventTypeEntity = eventTypeRepository.findByEventName(eventType)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown event type: " + eventType));
         final UUID documentId = uuidService.random();
-        final DocumentMappingEntity entity = documentMapper.mapToNewEntity(documentId, materialId, eventType, clockService.nowOffsetUTC());
+        final DocumentMappingEntity entity = documentMapper.mapToNewEntity(documentId, materialId, eventTypeEntity, clockService.nowOffsetUTC());
         log.info("saving DocumentMapping materialId:{} to documentId:{}", materialId, entity.getDocumentId());
         documentMappingRepository.save(entity);
         return entity.getDocumentId();
@@ -43,7 +48,7 @@ public class DocumentService {
 
     @Transactional
     public String getEventTypeForDocument(final UUID documentId) {
-        return documentMappingRepository.findById(documentId).get().getEventType();
+        return documentMappingRepository.findById(documentId).get().getEventTypeId().getEventName();
     }
 
     public DocumentContent getDocumentContent(final UUID documentId) {
