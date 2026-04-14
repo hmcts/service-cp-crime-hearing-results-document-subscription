@@ -1,0 +1,64 @@
+package uk.gov.hmcts.cp.subscription.controllers;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
+import uk.gov.hmcts.cp.hmac.services.EncodingService;
+import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
+import uk.gov.hmcts.cp.subscription.config.AppProperties;
+import uk.gov.hmcts.cp.subscription.config.EnvironmentName;
+import uk.gov.hmcts.cp.vault.SecretStoreServiceInterface;
+
+import java.security.InvalidKeyException;
+
+import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
+import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.SIGNATURE_HEADER;
+
+@RestController
+@RequiredArgsConstructor
+@Slf4j
+public class MockCallbackController {
+
+    private final SecretStoreServiceInterface secretStoreService;
+    private final HmacSigningService hmacSigningService;
+    private final EncodingService encodingService;
+    private final AppProperties appProperties;
+
+    @PostMapping("/mock-callback")
+    public ResponseEntity<Void> mockCallback(
+            @RequestHeader(KEY_ID_HEADER) final String keyId,
+            @RequestHeader(SIGNATURE_HEADER) final String signature,
+            @RequestBody final String body) {
+
+        if (appProperties.getEnvironmentName() != EnvironmentName.DEV
+                && appProperties.getEnvironmentName() != EnvironmentName.SIT) {
+            log.warn("/mock-callback is only available in DEV and SIT - current environment is:{}", appProperties.getEnvironmentName());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        log.info("Received mock callback for keyId:{}", keyId);
+
+        final String encodedSecret = secretStoreService.getSecret(keyId)
+                .orElse(null);
+
+        if (encodedSecret == null) {
+            log.warn("No secret found for keyId:{}", keyId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            final byte[] secret = encodingService.decodeFromBase64(encodedSecret);
+            hmacSigningService.validateSignature(secret, body, signature);
+            log.info("Signature validated successfully for keyId:{}", keyId);
+            return ResponseEntity.ok().build();
+        } catch (InvalidKeyException e) {
+            log.warn("Signature validation failed for keyId:{}", keyId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+}
