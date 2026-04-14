@@ -33,7 +33,7 @@ apply {
 dependencies {
   // Api spec
   implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-results-document-subscription:2.0.3')
-  implementation('io.swagger.core.v3:swagger-annotations:2.2.47')
+  implementation('io.swagger.core.v3:swagger-annotations:2.2.48')
 
 
   // Java core
