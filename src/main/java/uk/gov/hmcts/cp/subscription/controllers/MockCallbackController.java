@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import org.owasp.encoder.Encode;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
 import uk.gov.hmcts.cp.subscription.config.AppProperties;
@@ -41,23 +42,23 @@ public class MockCallbackController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        log.info("Received mock callback for keyId:{}", keyId);
+        log.info("Received mock callback for keyId:{}", Encode.forJava(keyId));
 
         final String encodedSecret = secretStoreService.getSecret(keyId)
                 .orElse(null);
 
         if (encodedSecret == null) {
-            log.warn("No secret found for keyId:{}", keyId);
+            log.warn("No secret found for keyId:{}", Encode.forJava(keyId));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         try {
             final byte[] secret = encodingService.decodeFromBase64(encodedSecret);
             hmacSigningService.validateSignature(secret, body, signature);
-            log.info("Signature validated successfully for keyId:{}", keyId);
+            log.info("Signature validated successfully for keyId:{}", Encode.forJava(keyId));
             return ResponseEntity.ok().build();
         } catch (InvalidKeyException e) {
-            log.warn("Signature validation failed for keyId:{}", keyId);
+            log.warn("Signature validation failed for keyId:{}", Encode.forJava(keyId));
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
