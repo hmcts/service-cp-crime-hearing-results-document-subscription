@@ -10,4 +10,6 @@ public interface ServiceBusAdminInterface {
     boolean getQueueExists(String queueName);
 
     void createQueue(String queueName);
+
+    void deleteQueue(String queueName);
 }

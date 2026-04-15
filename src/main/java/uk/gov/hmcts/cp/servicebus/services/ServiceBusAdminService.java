@@ -34,4 +34,13 @@ public class ServiceBusAdminService {
             adminClient.createQueue(queueName);
         }
     }
+
+    public void deleteQueueIfExists(final String queueName) {
+        if (adminClient.getQueueExists(queueName)) {
+            log.info("Deleting queue {}", queueName);
+            adminClient.deleteQueue(queueName);
+        } else {
+            log.info("Queue {} does not exist, skipping delete", queueName);
+        }
+    }
 }
