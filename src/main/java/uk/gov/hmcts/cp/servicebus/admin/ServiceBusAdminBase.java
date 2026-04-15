@@ -36,4 +36,9 @@ public abstract class ServiceBusAdminBase implements ServiceBusAdminInterface {
         options.setMaxDeliveryCount(1);
         adminClient.createQueue(queueName, options);
     }
+
+    @Override
+    public void deleteQueue(final String queueName) {
+        adminClient.deleteQueue(queueName);
+    }
 }
