@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCustodyEstablishmentDetails;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
+import uk.gov.hmcts.cp.subscription.services.CallbackService;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
 import java.util.UUID;
@@ -35,6 +36,8 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
 })
 public class ServiceBusInboundNotificationIntegrationTest extends ServiceBusIntegrationTestBase {
 
+    @MockitoBean
+    CallbackService callbackService;
     @MockitoBean
     MaterialService materialService;
 
