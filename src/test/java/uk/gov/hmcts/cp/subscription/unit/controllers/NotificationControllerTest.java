@@ -14,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
@@ -25,7 +24,6 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -35,8 +33,6 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
 
-    @Mock
-    ServiceBusProperties configService;
     @Mock
     JsonMapper jsonMapper;
     @Mock
@@ -66,18 +62,7 @@ class NotificationControllerTest {
 
     @SneakyThrows
     @Test
-    void service_bus_disabled_should_process_notification_synchronously_and_return_accepted() {
-        when(configService.isEnabled()).thenReturn(false);
-        when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
-        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
-        verify(notificationManager).processNotification(eq(payload));
-        assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
-        assertThat(response.getBody()).isNull();
-    }
-
-    @Test
-    void service_bus_enabled_should_queue_to_service_bus() {
-        when(configService.isEnabled()).thenReturn(true);
+    void valid_notification_should_queue_to_service_bus_and_return_accepted() {
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
         when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
 

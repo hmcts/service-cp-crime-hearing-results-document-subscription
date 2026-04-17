@@ -7,25 +7,24 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.wiremock.spring.ConfigureWireMock;
 import org.wiremock.spring.EnableWireMock;
-import uk.gov.hmcts.cp.openapi.model.EventPayload;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
-import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
 
 @EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0, filesUnderClasspath = "wiremock/material-client")})
 @TestPropertySource(properties = {
@@ -40,16 +39,16 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
     private static final String DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
 
     @MockitoBean
-    private CallbackDeliveryService callbackDeliveryService;
+    private ServiceBusClientService serviceBusClientService;
 
     @BeforeEach
     void setUp() {
-        reset(callbackDeliveryService);
+        reset(serviceBusClientService);
         clearAllTables();
     }
 
     @Test
-    void prison_court_register_generated_should_return_success() throws Exception {
+    void prison_court_register_generated_should_queue_to_service_bus_and_return_accepted() throws Exception {
         String payload = loadPayload("stubs/requests/progression/pcr-request-prison-court-register.json");
 
         mockMvc.perform(post(NOTIFICATION_URI)
@@ -58,34 +57,7 @@ class NotificationControllerIntegrationTest extends IntegrationTestBase {
                         .content(payload))
                 .andExpect(status().isAccepted());
 
-        verify(callbackDeliveryService, times(1)).submitOutboundEvents(any(EventPayload.class), any(UUID.class));
-    }
-
-    @Test
-    void material_metadata_not_found_should_return_504_after_timeout() throws Exception {
-        String payload = loadPayload("stubs/requests/progression/pcr-request-material-not-found.json");
-
-        mockMvc.perform(post(NOTIFICATION_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(payload))
-                .andExpect(status().isGatewayTimeout())
-                .andExpect(jsonPath("$.error").value("gateway_timeout"))
-                .andExpect(jsonPath("$.message").value("Material metadata not ready"));
-    }
-
-    @Test
-    void material_metadata_timeout_should_return_504_via_global_exception_handler() throws Exception {
-        String payload = loadPayload("stubs/requests/progression/pcr-request-material-timeout.json");
-
-
-        mockMvc.perform(post(NOTIFICATION_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("Accept", MediaType.APPLICATION_JSON_VALUE)
-                        .content(payload))
-                .andExpect(status().isGatewayTimeout())
-                .andExpect(jsonPath("$.error").value("gateway_timeout"))
-                .andExpect(jsonPath("$.message").value("Material metadata not ready"));
+        verify(serviceBusClientService).queueMessage(eq(NOTIFICATIONS_INBOUND_QUEUE), eq(null), anyString(), eq(0));
     }
 
     // Reproduces the Azure Blob 403 "Signature fields not well formed" bug.

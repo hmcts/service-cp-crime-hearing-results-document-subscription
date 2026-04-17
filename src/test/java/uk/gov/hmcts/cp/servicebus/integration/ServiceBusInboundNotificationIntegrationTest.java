@@ -55,26 +55,26 @@ public class ServiceBusInboundNotificationIntegrationTest extends ServiceBusInte
     @Test
     void inbound_notification_should_process_material_service() {
         MaterialMetadata materialMetadata = materialMetadata(materialId);
-        when(materialService.waitForMaterialMetadata(materialId)).thenReturn(materialMetadata);
+        when(materialService.getMaterialMetadata(materialId)).thenReturn(materialMetadata);
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
         clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload()), 0);
         MDC.clear();
 
         Thread.sleep(5000);
-        verify(materialService).waitForMaterialMetadata(materialId);
+        verify(materialService).getMaterialMetadata(materialId);
     }
 
     @SneakyThrows
     @Test
     void process_message_should_retry_n_times_then_send_to_DLQ() {
-        when(materialService.waitForMaterialMetadata(materialId)).thenReturn(null);
+        when(materialService.getMaterialMetadata(materialId)).thenReturn(null);
         EventPayload eventPayload = EventPayload.builder().eventType("PRISON_COURT_REGISTER_GENERATED").materialId(materialId).build();
         MDC.put(CORRELATION_ID_KEY, UUID.randomUUID().toString());
         clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, jsonMapper.toJson(eventPayload), 0);
         MDC.clear();
 
         Thread.sleep(5000);
-        verify(materialService, times(2)).waitForMaterialMetadata(materialId);
+        verify(materialService, times(2)).getMaterialMetadata(materialId);
     }
 
     // There are not nulls on EventPayload so we need to populate it quite fully

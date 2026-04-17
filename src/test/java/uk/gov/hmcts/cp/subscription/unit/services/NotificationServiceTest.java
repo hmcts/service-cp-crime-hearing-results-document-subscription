@@ -8,8 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
-import uk.gov.hmcts.cp.subscription.config.AppProperties;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.services.DocumentService;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
@@ -28,10 +26,6 @@ import static org.mockito.Mockito.when;
 class NotificationServiceTest {
 
     @Mock
-    ServiceBusProperties configService;
-    @Mock
-    AppProperties appProperties;
-    @Mock
     private DocumentService documentService;
     @Mock
     private MaterialService materialService;
@@ -39,49 +33,8 @@ class NotificationServiceTest {
     @InjectMocks
     private NotificationService notificationService;
 
-
     @Test
-    void sync_notification_should_save_document() {
-        UUID materialId = randomUUID();
-        EventPayload payload = EventPayload.builder()
-                .materialId(materialId)
-                .eventType("PRISON_COURT_REGISTER_GENERATED")
-                .build();
-        MaterialMetadata materialMetadata = new MaterialMetadata();
-        materialMetadata.setMaterialId(materialId);
-        when(materialService.waitForMaterialMetadata(materialId)).thenReturn(materialMetadata);
-
-        notificationService.processInboundEvent(payload);
-
-        verify(materialService).waitForMaterialMetadata(materialId);
-        verify(documentService).saveDocumentMapping(eq(materialId), eq("PRISON_COURT_REGISTER_GENERATED"));
-    }
-
-    @Test
-    void sync_notification_should_propagate_exception_when_event_type_is_unknown() {
-        UUID materialId = randomUUID();
-        EventPayload payload = EventPayload.builder()
-                .materialId(materialId)
-                .eventType("UNKNOWN_EVENT")
-                .build();
-        MaterialMetadata materialMetadata = new MaterialMetadata();
-        materialMetadata.setMaterialId(materialId);
-        when(materialService.waitForMaterialMetadata(materialId)).thenReturn(materialMetadata);
-        when(documentService.saveDocumentMapping(materialId, "UNKNOWN_EVENT"))
-                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown event type: UNKNOWN_EVENT"));
-
-        assertThatThrownBy(() -> notificationService.processInboundEvent(payload))
-                .isInstanceOf(ResponseStatusException.class)
-                .satisfies(e -> {
-                    ResponseStatusException ex = (ResponseStatusException) e;
-                    assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-                    assertThat(ex.getReason()).contains("UNKNOWN_EVENT");
-                });
-    }
-
-    @Test
-    void async_notification_should_save_document() {
-        when(configService.isEnabled()).thenReturn(true);
+    void notification_should_save_document() {
         UUID materialId = randomUUID();
         EventPayload payload = EventPayload.builder()
                 .materialId(materialId)
@@ -95,5 +48,27 @@ class NotificationServiceTest {
 
         verify(materialService).getMaterialMetadata(materialId);
         verify(documentService).saveDocumentMapping(eq(materialId), eq("PRISON_COURT_REGISTER_GENERATED"));
+    }
+
+    @Test
+    void notification_should_propagate_exception_when_event_type_is_unknown() {
+        UUID materialId = randomUUID();
+        EventPayload payload = EventPayload.builder()
+                .materialId(materialId)
+                .eventType("UNKNOWN_EVENT")
+                .build();
+        MaterialMetadata materialMetadata = new MaterialMetadata();
+        materialMetadata.setMaterialId(materialId);
+        when(materialService.getMaterialMetadata(materialId)).thenReturn(materialMetadata);
+        when(documentService.saveDocumentMapping(materialId, "UNKNOWN_EVENT"))
+                .thenThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown event type: UNKNOWN_EVENT"));
+
+        assertThatThrownBy(() -> notificationService.processInboundEvent(payload))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(e -> {
+                    ResponseStatusException ex = (ResponseStatusException) e;
+                    assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(ex.getReason()).contains("UNKNOWN_EVENT");
+                });
     }
 }

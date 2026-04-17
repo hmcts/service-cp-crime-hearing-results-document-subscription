@@ -67,9 +67,7 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
 @TestPropertySource(properties = {
         "service-bus.enabled=true",
         "service-bus.max-tries=3",
-        "service-bus.retry-msecs=0,500,1000",
-        "material-client.retry.intervalMilliSecs=100",
-        "material-client.retry.timeoutMilliSecs=500"
+        "service-bus.retry-msecs=0,500,1000"
 })
 @Slf4j
 class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
