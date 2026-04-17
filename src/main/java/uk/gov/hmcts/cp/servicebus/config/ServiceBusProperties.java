@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 @Getter
 public class ServiceBusProperties {
     public static final int ADMIN_CONNECTION_PORT = 5300;
-    public static final String NOTIFICATIONS_INBOUND_QUEUE = "hces.notifications.inbound";
-    public static final String NOTIFICATIONS_OUTBOUND_QUEUE = "hces.notifications.outbound";
+    public static final String NOTIFICATIONS_INBOUND_QUEUE = "hrds.notifications.inbound";
+    public static final String NOTIFICATIONS_OUTBOUND_QUEUE = "hrds.notifications.outbound";
     public static final String HTTPS = "https";
 
     private String adminConnectionString;

@@ -42,17 +42,12 @@ public class DocumentService {
     }
 
     @Transactional
-    public UUID getDocumentIdForMaterialId(final UUID materialId) {
-        return documentMappingRepository.findByMaterialId(materialId).get().getDocumentId();
-    }
-
-    @Transactional
     public String getEventTypeForDocument(final UUID documentId) {
         return documentMappingRepository.findById(documentId).get().getEventType();
     }
 
     public DocumentContent getDocumentContent(final UUID documentId) {
-        final DocumentMappingEntity documentMapping = documentMappingRepository.findById(documentId)
+        final DocumentMappingEntity documentMapping = documentMappingRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
         final UUID materialId = documentMapping.getMaterialId();
         log.info("getDocumentContent documentId:{} resolved to materialId:{}", documentId, materialId);

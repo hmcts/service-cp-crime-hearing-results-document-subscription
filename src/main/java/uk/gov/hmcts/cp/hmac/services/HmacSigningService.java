@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.hmac.services;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.Mac;
@@ -32,7 +33,7 @@ public class HmacSigningService {
     public void validateSignature(final byte[] secret, final String message, final String signature) throws InvalidKeyException {
         final String calculatedSignature = sign(secret, message);
         if (!calculatedSignature.equals(signature)) {
-            log.error("Invalid signature passed:\"{}\" does not match calculated:\"{}\"", signature, calculatedSignature);
+            log.error("Invalid signature passed:\"{}\" does not match calculated:\"{}\"", Encode.forJava(signature), calculatedSignature);
             throw new InvalidKeyException("Invalid signature does not match expected");
         }
     }

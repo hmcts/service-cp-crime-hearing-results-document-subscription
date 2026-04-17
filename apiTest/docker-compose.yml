@@ -37,15 +37,17 @@ services:
     container_name: wiremock
     ports:
       - "8090:8080"
+      - "8443:8443"
     volumes:
       - ./src/test/resources/mappings:/home/wiremock/mappings
       - ./src/test/resources/files:/home/wiremock/__files
     command:
       - "--global-response-templating"
       - "--verbose"
+      - "--https-port=8443"
 
   app1:
-    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-case-event-subscription:local}
+    image: ${DOCKER_IMAGE:-service-cp-crime-hearing-results-document-subscription:local}
     build:
       context: ..
     environment:
