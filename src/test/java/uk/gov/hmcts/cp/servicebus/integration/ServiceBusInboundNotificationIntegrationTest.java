@@ -7,14 +7,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendant;
 import uk.gov.hmcts.cp.openapi.model.EventPayloadDefendantCustodyEstablishmentDetails;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
+import uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService;
 import uk.gov.hmcts.cp.subscription.services.MaterialService;
 
 import java.util.UUID;
@@ -24,10 +23,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.filters.TracingFilter.CORRELATION_ID_KEY;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_INBOUND_QUEUE;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 
 @Slf4j
 @SpringBootTest
-@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false",
         "service-bus.max-tries=2",
@@ -37,12 +36,16 @@ public class ServiceBusInboundNotificationIntegrationTest extends ServiceBusInte
 
     @MockitoBean
     MaterialService materialService;
+    @MockitoBean
+    CallbackDeliveryService callbackDeliveryService;
 
     UUID materialId = UUID.fromString("570e1a66-1341-474c-92b2-b7e89e0a524a");
 
     @BeforeEach
     void setUp() {
-        prepareQueue(NOTIFICATIONS_INBOUND_QUEUE);
+        super.
+        recreateQueue(NOTIFICATIONS_INBOUND_QUEUE);
+        recreateQueue(NOTIFICATIONS_OUTBOUND_QUEUE);
     }
 
     @AfterEach

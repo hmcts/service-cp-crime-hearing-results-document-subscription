@@ -63,7 +63,7 @@ class DocumentServiceTest {
     DocumentMappingEntity documentMappingEntity = DocumentMappingEntity.builder()
             .documentId(documentId)
             .materialId(materialId)
-            .eventTypeId(eventTypeEntity).build();
+            .eventType(eventTypeEntity).build();
 
     @Test
     void save_document_should_save_entity() {

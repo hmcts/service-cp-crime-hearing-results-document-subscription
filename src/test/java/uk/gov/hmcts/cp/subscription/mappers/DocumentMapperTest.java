@@ -30,7 +30,7 @@ class DocumentMapperTest {
         DocumentMappingEntity result = documentMapper.mapToNewEntity(documentId, materialId, eventTypeEntity, now);
         assertThat(result.getDocumentId()).isNotNull();
         assertThat(result.getMaterialId()).isEqualTo(materialId);
-        assertThat(result.getEventTypeId()).isEqualTo(eventTypeEntity);
+        assertThat(result.getEventType()).isEqualTo(eventTypeEntity);
         assertThat(result.getCreatedAt()).isEqualTo(now);
     }
 }

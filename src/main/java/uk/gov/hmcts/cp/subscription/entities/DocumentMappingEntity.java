@@ -26,7 +26,7 @@ public class DocumentMappingEntity {
     private UUID materialId;
     @ManyToOne
     @JoinColumn(name = "event_type_id")
-    private EventTypeEntity eventTypeId;
+    private EventTypeEntity eventType;
     private OffsetDateTime createdAt;
 }
 

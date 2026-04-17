@@ -15,7 +15,7 @@ import static uk.gov.hmcts.cp.vault.SecretStoreServiceAzureImpl.SECRET_PREFIX;
 @AllArgsConstructor
 public class SecretStoreServiceStubImpl implements SecretStoreServiceInterface {
 
-    public static String encodedSecret;
+    public static String encodedSecret = "not-set";
 
     public Optional<String> getSecret(final String secretName) {
         log.warn("WARNING SecretService is stubbed. Do not use in real environments");

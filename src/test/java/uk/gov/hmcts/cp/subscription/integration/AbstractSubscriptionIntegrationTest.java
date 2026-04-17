@@ -6,16 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.NotificationEndpoint;
-import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
-import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
-import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
@@ -26,8 +20,6 @@ import uk.gov.hmcts.cp.subscription.services.ClockService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +30,6 @@ import java.util.UUID;
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
-@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false"
 })

@@ -5,15 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
-import uk.gov.hmcts.cp.subscription.config.AppProperties;
 import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static org.awaitility.Awaitility.await;
 
 @Service
 @Slf4j

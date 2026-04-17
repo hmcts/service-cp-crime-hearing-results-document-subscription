@@ -25,7 +25,7 @@ public class ServiceBusIntegrationTestBase {
     @Autowired
     protected ServiceBusTestService testService;
 
-    protected void prepareQueue(final String queueName) {
+    protected void recreateQueue(final String queueName) {
         assertThat(adminService.isServiceBusReady()).isTrue();
         processorService.stopMessageProcessor(queueName);
         testService.dropQueueIfExists(queueName);
