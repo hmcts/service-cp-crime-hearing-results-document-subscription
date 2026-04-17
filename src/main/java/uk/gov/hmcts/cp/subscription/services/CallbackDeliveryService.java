@@ -38,7 +38,7 @@ public class CallbackDeliveryService {
     private final CallbackService callbackService;
     private final HmacManager hmacManager;
 
-    public EventNotificationPayload submitOutboundEvents(final EventPayload eventPayload, final UUID documentId) {
+    public void submitOutboundEvents(final EventPayload eventPayload, final UUID documentId) {
         final String eventType = eventPayload.getEventType();
         final List<ClientEntity> clients = clientEventRepository.findClientsByEventType(eventType);
         final EventNotificationPayload eventNotificationPayload = notificationMapper.mapToPayload(documentId, eventPayload);
@@ -59,6 +59,5 @@ public class CallbackDeliveryService {
                 log.info("Subscriber {} notified via callbackUrl {} for documentId {}", client.getSubscriptionId(), client.getCallbackUrl(), eventNotificationPayload.getDocumentId());
             }
         }
-        return eventNotificationPayload;
     }
 }

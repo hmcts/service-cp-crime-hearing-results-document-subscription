@@ -13,7 +13,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
-import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
@@ -67,15 +66,13 @@ class NotificationControllerTest {
 
     @SneakyThrows
     @Test
-    void service_bus_disabled_should_process_notification_synchronously_and_return_payload() {
-        final EventNotificationPayload expectedPayload = new EventNotificationPayload();
+    void service_bus_disabled_should_process_notification_synchronously_and_return_accepted() {
         when(configService.isEnabled()).thenReturn(false);
-        when(notificationManager.processNotification(eq(payload))).thenReturn(expectedPayload);
         when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
-        ResponseEntity<EventNotificationPayload> response = notificationController.createNotification(payload, null);
+        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
         verify(notificationManager).processNotification(eq(payload));
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
-        assertThat(response.getBody()).isEqualTo(expectedPayload);
+        assertThat(response.getBody()).isNull();
     }
 
     @Test
@@ -84,7 +81,7 @@ class NotificationControllerTest {
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
         when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
 
-        ResponseEntity<EventNotificationPayload> response = notificationController.createNotification(payload, null);
+        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
 
         verify(clientService).queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, "payload-json", 0);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
@@ -94,7 +91,7 @@ class NotificationControllerTest {
     @Test
     void invalid_event_payload_is_silently_ignored() {
         when(eventTypeService.eventExists(payload.getEventType())).thenReturn(false);
-        ResponseEntity<EventNotificationPayload> response = notificationController.createNotification(payload, null);
+        ResponseEntity<Void> response = notificationController.createNotification(payload, null);
         verifyNoInteractions(clientService);
         assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
     }

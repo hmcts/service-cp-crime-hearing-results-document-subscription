@@ -19,7 +19,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
-import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
@@ -57,7 +56,7 @@ public class NotificationController implements InternalApi, NotificationApi {
     }
 
     @Override
-    public ResponseEntity<EventNotificationPayload> createNotification(
+    public ResponseEntity<Void> createNotification(
             @Valid @RequestBody final EventPayload eventPayload,
             // note the X-Correlation-Id is handled by TracingFilter but we need to declare it because its in the spec
             @RequestHeader(value = "X-Correlation-Id", required = false) final UUID xCorrelationId) {
@@ -72,8 +71,8 @@ public class NotificationController implements InternalApi, NotificationApi {
                 clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
                 return new ResponseEntity<>(HttpStatus.ACCEPTED);
             }
-            final EventNotificationPayload payload = notificationManager.processNotification(eventPayload);
-            return new ResponseEntity<>(payload, HttpStatus.ACCEPTED);
+            notificationManager.processNotification(eventPayload);
+            return new ResponseEntity<>(HttpStatus.ACCEPTED);
         }
 
         log.warn("Received notification with unknown event type: {}", eventPayload.getEventType());
