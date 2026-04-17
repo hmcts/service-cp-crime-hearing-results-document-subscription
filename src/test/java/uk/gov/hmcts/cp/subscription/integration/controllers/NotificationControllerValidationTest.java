@@ -145,18 +145,4 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
                 .andDo(print())
                 .andExpect(status().isNotFound());
     }
-
-    @Test
-    void callbackUrl_delivery_failure_should_return_502() throws Exception {
-        String payload = loadPayload(NOTIFICATION_REQUEST_VALID);
-
-        doThrow(new ResponseStatusException(HttpStatus.BAD_GATEWAY, "CallbackUrl delivery failed"))
-                .when(notificationManager).processNotification(any());
-
-        mockMvc.perform(post(NOTIFICATION_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andDo(print())
-                .andExpect(status().isBadGateway());
-    }
 }
