@@ -20,7 +20,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
@@ -56,13 +55,6 @@ class ServiceBusProcessorServiceTest {
     ServiceBusWrappedMessage wrappedMessage;
 
     private String callbackUrl = "http://callback";
-
-    @Test
-    void initialise_do_nothing_if_not_enabled() {
-        when(properties.isEnabled()).thenReturn(false);
-        serviceBusProcessorService.initialiseServiceBus();
-        verify(adminService, never()).isServiceBusReady();
-    }
 
     @Test
     void initialise_should_wait_60_secs_for_service_bus() {

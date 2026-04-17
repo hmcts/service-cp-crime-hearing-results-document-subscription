@@ -67,16 +67,10 @@ public class NotificationController implements InternalApi, NotificationApi {
                 eventPayload.getEventType());
 
         if (eventTypeService.eventExists(eventPayload.getEventType())) {
-            if (serviceBusConfig.isEnabled()) {
-                final String eventjson = jsonMapper.toJson(eventPayload);
-                clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
-                return new ResponseEntity<>(HttpStatus.ACCEPTED);
-            }
-            final EventNotificationPayload payload = notificationManager.processNotification(eventPayload);
-            return new ResponseEntity<>(payload, HttpStatus.ACCEPTED);
+            final String eventjson = jsonMapper.toJson(eventPayload);
+            clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
         }
-
-        log.warn("Received notification with unknown event type: {}", eventPayload.getEventType());
+        log.info("Skipping notification for unknown event type: {}", eventPayload.getEventType());
         return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
 

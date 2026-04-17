@@ -6,24 +6,26 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.servicebus.admin.ServiceBusAdminInterface;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
+import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 @SpringBootTest
-@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false"
 })
 public class ServiceBusAdminIntegrationTest {
+
+    @MockitoBean
+    @SuppressWarnings("unused")
+    private ServiceBusProcessorService serviceBusProcessorService;
 
     @Autowired
     ServiceBusTestService testService;
@@ -35,7 +37,6 @@ public class ServiceBusAdminIntegrationTest {
     @BeforeEach
     void beforeEach() {
         assertThat(adminService.isServiceBusReady()).isTrue();
-        log.info("ServiceBus is up and running");
     }
 
     @Test

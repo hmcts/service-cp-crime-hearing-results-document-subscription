@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
@@ -16,7 +15,6 @@ import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
 import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
 import uk.gov.hmcts.cp.subscription.repositories.ClientHmacRepository;
@@ -36,17 +34,12 @@ import java.util.UUID;
 @Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
-@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
-        "vault.enabled=false",
-        "service-bus.enabled=false"
+        "vault.enabled=false"
 })
 public abstract class IntegrationTestBase {
 
-    protected static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
-    protected static final String NOTIFICATIONS_URI = "/notifications";
     protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
-    protected static final String CALLBACK_URI = "/callback/notify";
     protected static final UUID TEST_CLIENT_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
     protected static final String AUTHORIZATION_HEADER_VALUE = JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID.toString());
 
@@ -141,7 +134,7 @@ public abstract class IntegrationTestBase {
         DocumentMappingEntity document = DocumentMappingEntity.builder()
                 .documentId(UUID.randomUUID())
                 .materialId(materialId)
-                .eventTypeId(eventTypeEntity)
+                .eventType(eventTypeEntity)
                 .createdAt(now)
                 .build();
         return documentMappingRepository.save(document);

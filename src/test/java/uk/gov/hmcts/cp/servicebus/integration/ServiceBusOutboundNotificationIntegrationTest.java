@@ -11,11 +11,9 @@ import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import uk.gov.hmcts.cp.subscription.clients.CallbackClient;
-import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper;
 
 import java.util.UUID;
@@ -31,10 +29,8 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
 
 @Slf4j
 @SpringBootTest
-@ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
         "vault.enabled=false",
-        "service-bus.enabled=false",
         "service-bus.max-tries=2",
         "service-bus.retry-msecs=0"
 })
@@ -49,7 +45,7 @@ public class ServiceBusOutboundNotificationIntegrationTest extends ServiceBusInt
 
     @BeforeEach
     void setUp() {
-        prepareQueue(NOTIFICATIONS_OUTBOUND_QUEUE);
+        recreateQueue(NOTIFICATIONS_OUTBOUND_QUEUE);
     }
 
     @AfterEach

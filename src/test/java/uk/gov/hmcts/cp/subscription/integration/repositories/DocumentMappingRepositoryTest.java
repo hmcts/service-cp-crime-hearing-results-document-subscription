@@ -31,7 +31,7 @@ class DocumentMappingRepositoryTest extends IntegrationTestBase {
         assertThat(found).isPresent();
         assertThat(found.get().getDocumentId()).isEqualTo(saved.getDocumentId());
         assertThat(found.get().getMaterialId()).isEqualTo(MATERIAL_ID);
-        assertThat(found.get().getEventTypeId().getEventName()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
+        assertThat(found.get().getEventType().getEventName()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
         assertThat(found.get().getCreatedAt()).isNotNull();
     }
 }

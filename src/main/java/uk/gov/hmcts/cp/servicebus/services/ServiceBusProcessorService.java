@@ -41,7 +41,6 @@ public class ServiceBusProcessorService {
 
     @PostConstruct
     public void initialiseServiceBus() {
-        if (properties.isEnabled()) {
             try {
                 await()
                         .atMost(Duration.ofSeconds(MAX_WAIT_SECONDS))
@@ -59,7 +58,6 @@ public class ServiceBusProcessorService {
                 startMessageProcessor(NOTIFICATIONS_OUTBOUND_QUEUE);
             } catch (Exception e) {
                 log.error("Failed to initialise serviceBus. {}", e.getMessage());
-            }
         }
     }
 

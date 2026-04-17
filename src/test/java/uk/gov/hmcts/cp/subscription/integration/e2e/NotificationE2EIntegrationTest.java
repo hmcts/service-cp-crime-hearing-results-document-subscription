@@ -25,7 +25,7 @@ import uk.gov.hmcts.cp.servicebus.services.ServiceBusAdminService;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusProcessorService;
 import uk.gov.hmcts.cp.subscription.clients.MaterialClient;
 import uk.gov.hmcts.cp.subscription.config.IgnoreSSLCertificatesForWiremockTest;
-import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.integration.AbstractSubscriptionIntegrationTest;
 import uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub;
 import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 
@@ -55,7 +55,6 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscription;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.SIGNATURE_HEADER;
 
@@ -65,14 +64,13 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
 })
 @Import(IgnoreSSLCertificatesForWiremockTest.class)
 @TestPropertySource(properties = {
-        "service-bus.enabled=true",
         "service-bus.max-tries=3",
         "service-bus.retry-msecs=0,500,1000",
         "material-client.retry.intervalMilliSecs=100",
         "material-client.retry.timeoutMilliSecs=500"
 })
 @Slf4j
-class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
+class NotificationE2EIntegrationTest extends AbstractSubscriptionIntegrationTest {
 
     @Autowired
     ServiceBusAdminService adminService;

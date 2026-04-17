@@ -12,8 +12,8 @@ import java.util.UUID;
 public interface DocumentMapper {
     @Mapping(source = "documentId", target = "documentId")
     @Mapping(source = "materialId", target = "materialId")
-    @Mapping(source = "eventTypeId", target = "eventTypeId")
+    @Mapping(source = "eventType", target = "eventType")
     @Mapping(source = "createdAt", target = "createdAt")
-    DocumentMappingEntity mapToNewEntity(UUID documentId, UUID materialId, EventTypeEntity eventTypeId, OffsetDateTime createdAt);
+    DocumentMappingEntity mapToNewEntity(UUID documentId, UUID materialId, EventTypeEntity eventType, OffsetDateTime createdAt);
 }
 

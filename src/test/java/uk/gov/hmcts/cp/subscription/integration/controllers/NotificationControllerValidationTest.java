@@ -15,7 +15,6 @@ import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -144,19 +143,5 @@ class NotificationControllerValidationTest extends IntegrationTestBase {
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andDo(print())
                 .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void callbackUrl_delivery_failure_should_return_502() throws Exception {
-        String payload = loadPayload(NOTIFICATION_REQUEST_VALID);
-
-        doThrow(new ResponseStatusException(HttpStatus.BAD_GATEWAY, "CallbackUrl delivery failed"))
-                .when(notificationManager).processNotification(any());
-
-        mockMvc.perform(post(NOTIFICATION_URI)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andDo(print())
-                .andExpect(status().isBadGateway());
     }
 }

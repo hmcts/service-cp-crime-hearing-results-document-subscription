@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.subscription.unit.controllers;
 
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.controllers.NotificationController;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
@@ -26,7 +24,6 @@ import uk.gov.hmcts.cp.subscription.services.JsonMapper;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -36,8 +33,6 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
 @ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
 
-    @Mock
-    ServiceBusProperties configService;
     @Mock
     JsonMapper jsonMapper;
     @Mock
@@ -65,22 +60,8 @@ class NotificationControllerTest {
         MDC.remove(ClientIdResolutionFilter.MDC_CLIENT_ID);
     }
 
-    @SneakyThrows
     @Test
-    void service_bus_disabled_should_process_notification_synchronously_and_return_payload() {
-        final EventNotificationPayload expectedPayload = new EventNotificationPayload();
-        when(configService.isEnabled()).thenReturn(false);
-        when(notificationManager.processNotification(eq(payload))).thenReturn(expectedPayload);
-        when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
-        ResponseEntity<EventNotificationPayload> response = notificationController.createNotification(payload, null);
-        verify(notificationManager).processNotification(eq(payload));
-        assertThat(response.getStatusCode()).isEqualTo(ACCEPTED);
-        assertThat(response.getBody()).isEqualTo(expectedPayload);
-    }
-
-    @Test
-    void service_bus_enabled_should_queue_to_service_bus() {
-        when(configService.isEnabled()).thenReturn(true);
+    void create_notification_should_queue_to_service_bus() {
         when(jsonMapper.toJson(payload)).thenReturn("payload-json");
         when(eventTypeService.eventExists(payload.getEventType())).thenReturn(true);
 

@@ -48,7 +48,7 @@ public class DocumentService {
 
     @Transactional
     public String getEventTypeForDocument(final UUID documentId) {
-        return documentMappingRepository.findById(documentId).get().getEventTypeId().getEventName();
+        return documentMappingRepository.findById(documentId).get().getEventType().getEventName();
     }
 
     public DocumentContent getDocumentContent(final UUID documentId) {
