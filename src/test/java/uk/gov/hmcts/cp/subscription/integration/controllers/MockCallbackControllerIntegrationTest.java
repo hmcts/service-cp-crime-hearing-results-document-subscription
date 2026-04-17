@@ -20,7 +20,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @TestPropertySource(properties = {
         "vault.enabled=false",
-        "service-bus.enabled=false",
         "environment.name=DEV"
 })
 class MockCallbackControllerIntegrationTest extends IntegrationTestBase {

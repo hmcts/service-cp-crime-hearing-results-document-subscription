@@ -1,6 +1,6 @@
 # AGENTS.md - AI Coding Agent Guide
 
-Guide for AI coding agents working on the **Court Hearing Cases Event Subscription API** (`service-cp-crime-hearing-case-event-subscription`).
+Guide for AI coding agents working on the **Court Hearing Cases Event Subscription API** (`service-cp-crime-hearing-results-document-subscription`).
 
 ## Overview
 
@@ -134,7 +134,7 @@ curl http://localhost:4550/actuator/health
 
 ### 1. **OpenAPI-First Design**
 
-- API specs are external (likely in `api-cp-crime-hearing-case-event-subscription` dependency)
+- API specs are external (likely in `api-cp-crime-hearing-results-document-subscription` dependency)
 - Controllers **implement** generated API interfaces (e.g., `NotificationController implements InternalApi, NotificationApi`)
 - DTO models are auto-generated (e.g., `EventPayload`, `ClientSubscription`)
 - **Never manually modify generated code**; regenerate via `./gradlew openApiGenerate`
@@ -186,7 +186,7 @@ curl http://localhost:4550/actuator/health
 
 ### Add a New Endpoint
 
-1. Define in OpenAPI spec (external, likely in `api-cp-crime-hearing-case-event-subscription`)
+1. Define in OpenAPI spec (external, likely in `api-cp-crime-hearing-results-document-subscription`)
 2. Regenerate: `./gradlew openApiGenerate`
 3. Implement interface in controller (e.g., `SubscriptionController`)
 4. Extract client ID from MDC: `UUID.fromString(MDC.get(ClientIdResolutionFilter.MDC_CLIENT_ID))`

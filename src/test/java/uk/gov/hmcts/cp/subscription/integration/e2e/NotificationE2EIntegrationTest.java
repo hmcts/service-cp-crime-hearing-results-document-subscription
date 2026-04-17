@@ -55,7 +55,6 @@ import static uk.gov.hmcts.cp.subscription.integration.stubs.CallbackStub.stubCa
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialBinary;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialContent;
 import static uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub.stubMaterialMetadata;
-import static uk.gov.hmcts.cp.subscription.integration.stubs.SubscriptionStub.createSubscription;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.KEY_ID_HEADER;
 import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper.SIGNATURE_HEADER;
 
@@ -71,7 +70,7 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
         "material-client.retry.timeoutMilliSecs=500"
 })
 @Slf4j
-class NotificationAsyncE2EIntegrationTest extends AbstractSubscriptionIntegrationTest {
+class NotificationE2EIntegrationTest extends AbstractSubscriptionIntegrationTest {
 
     @Autowired
     ServiceBusAdminService adminService;

@@ -44,7 +44,6 @@ import java.util.UUID;
 })
 public abstract class AbstractSubscriptionIntegrationTest {
 
-    protected static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
     protected static final String NOTIFICATIONS_URI = "/notifications";
     protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
     protected static final String CALLBACK_URI = "/callback/notify";
@@ -80,18 +79,6 @@ public abstract class AbstractSubscriptionIntegrationTest {
             .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
 
-    protected void clearClientSubscriptionTable() {
-        log.info("Clearing client_subscription table and related client/client_events/client_hmac rows");
-        clientEventRepository.deleteAll();
-        clientHmacRepository.deleteAll();
-        clientRepository.deleteAll();
-    }
-
-    protected void clearDocumentMappingTable() {
-        log.info("Clearing document_mapping table");
-        documentMappingRepository.deleteAll();
-    }
-
     protected void clearAllTables() {
         log.info("Clearing all tables");
         clientHmacRepository.deleteAll();
@@ -100,63 +87,6 @@ public abstract class AbstractSubscriptionIntegrationTest {
         documentMappingRepository.deleteAll();
     }
 
-    protected UUID insertSubscription(String notificationUri, List<String> entityEventTypes) {
-        return insertSubscription(TEST_CLIENT_ID, entityEventTypes, notificationUri);
-    }
-
-    protected UUID insertSubscription(UUID clientId, List<String> entityEventTypes, String notificationUri) {
-        OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
-        UUID subscriptionId = UUID.randomUUID();
-
-        clientRepository.save(ClientEntity.builder()
-                .id(clientId)
-                .subscriptionId(subscriptionId)
-                .callbackUrl(notificationUri)
-                .createdAt(now)
-                .updatedAt(now)
-                .build());
-
-        entityEventTypes.forEach(eventType ->
-                eventTypeRepository.findByEventName(eventType).ifPresent(eventTypeEntity ->
-                        clientEventRepository.save(ClientEventEntity.builder()
-                                .subscriptionId(subscriptionId)
-                                .eventTypeId(eventTypeEntity.getId())
-                                .build())));
-
-        clientHmacRepository.save(ClientHmacEntity.builder()
-                .subscriptionId(subscriptionId)
-                .keyId("kid-v1-keyid")
-                .build());
-
-        return subscriptionId;
-    }
-
-    protected ClientEntity insertClient(UUID clientId, UUID subscriptionId) {
-        OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
-        ClientEntity client = ClientEntity.builder()
-                .id(clientId)
-                .subscriptionId(subscriptionId)
-                .callbackUrl("https://callback")
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
-        return clientRepository.save(client);
-    }
-
-    protected DocumentMappingEntity insertDocument(UUID materialId) {
-        return insertDocument(materialId, "PRISON_COURT_REGISTER_GENERATED");
-    }
-
-    protected DocumentMappingEntity insertDocument(UUID materialId, String eventType) {
-        OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
-        DocumentMappingEntity document = DocumentMappingEntity.builder()
-                .documentId(UUID.randomUUID())
-                .materialId(materialId)
-                .eventType(eventType)
-                .createdAt(now)
-                .build();
-        return documentMappingRepository.save(document);
-    }
 
     protected String loadPayload(String path) throws IOException {
         return new ClassPathResource(path).getContentAsString(StandardCharsets.UTF_8);

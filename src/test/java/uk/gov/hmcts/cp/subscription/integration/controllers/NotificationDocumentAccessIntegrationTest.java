@@ -45,7 +45,6 @@ class NotificationDocumentAccessIntegrationTest extends IntegrationTestBase {
     private static final String NOTIFICATION_URI = "/notifications";
     private static final String CALLBACK_URL = "https://callback.example.com";
     private static final String EVENT_PAYLOAD = "stubs/requests/progression/pcr-request-prison-court-register.json";
-    private static final UUID MATERIAL_ID = UUID.fromString("6c198796-08bb-4803-b456-fa0c29ca6021");
     private static final String DOCUMENT_URI = "/client-subscriptions/{clientSubscriptionId}/documents/{documentId}";
     private static final String CALLBACK_URI_LATE = "/callback/late";
     private static final String CLIENT_ID_OTHER = "22222222-2222-3333-4444-555555555555";
@@ -61,9 +60,6 @@ class NotificationDocumentAccessIntegrationTest extends IntegrationTestBase {
     private ServiceBusHandlers serviceBusHandlers;
 
     @Autowired
-    private DocumentMappingRepository documentMappingRepository;
-
-    @Autowired
     private JsonMapper jsonMapper;
 
     @BeforeEach
@@ -76,27 +72,30 @@ class NotificationDocumentAccessIntegrationTest extends IntegrationTestBase {
         clearAllTables();
     }
 
-    private UUID postNotificationAndGetDocumentId() throws Exception {
+    private void postNotification() throws Exception {
         mockMvc.perform(post(NOTIFICATION_URI)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept", MediaType.APPLICATION_JSON_VALUE)
                         .content(loadPayload(EVENT_PAYLOAD)))
                 .andExpect(status().isAccepted());
-        return documentMappingRepository.findByMaterialId(MATERIAL_ID).orElseThrow().getDocumentId();
+    }
+
+    private UUID getSingleDocumentId() {
+        return documentMappingRepository.findAll().getFirst().getDocumentId();
     }
 
     @Test
     void subscriber_lost_access_after_notification_should_return_403() throws Exception {
         UUID subscriptionId = insertSubscription(CALLBACK_URL, List.of("PRISON_COURT_REGISTER_GENERATED"));
-        UUID documentId = postNotificationAndGetDocumentId();
+        postNotification();
 
-        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, documentId)
+        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, getSingleDocumentId())
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isOk());
 
         SubscriptionStub.deleteSubscription(mockMvc, CLIENT_SUBSCRIPTIONS_URI, subscriptionId).andExpect(status().isNoContent());
 
-        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, documentId)
+        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, getSingleDocumentId())
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("invalid_request"))
@@ -108,9 +107,9 @@ class NotificationDocumentAccessIntegrationTest extends IntegrationTestBase {
         insertSubscription(CALLBACK_URL, List.of("PRISON_COURT_REGISTER_GENERATED"));
         UUID otherSubscriptionId = insertSubscription(
                 UUID.fromString(CLIENT_ID_OTHER), List.of(), "https://other.example.com/callback");
-        UUID documentId = postNotificationAndGetDocumentId();
+        postNotification();
 
-        mockMvc.perform(get(DOCUMENT_URI, otherSubscriptionId, documentId)
+        mockMvc.perform(get(DOCUMENT_URI, otherSubscriptionId, getSingleDocumentId())
                         .header("Authorization", JwtHelper.bearerTokenWithAzp(CLIENT_ID_OTHER)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.error").value("invalid_request"))
@@ -120,9 +119,9 @@ class NotificationDocumentAccessIntegrationTest extends IntegrationTestBase {
     @Test
     void late_subscriber_with_same_event_type_should_retrieve_document() throws Exception {
         UUID subscriptionId = insertSubscription(CALLBACK_URL, List.of("PRISON_COURT_REGISTER_GENERATED"));
-        UUID documentId = postNotificationAndGetDocumentId();
+        postNotification();
 
-        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, documentId)
+        mockMvc.perform(get(DOCUMENT_URI, subscriptionId, getSingleDocumentId())
                         .header("Authorization", AUTHORIZATION_HEADER_VALUE))
                 .andExpect(status().isOk());
 
@@ -130,7 +129,7 @@ class NotificationDocumentAccessIntegrationTest extends IntegrationTestBase {
                 mockMvc, CLIENT_SUBSCRIPTIONS_URI, "https://late.example.com", CALLBACK_URI_LATE, CLIENT_ID_LATE);
         UUID lateSubscriptionId = jsonMapper.getUUIDAtPath(responseBody, "/clientSubscriptionId");
 
-        mockMvc.perform(get(DOCUMENT_URI, lateSubscriptionId, documentId)
+        mockMvc.perform(get(DOCUMENT_URI, lateSubscriptionId, getSingleDocumentId())
                         .header("Authorization", JwtHelper.bearerTokenWithAzp(CLIENT_ID_LATE)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("application/pdf")))

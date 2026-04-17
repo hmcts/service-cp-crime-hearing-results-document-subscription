@@ -85,10 +85,6 @@ subscriptionRepository.findByIdAndClientId(id, UUID.fromString(MDC.get(ClientIdR
 
 Controllers implement generated interfaces from the `api-cp-crime-hearing-results-document-subscription` dependency. Never edit generated code in `build/generated/`. To regenerate: `./gradlew openApiGenerate`.
 
-### Async toggle
-
-`AZURE_SERVICE_BUS_ENABLED=true` routes events through Azure Service Bus topics (`PCR_INBOUND_TOPIC`, `PCR_OUTBOUND_TOPIC`). When false, processing is synchronous on the same thread.
-
 ## Gradle structure
 
 ```

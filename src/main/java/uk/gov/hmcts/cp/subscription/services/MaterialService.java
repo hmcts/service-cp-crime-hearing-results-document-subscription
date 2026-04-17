@@ -20,19 +20,7 @@ import static org.awaitility.Awaitility.await;
 @RequiredArgsConstructor
 public class MaterialService {
 
-    private final AppProperties appProperties;
     private final MaterialClient materialClient;
-
-    // TODO remove once we switch to async only
-    public MaterialMetadata waitForMaterialMetadata(final UUID materialId) {
-        final Map<String, String> mdcContext = MDC.getCopyOfContextMap();
-        final AtomicReference<MaterialMetadata> materialResponse = new AtomicReference<>();
-        await()
-                .pollInterval(Duration.ofMillis(appProperties.getMaterialRetryIntervalMilliSecs()))
-                .atMost(Duration.ofMillis(appProperties.getMaterialRetryTimeoutMilliSecs()))
-                .until(() -> pollMaterialMetadata(materialId, mdcContext, materialResponse));
-        return materialResponse.get();
-    }
 
     public boolean pollMaterialMetadata(final UUID materialId, final Map<String, String> mdcContext,
                                         final AtomicReference<MaterialMetadata> materialResponse) {

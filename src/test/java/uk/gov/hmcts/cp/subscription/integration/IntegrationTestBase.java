@@ -38,15 +38,11 @@ import java.util.UUID;
 @AutoConfigureMockMvc
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
-        "vault.enabled=false",
-        "service-bus.enabled=false"
+        "vault.enabled=false"
 })
 public abstract class IntegrationTestBase {
 
-    protected static final UUID MATERIAL_ID_TIMEOUT = UUID.fromString("11111111-1111-1111-1111-111111111112");
-    protected static final String NOTIFICATIONS_URI = "/notifications";
     protected static final String CLIENT_SUBSCRIPTIONS_URI = "/client-subscriptions";
-    protected static final String CALLBACK_URI = "/callback/notify";
     protected static final UUID TEST_CLIENT_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
     protected static final String AUTHORIZATION_HEADER_VALUE = JwtHelper.bearerTokenWithAzp(TEST_CLIENT_ID.toString());
 
