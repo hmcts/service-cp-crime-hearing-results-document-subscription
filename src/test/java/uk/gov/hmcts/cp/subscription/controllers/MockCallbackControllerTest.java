@@ -101,4 +101,74 @@ class MockCallbackControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
+
+    @Test
+    void valid_callback_should_be_stored_in_received_list() throws InvalidKeyException {
+        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
+        when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
+        when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
+        doNothing().when(hmacSigningService).validateSignature(DECODED_SECRET, BODY, SIGNATURE);
+
+        mockCallbackController.mockCallback(KEY_ID, SIGNATURE, BODY);
+
+        final ResponseEntity<String> response = mockCallbackController.getReceivedCallbacks();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).contains(BODY);
+    }
+
+    @Test
+    void invalid_callback_should_not_be_stored() throws InvalidKeyException {
+        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
+        when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
+        when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
+        doThrow(new InvalidKeyException("bad sig")).when(hmacSigningService)
+                .validateSignature(DECODED_SECRET, BODY, SIGNATURE);
+
+        mockCallbackController.mockCallback(KEY_ID, SIGNATURE, BODY);
+
+        final ResponseEntity<String> response = mockCallbackController.getReceivedCallbacks();
+        assertThat(response.getBody()).isEqualTo("[]");
+    }
+
+    @Test
+    void get_received_callbacks_should_return_empty_list_initially() {
+        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
+
+        final ResponseEntity<String> response = mockCallbackController.getReceivedCallbacks();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo("[]");
+    }
+
+    @Test
+    void get_received_callbacks_in_non_test_environment_should_return_404() {
+        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.PROD);
+
+        final ResponseEntity<String> response = mockCallbackController.getReceivedCallbacks();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void clear_received_callbacks_should_return_200() throws InvalidKeyException {
+        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
+        when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
+        when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
+        doNothing().when(hmacSigningService).validateSignature(DECODED_SECRET, BODY, SIGNATURE);
+        mockCallbackController.mockCallback(KEY_ID, SIGNATURE, BODY);
+
+        final ResponseEntity<Void> clearResponse = mockCallbackController.clearReceivedCallbacks();
+
+        assertThat(clearResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(mockCallbackController.getReceivedCallbacks().getBody()).isEqualTo("[]");
+    }
+
+    @Test
+    void clear_received_callbacks_in_non_test_environment_should_return_404() {
+        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.PROD);
+
+        final ResponseEntity<Void> response = mockCallbackController.clearReceivedCallbacks();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
 }

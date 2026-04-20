@@ -1,11 +1,9 @@
 package uk.gov.hmcts.cp.subscription.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,12 +34,10 @@ public class MockCallbackController {
     private final HmacSigningService hmacSigningService;
     private final EncodingService encodingService;
     private final AppProperties appProperties;
-    private final ObjectMapper objectMapper;
 
-    private final List<JsonNode> receivedCallbacks = new CopyOnWriteArrayList<>();
+    private final List<String> receivedCallbacks = new CopyOnWriteArrayList<>();
 
     @PostMapping("/mock-callback")
-    @SneakyThrows
     public ResponseEntity<Void> mockCallback(
             @RequestHeader(KEY_ID_HEADER) final String keyId,
             @RequestHeader(SIGNATURE_HEADER) final String signature,
@@ -65,7 +61,7 @@ public class MockCallbackController {
         try {
             final byte[] secret = encodingService.decodeFromBase64(encodedSecret);
             hmacSigningService.validateSignature(secret, body, signature);
-            receivedCallbacks.add(objectMapper.readTree(body));
+            receivedCallbacks.add(body);
             log.info("Signature validated successfully for keyId:{} total received:{}", Encode.forJava(keyId), receivedCallbacks.size());
             return ResponseEntity.ok().build();
         } catch (InvalidKeyException e) {
@@ -74,13 +70,14 @@ public class MockCallbackController {
         }
     }
 
-    @GetMapping("/mock-callback/received")
-    public ResponseEntity<List<JsonNode>> getReceivedCallbacks() {
+    @GetMapping(value = "/mock-callback/received", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getReceivedCallbacks() {
         if (!isTestEnvironment()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+        final String json = "[" + String.join(",", receivedCallbacks) + "]";
         log.info("Returning {} received callbacks", receivedCallbacks.size());
-        return ResponseEntity.ok(receivedCallbacks);
+        return ResponseEntity.ok(json);
     }
 
     @DeleteMapping("/mock-callback/received")
