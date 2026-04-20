@@ -33,7 +33,7 @@ class ClientSubscriptionMapperTest {
             .build();
     ClientEntity clientEntity = ClientEntity.builder()
             .callbackUrl("https://example.com")
-            .id(clientId)
+            .clientId(clientId)
             .subscriptionId(subscriptionId)
             .createdAt(createdAt)
             .updatedAt(updatedAt)

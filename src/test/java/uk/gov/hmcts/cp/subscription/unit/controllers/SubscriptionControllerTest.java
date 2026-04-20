@@ -15,11 +15,17 @@ import uk.gov.hmcts.cp.subscription.controllers.SubscriptionController;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionValidationService;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +34,9 @@ class SubscriptionControllerTest {
 
     @Mock
     SubscriptionService subscriptionService;
+
+    @Mock
+    SubscriptionValidationService subscriptionValidationService;
 
     @Mock
     EventTypeService eventTypeService;
@@ -51,23 +60,55 @@ class SubscriptionControllerTest {
             .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
             .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
             .build();
-    ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder().build();
+    ClientSubscriptionRequest updateRequest = ClientSubscriptionRequest.builder()
+            .notificationEndpoint(NotificationEndpoint.builder().callbackUrl("https://example.com/callback").build())
+            .eventTypes(List.of("PRISON_COURT_REGISTER_GENERATED"))
+            .build();
     UUID subscriptionId = UUID.randomUUID();
 
     @Test
     void create_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
         when(subscriptionService.createClientSubscription(createRequest, TEST_CLIENT_UUID)).thenReturn(response);
+
         var result = subscriptionController.createClientSubscription(createRequest, null);
+
+        verify(subscriptionValidationService).validateClientDoesNotExist(TEST_CLIENT_UUID);
+        verify(subscriptionService).createClientSubscription(createRequest, TEST_CLIENT_UUID);
         assertThat(result.getStatusCode().value()).isEqualTo(201);
         assertThat(result.getBody()).isEqualTo(response);
+    }
+
+    @Test
+    void create_controller_should_throw_conflict_when_client_already_exists() {
+        ResponseStatusException conflict = new ResponseStatusException(HttpStatus.CONFLICT,
+                "subscription already exist with " + subscriptionId);
+        doThrow(conflict)
+                .when(subscriptionValidationService).validateClientDoesNotExist(TEST_CLIENT_UUID);
+
+        assertThatThrownBy(() -> subscriptionController.createClientSubscription(createRequest, null))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
+    }
+
+    @Test
+    void create_controller_should_throw_when_event_types_are_invalid() {
+        doThrow(new IllegalArgumentException("Invalid event type(s): BAD"))
+                .when(subscriptionService).createClientSubscription(createRequest, TEST_CLIENT_UUID);
+
+        assertThatThrownBy(() -> subscriptionController.createClientSubscription(createRequest, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid event type(s): BAD");
     }
 
     @Test
     void update_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
         when(subscriptionService.updateClientSubscription(TEST_CLIENT_UUID, subscriptionId, updateRequest)).thenReturn(response);
+
         var result = subscriptionController.updateClientSubscription(subscriptionId, updateRequest, null);
+
+        verify(subscriptionValidationService).validateClientSubscriptionExists(TEST_CLIENT_UUID, subscriptionId);
         verify(subscriptionService).updateClientSubscription(TEST_CLIENT_UUID, subscriptionId, updateRequest);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
@@ -77,7 +118,10 @@ class SubscriptionControllerTest {
     void get_controller_should_call_service() {
         ClientSubscription response = ClientSubscription.builder().clientSubscriptionId(subscriptionId).build();
         when(subscriptionService.getClientSubscription(TEST_CLIENT_UUID, subscriptionId)).thenReturn(response);
+
         var result = subscriptionController.getClientSubscription(subscriptionId, null);
+
+        verify(subscriptionValidationService).validateClientSubscriptionExists(TEST_CLIENT_UUID, subscriptionId);
         verify(subscriptionService).getClientSubscription(TEST_CLIENT_UUID, subscriptionId);
         assertThat(result.getStatusCode().value()).isEqualTo(200);
         assertThat(result.getBody()).isEqualTo(response);
@@ -86,6 +130,8 @@ class SubscriptionControllerTest {
     @Test
     void delete_controller_should_call_service() {
         var result = subscriptionController.deleteClientSubscription(subscriptionId, null);
+
+        verify(subscriptionValidationService).validateClientSubscriptionExists(TEST_CLIENT_UUID, subscriptionId);
         verify(subscriptionService).deleteClientSubscription(TEST_CLIENT_UUID, subscriptionId);
         assertThat(result.getStatusCode().value()).isEqualTo(204);
     }
