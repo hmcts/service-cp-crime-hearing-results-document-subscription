@@ -56,6 +56,7 @@ services:
       MATERIAL_CLIENT_URL: http://wiremock:8080
       SERVICE_BUS_MAX_TRIES: 4
       AZURE_VAULT_ENABLED: false
+      ENVIRONMENT_NAME: DEV
 
     depends_on:
       - db
