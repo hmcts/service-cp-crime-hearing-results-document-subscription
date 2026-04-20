@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
 import uk.gov.hmcts.cp.subscription.entities.DocumentMappingEntity;
+import uk.gov.hmcts.cp.subscription.entities.EventTypeEntity;
 import uk.gov.hmcts.cp.subscription.integration.config.TestContainersInitialise;
 import uk.gov.hmcts.cp.subscription.integration.helpers.JwtHelper;
 import uk.gov.hmcts.cp.subscription.repositories.ClientEventRepository;
@@ -136,10 +137,11 @@ public abstract class IntegrationTestBase {
 
     protected DocumentMappingEntity insertDocument(UUID materialId, String eventType) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
+        EventTypeEntity eventTypeEntity = eventTypeRepository.findByEventName(eventType).get();
         DocumentMappingEntity document = DocumentMappingEntity.builder()
                 .documentId(UUID.randomUUID())
                 .materialId(materialId)
-                .eventType(eventType)
+                .eventTypeId(eventTypeEntity)
                 .createdAt(now)
                 .build();
         return documentMappingRepository.save(document);

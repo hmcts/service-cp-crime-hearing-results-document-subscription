@@ -8,7 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
-import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
@@ -61,16 +60,13 @@ class NotificationManagerTest {
             .build();
 
     @Test
-    void processNotification_should_process_deliver_and_return_notification_payload() {
-        final EventNotificationPayload expectedPayload = new EventNotificationPayload();
+    void processNotification_should_process_and_deliver_notification() {
         when(notificationService.processInboundEvent(payload)).thenReturn(documentId);
-        when(callbackDeliveryService.submitOutboundEvents(payload, documentId)).thenReturn(expectedPayload);
 
-        final EventNotificationPayload result = notificationManager.processNotification(payload);
+        notificationManager.processNotification(payload);
 
         verify(notificationService).processInboundEvent(eq(payload));
         verify(callbackDeliveryService).submitOutboundEvents(payload, documentId);
-        assertThat(result).isEqualTo(expectedPayload);
     }
 
     @Test
