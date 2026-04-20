@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
-import uk.gov.hmcts.cp.subscription.config.AppProperties;
-import uk.gov.hmcts.cp.subscription.config.EnvironmentName;
 import uk.gov.hmcts.cp.vault.SecretStoreServiceInterface;
 
 import java.security.InvalidKeyException;
@@ -40,15 +38,11 @@ class MockCallbackControllerTest {
     @Mock
     private EncodingService encodingService;
 
-    @Mock
-    private AppProperties appProperties;
-
     @InjectMocks
     private MockCallbackController mockCallbackController;
 
     @Test
     void valid_signature_should_return_200() throws InvalidKeyException {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
         when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
         when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
         doNothing().when(hmacSigningService).validateSignature(DECODED_SECRET, BODY, SIGNATURE);
@@ -56,32 +50,10 @@ class MockCallbackControllerTest {
         final ResponseEntity<Void> response = mockCallbackController.mockCallback(KEY_ID, SIGNATURE, BODY);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
-    void sit_environment_should_return_200() throws InvalidKeyException {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.SIT);
-        when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
-        when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
-        doNothing().when(hmacSigningService).validateSignature(DECODED_SECRET, BODY, SIGNATURE);
-
-        final ResponseEntity<Void> response = mockCallbackController.mockCallback(KEY_ID, SIGNATURE, BODY);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-    }
-
-    @Test
-    void non_dev_or_sit_environment_should_return_404() {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.PROD);
-
-        final ResponseEntity<Void> response = mockCallbackController.mockCallback(KEY_ID, SIGNATURE, BODY);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 
     @Test
     void unknown_key_id_should_return_401() {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
         when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.empty());
 
         final ResponseEntity<Void> response = mockCallbackController.mockCallback(KEY_ID, SIGNATURE, BODY);
@@ -91,7 +63,6 @@ class MockCallbackControllerTest {
 
     @Test
     void invalid_signature_should_return_401() throws InvalidKeyException {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
         when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
         when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
         doThrow(new InvalidKeyException("Invalid signature")).when(hmacSigningService)
@@ -104,7 +75,6 @@ class MockCallbackControllerTest {
 
     @Test
     void valid_callback_should_be_stored_in_received_list() throws InvalidKeyException {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
         when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
         when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
         doNothing().when(hmacSigningService).validateSignature(DECODED_SECRET, BODY, SIGNATURE);
@@ -118,7 +88,6 @@ class MockCallbackControllerTest {
 
     @Test
     void invalid_callback_should_not_be_stored() throws InvalidKeyException {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
         when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
         when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
         doThrow(new InvalidKeyException("bad sig")).when(hmacSigningService)
@@ -132,8 +101,6 @@ class MockCallbackControllerTest {
 
     @Test
     void get_received_callbacks_should_return_empty_list_initially() {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
-
         final ResponseEntity<String> response = mockCallbackController.getReceivedCallbacks();
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -141,17 +108,7 @@ class MockCallbackControllerTest {
     }
 
     @Test
-    void get_received_callbacks_in_non_test_environment_should_return_404() {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.PROD);
-
-        final ResponseEntity<String> response = mockCallbackController.getReceivedCallbacks();
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    }
-
-    @Test
     void clear_received_callbacks_should_return_200() throws InvalidKeyException {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.DEV);
         when(secretStoreService.getSecret(KEY_ID)).thenReturn(Optional.of(ENCODED_SECRET));
         when(encodingService.decodeFromBase64(ENCODED_SECRET)).thenReturn(DECODED_SECRET);
         doNothing().when(hmacSigningService).validateSignature(DECODED_SECRET, BODY, SIGNATURE);
@@ -161,14 +118,5 @@ class MockCallbackControllerTest {
 
         assertThat(clearResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(mockCallbackController.getReceivedCallbacks().getBody()).isEqualTo("[]");
-    }
-
-    @Test
-    void clear_received_callbacks_in_non_test_environment_should_return_404() {
-        when(appProperties.getEnvironmentName()).thenReturn(EnvironmentName.PROD);
-
-        final ResponseEntity<Void> response = mockCallbackController.clearReceivedCallbacks();
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     }
 }

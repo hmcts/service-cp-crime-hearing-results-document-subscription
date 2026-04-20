@@ -2,6 +2,7 @@ package uk.gov.hmcts.cp.subscription.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.owasp.encoder.Encode;
 import uk.gov.hmcts.cp.hmac.services.EncodingService;
 import uk.gov.hmcts.cp.hmac.services.HmacSigningService;
-import uk.gov.hmcts.cp.subscription.config.AppProperties;
-import uk.gov.hmcts.cp.subscription.config.EnvironmentName;
 import uk.gov.hmcts.cp.vault.SecretStoreServiceInterface;
 
 import java.security.InvalidKeyException;
@@ -28,12 +27,14 @@ import static uk.gov.hmcts.cp.subscription.model.EventNotificationPayloadWrapper
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnExpression(
+    "'${environment.name:UNKNOWN}' == 'DEV' || '${environment.name:UNKNOWN}' == 'SIT' || '${environment.name:UNKNOWN}' == 'LOCAL'"
+)
 public class MockCallbackController {
 
     private final SecretStoreServiceInterface secretStoreService;
     private final HmacSigningService hmacSigningService;
     private final EncodingService encodingService;
-    private final AppProperties appProperties;
 
     private final List<String> receivedCallbacks = new CopyOnWriteArrayList<>();
 
@@ -42,11 +43,6 @@ public class MockCallbackController {
             @RequestHeader(KEY_ID_HEADER) final String keyId,
             @RequestHeader(SIGNATURE_HEADER) final String signature,
             @RequestBody final String body) {
-
-        if (!isTestEnvironment()) {
-            log.warn("/mock-callback is only available in DEV and SIT - current environment is:{}", appProperties.getEnvironmentName());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
 
         log.info("Received mock callback for keyId:{}", Encode.forJava(keyId));
 
@@ -72,9 +68,6 @@ public class MockCallbackController {
 
     @GetMapping(value = "/mock-callback/received", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getReceivedCallbacks() {
-        if (!isTestEnvironment()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
         final String json = "[" + String.join(",", receivedCallbacks) + "]";
         log.info("Returning {} received callbacks", receivedCallbacks.size());
         return ResponseEntity.ok(json);
@@ -82,16 +75,8 @@ public class MockCallbackController {
 
     @DeleteMapping("/mock-callback/received")
     public ResponseEntity<Void> clearReceivedCallbacks() {
-        if (!isTestEnvironment()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
         receivedCallbacks.clear();
         log.info("Cleared received callbacks");
         return ResponseEntity.ok().build();
-    }
-
-    private boolean isTestEnvironment() {
-        return appProperties.getEnvironmentName() == EnvironmentName.DEV
-                || appProperties.getEnvironmentName() == EnvironmentName.SIT;
     }
 }
