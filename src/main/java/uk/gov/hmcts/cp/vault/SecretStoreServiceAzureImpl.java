@@ -17,7 +17,7 @@ import java.util.Optional;
 @Service
 public class SecretStoreServiceAzureImpl implements SecretStoreServiceInterface {
 
-    public static final String SECRET_PREFIX = "hces";
+    public static final String SECRET_PREFIX = "hrds";
     public static final String SECRET_SUFFIX = "hmac";
 
     private SecretClient secretClient;
