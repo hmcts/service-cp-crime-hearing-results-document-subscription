@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
@@ -33,9 +32,7 @@ public class CallbackDeliveryService {
     private final ClientHmacRepository clientHmacRepository;
     private final NotificationMapper notificationMapper;
     private final JsonMapper jsonMapper;
-    private final ServiceBusProperties serviceBusConfig;
     private final ServiceBusClientService clientService;
-    private final CallbackService callbackService;
     private final HmacManager hmacManager;
 
     public void submitOutboundEvents(final EventPayload eventPayload, final UUID documentId) {
@@ -50,13 +47,9 @@ public class CallbackDeliveryService {
             final EventNotificationPayloadWrapper payloadWrapper = notificationMapper.mapToWrapper(eventNotificationPayload, clientHmac.getKeyId(), signature);
             if (client.getCallbackUrl().startsWith(EXAMPLE_ENDPOINT)) {
                 log.info("Skipping notification for EXAMPLE callback endpoint:{}", client.getCallbackUrl());
-
-            } else if (serviceBusConfig.isEnabled()) {
+            } else {
                 final String payload = jsonMapper.toJson(payloadWrapper);
                 clientService.queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, client.getCallbackUrl(), payload, 0);
-            } else {
-                callbackService.sendToSubscriber(client.getCallbackUrl(), payloadWrapper);
-                log.info("Subscriber {} notified via callbackUrl {} for documentId {}", client.getSubscriptionId(), client.getCallbackUrl(), eventNotificationPayload.getDocumentId());
             }
         }
     }
