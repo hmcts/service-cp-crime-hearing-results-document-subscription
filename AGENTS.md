@@ -1,6 +1,6 @@
 # AGENTS.md - AI Coding Agent Guide
 
-Guide for AI coding agents working on the **Court Hearing Cases Event Subscription API** (`service-cp-crime-hearing-case-event-subscription`).
+Guide for AI coding agents working on the **Hearing Results Document Subscription API** (`service-cp-crime-hearing-results-document-subscription`).
 
 ## Overview
 

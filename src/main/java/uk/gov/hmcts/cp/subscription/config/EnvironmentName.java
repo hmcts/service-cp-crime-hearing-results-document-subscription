@@ -5,6 +5,6 @@ public enum EnvironmentName {
     LOCAL,
     DEV,
     SIT,
-    PREPROD,
-    PROD
+    PRP,
+    PRD
 }
