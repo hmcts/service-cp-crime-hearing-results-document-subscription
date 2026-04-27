@@ -30,7 +30,6 @@ public class NotificationMapper {
                 .documentId(documentId)
                 .documentGeneratedTimestamp(eventPayload.getTimestamp())
                 .prisonEmailAddress(prisonEmailAddress)
-                .eventType(eventPayload.getEventType())
                 .build();
     }
 
