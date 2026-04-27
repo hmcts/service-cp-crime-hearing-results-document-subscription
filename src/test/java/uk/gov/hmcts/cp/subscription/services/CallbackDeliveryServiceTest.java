@@ -8,7 +8,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.openapi.model.EventNotificationPayload;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
@@ -23,16 +22,16 @@ import java.util.UUID;
 
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIONS_OUTBOUND_QUEUE;
 import static uk.gov.hmcts.cp.subscription.services.CallbackDeliveryService.EXAMPLE_ENDPOINT;
 
 @ExtendWith(MockitoExtension.class)
 class CallbackDeliveryServiceTest {
-    @Mock
-    ServiceBusProperties serviceBusConfigService;
     @Mock
     JsonMapper jsonMapper;
     @Mock
@@ -41,8 +40,6 @@ class CallbackDeliveryServiceTest {
     ClientHmacRepository clientHmacRepository;
     @Mock
     NotificationMapper notificationMapper;
-    @Mock
-    CallbackService callbackService;
     @Mock
     HmacManager hmacManager;
     @Mock
@@ -62,17 +59,18 @@ class CallbackDeliveryServiceTest {
     private EventNotificationPayloadWrapper payloadWrapper = EventNotificationPayloadWrapper.builder().build();
 
     @Test
-    void submit_should_send_when_servicebus_disabled() {
+    void submit_should_queue_to_service_bus() {
         when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
         when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
         when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
         when(jsonMapper.toJson(payload)).thenReturn("{payload}");
+        when(jsonMapper.toJson(payloadWrapper)).thenReturn("{payload-wrapper}");
         when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
         when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
 
         callbackDeliveryService.submitOutboundEvents(eventPayload, documentId);
 
-        verify(callbackService).sendToSubscriber(callbackUrl, payloadWrapper);
+        verify(serviceBusClientService).queueMessage(NOTIFICATIONS_OUTBOUND_QUEUE, callbackUrl, "{payload-wrapper}", 0);
     }
 
     @Test
@@ -87,21 +85,6 @@ class CallbackDeliveryServiceTest {
 
         callbackDeliveryService.submitOutboundEvents(eventPayload, documentId);
 
-        verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));
+        verify(serviceBusClientService, never()).queueMessage(anyString(), anyString(), anyString(), anyInt());
     }
-
-    @Test
-    void submit_async_should_add_to_queue() {
-        when(serviceBusConfigService.isEnabled()).thenReturn(true);
-        when(clientEventRepository.findClientsByEventType("PRISON_COURT_REGISTER_GENERATED")).thenReturn(List.of(clientEntity));
-        when(notificationMapper.mapToPayload(documentId, eventPayload)).thenReturn(payload);
-        when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(clientHmacEntity));
-        when(jsonMapper.toJson(payload)).thenReturn("{payload}");
-        when(jsonMapper.toJson(payloadWrapper)).thenReturn("{payload-wrapper}");
-        when(hmacManager.calculateSignature(hmacKeyId, "{payload}")).thenReturn("signature");
-        when(notificationMapper.mapToWrapper(payload, hmacKeyId, "signature")).thenReturn(payloadWrapper);
-
-        callbackDeliveryService.submitOutboundEvents(eventPayload, documentId);
-
-        verify(callbackService, never()).sendToSubscriber(anyString(), any(EventNotificationPayloadWrapper.class));}
 }

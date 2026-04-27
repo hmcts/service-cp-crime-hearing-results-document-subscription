@@ -20,7 +20,6 @@ import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
 import uk.gov.hmcts.cp.openapi.api.NotificationApi;
 import uk.gov.hmcts.cp.openapi.model.EventPayload;
-import uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties;
 import uk.gov.hmcts.cp.servicebus.services.ServiceBusClientService;
 import uk.gov.hmcts.cp.subscription.managers.NotificationManager;
 import uk.gov.hmcts.cp.subscription.model.DocumentContent;
@@ -44,7 +43,6 @@ import static uk.gov.hmcts.cp.servicebus.config.ServiceBusProperties.NOTIFICATIO
 @Slf4j
 public class NotificationController implements InternalApi, NotificationApi {
 
-    private final ServiceBusProperties serviceBusConfig;
     private final ServiceBusClientService clientService;
     private final EventTypeService eventTypeService;
     private final NotificationManager notificationManager;
@@ -66,12 +64,8 @@ public class NotificationController implements InternalApi, NotificationApi {
                 eventPayload.getEventType());
 
         if (eventTypeService.eventExists(eventPayload.getEventType())) {
-            if (serviceBusConfig.isEnabled()) {
-                final String eventjson = jsonMapper.toJson(eventPayload);
-                clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
-                return new ResponseEntity<>(HttpStatus.ACCEPTED);
-            }
-            notificationManager.processNotification(eventPayload);
+            final String eventjson = jsonMapper.toJson(eventPayload);
+            clientService.queueMessage(NOTIFICATIONS_INBOUND_QUEUE, null, eventjson, 0);
             return new ResponseEntity<>(HttpStatus.ACCEPTED);
         }
 
