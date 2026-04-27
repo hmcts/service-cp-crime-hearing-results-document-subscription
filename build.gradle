@@ -1,7 +1,7 @@
 plugins {
   id 'application'
   id 'java'
-  id 'org.springframework.boot' version '4.0.5'
+  id 'org.springframework.boot' version '4.0.6'
   id 'io.spring.dependency-management' version '1.1.7'
   id 'org.openapi.generator' version '7.21.0'
   id 'jacoco'
@@ -69,7 +69,7 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-flyway'
   implementation 'org.flywaydb:flyway-core'
   implementation 'org.flywaydb:flyway-database-postgresql'
-  testImplementation("org.springframework.boot:spring-boot-testcontainers:4.0.5")
+  testImplementation("org.springframework.boot:spring-boot-testcontainers:4.0.6")
   testImplementation 'org.testcontainers:postgresql:1.21.4'
   testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
 
