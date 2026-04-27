@@ -38,8 +38,7 @@ import java.util.UUID;
 @AutoConfigureMockMvc
 @ContextConfiguration(initializers = TestContainersInitialise.class)
 @TestPropertySource(properties = {
-        "vault.enabled=false",
-        "service-bus.enabled=false"
+        "vault.enabled=false"
 })
 public abstract class IntegrationTestBase {
 
