@@ -14,14 +14,14 @@ import java.util.UUID;
 @Mapper(componentModel = "spring")
 public interface ClientEntityMapper {
 
-    @Mapping(source = "clientId", target = "id")
+    @Mapping(source = "clientId", target = "clientId")
     @Mapping(target = "subscriptionId", expression = "java(java.util.UUID.randomUUID())")
     @Mapping(source = "clientSubscription.notificationEndpoint.callbackUrl", target = "callbackUrl")
     @Mapping(target = "createdAt", expression = "java(clockService.nowOffsetUTC())")
     @Mapping(target = "updatedAt", expression = "java(clockService.nowOffsetUTC())")
     ClientEntity toEntity(@Context ClockService clockService, ClientSubscriptionRequest clientSubscription, UUID clientId);
 
-    @Mapping(source = "existing.id", target = "id")
+    @Mapping(source = "existing.clientId", target = "clientId")
     @Mapping(source = "existing.subscriptionId", target = "subscriptionId")
     @Mapping(source = "request.notificationEndpoint", target = "callbackUrl", qualifiedByName = "mapFromNotificationEndpoint")
     @Mapping(source = "existing.createdAt", target = "createdAt")

@@ -15,6 +15,7 @@ import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
 import uk.gov.hmcts.cp.openapi.model.EventTypeResponse;
 import uk.gov.hmcts.cp.subscription.services.EventTypeService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
+import uk.gov.hmcts.cp.subscription.services.SubscriptionValidationService;
 
 import java.util.UUID;
 
@@ -28,6 +29,7 @@ public class SubscriptionController implements SubscriptionApi {
 
     private final SubscriptionService subscriptionService;
     private final EventTypeService eventTypeService;
+    private final SubscriptionValidationService subscriptionValidationService;
 
     @Override
     public ResponseEntity<ClientSubscription> createClientSubscription(
@@ -36,6 +38,7 @@ public class SubscriptionController implements SubscriptionApi {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("createClientSubscription callbackUrl:{} clientId:{}",
                 Encode.forJava(clientSubscriptionRequest.getNotificationEndpoint().getCallbackUrl()), clientId);
+        subscriptionValidationService.validateClientDoesNotExist(clientId);
         final ClientSubscription response = subscriptionService.createClientSubscription(clientSubscriptionRequest, clientId);
         log.info("createClientSubscription created subscription:{}", response.getClientSubscriptionId());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -48,6 +51,7 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("updateClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
+        subscriptionValidationService.validateClientSubscriptionExists(clientId, clientSubscriptionId);
         final ClientSubscription response = subscriptionService.updateClientSubscription(clientId, clientSubscriptionId, clientSubscriptionRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -58,6 +62,7 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("getClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
+        subscriptionValidationService.validateClientSubscriptionExists(clientId, clientSubscriptionId);
         final ClientSubscription response = subscriptionService.getClientSubscription(clientId, clientSubscriptionId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -68,6 +73,7 @@ public class SubscriptionController implements SubscriptionApi {
             @RequestHeader(value = CORRELATION_ID_KEY, required = false) final UUID xCorrelationId) {
         final UUID clientId = UUID.fromString(MDC.get(MDC_CLIENT_ID));
         log.info("deleteClientSubscription clientSubscriptionId:{} clientId:{}", clientSubscriptionId, clientId);
+        subscriptionValidationService.validateClientSubscriptionExists(clientId, clientSubscriptionId);
         subscriptionService.deleteClientSubscription(clientId, clientSubscriptionId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

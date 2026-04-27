@@ -52,7 +52,7 @@ class SubscriptionDeleteControllerIntegrationTest extends IntegrationTestBase {
                 .andDo(print())
                 .andExpect(status().isNotFound());
 
-        assertThat(clientRepository.findByIdAndSubscriptionId(otherClientId, otherSubscriptionId)).isPresent();
+        assertThat(clientRepository.findByClientIdAndSubscriptionId(otherClientId, otherSubscriptionId)).isPresent();
         assertThat(clientEventRepository.findBySubscriptionId(otherSubscriptionId)).isPresent();
     }
 }
