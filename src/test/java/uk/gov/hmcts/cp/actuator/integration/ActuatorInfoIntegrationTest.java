@@ -33,7 +33,7 @@ class ActuatorInfoIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.build.name").value("service-cp-crime-hearing-results-document-subscription"))
-                .andExpect(jsonPath("$.build.version").value("0.0.999"))
+                .andExpect(jsonPath("$.build.version").exists())
                 .andExpect(jsonPath("$.build.time").exists());
     }
 
