@@ -49,6 +49,7 @@ class NotificationMapperTest {
         EventPayload eventPayload = EventPayload.builder()
                 .defendant(defendant)
                 .timestamp(now)
+                .eventType("PRISON_COURT_REGISTER_GENERATED")
                 .build();
 
         EventNotificationPayload response = notificationMapper.mapToPayload(documentId, eventPayload);
@@ -59,6 +60,19 @@ class NotificationMapperTest {
         assertThat(response.getDocumentId()).isEqualTo(documentId);
         assertThat(response.getDocumentGeneratedTimestamp()).isEqualTo(now);
         assertThat(response.getPrisonEmailAddress()).isEqualTo("prison@example.com");
+        assertThat(response.getEventType()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
+    }
+
+    @Test
+    void mapper_should_map_null_event_type() {
+        EventPayload eventPayload = EventPayload.builder()
+                .defendant(defendant)
+                .timestamp(now)
+                .build();
+
+        EventNotificationPayload response = notificationMapper.mapToPayload(documentId, eventPayload);
+
+        assertThat(response.getEventType()).isNull();
     }
 
     @Test
