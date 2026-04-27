@@ -7,7 +7,7 @@ The system SHALL populate the `eventType` field on `EventNotificationPayload` wi
 - **WHEN** `NotificationMapper.mapToPayload()` is called with an `EventPayload` that has a non-null `eventType`
 - **THEN** the returned `EventNotificationPayload` SHALL contain the same `eventType` value
 
->>>>>>> ec29b7c (AMP-457 Add eventType to EventNotificationPayload)
+
 ### Requirement: API spec library version is 2.0.6
 The project SHALL declare `uk.gov.hmcts.cp:api-cp-crime-hearing-results-document-subscription:2.0.6` as its implementation dependency in `build.gradle`.
 
