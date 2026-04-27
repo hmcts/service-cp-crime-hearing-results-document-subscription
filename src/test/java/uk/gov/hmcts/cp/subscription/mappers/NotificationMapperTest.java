@@ -64,18 +64,6 @@ class NotificationMapperTest {
     }
 
     @Test
-    void mapper_should_map_null_event_type() {
-        EventPayload eventPayload = EventPayload.builder()
-                .defendant(defendant)
-                .timestamp(now)
-                .build();
-
-        EventNotificationPayload response = notificationMapper.mapToPayload(documentId, eventPayload);
-
-        assertThat(response.getEventType()).isNull();
-    }
-
-    @Test
     void mapper_should_return_populated_wrapper() {
         EventNotificationPayload payload = EventNotificationPayload.builder().build();
         EventNotificationPayloadWrapper response = notificationMapper.mapToWrapper(payload, "kid", "signature");

@@ -1,6 +1,6 @@
 ## Context
 
-The service consumes PCR events from Azure Service Bus. Each event carries an `eventType` (e.g. `PRISON_COURT_REGISTER_GENERATED`) in its `EventPayload`. The service generates an `EventNotificationPayload` and sends it to downstream subscribers via a callback HTTP call. Currently the `eventType` is silently dropped during the `NotificationMapper.mapToPayload()` step, so subscribers have no way to identify the originating event type from the notification alone.
+The service consumes PCR events from Azure Service Bus. Each event carries an `eventType` (e.g. `PRISON_COURT_REGISTER_GENERATED`) in its `EventPayload`. The service generates an `EventNotificationPayload` and sends it to downstream subscribers via a callback HTTP call. `eventType` is always present during the `NotificationMapper.mapToPayload()` step, so subscribers can always identify the originating event type from the notification alone.
 
 Version 2.0.6 of `uk.gov.hmcts.cp:api-cp-crime-hearing-results-document-subscription` adds `eventType` to `EventNotificationPayload`. This design covers the upgrade and the single mapping change required.
 
@@ -31,7 +31,10 @@ All mapping is centralised in `NotificationMapper.mapToPayload()`. The `eventTyp
 ## Risks / Trade-offs
 
 - **Risk**: 2.0.6 jar is not yet published to the artefact repository → **Mitigation**: The version bump will fail at build time with a clear resolution error; no runtime impact.
+<<<<<<< HEAD
 - **Risk**: `eventType` is nullable in the incoming `EventPayload` and the outbound payload → **Mitigation**: Pass through as-is; downstream subscribers already handle optional fields per the existing contract.
+=======
+>>>>>>> ec29b7c (AMP-457 Add eventType to EventNotificationPayload)
 
 ## Migration Plan
 

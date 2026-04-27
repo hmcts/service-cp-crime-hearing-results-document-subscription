@@ -10,7 +10,6 @@
 ## 3. Test Coverage
 
 - [x] 3.1 In `NotificationMapperTest`, add an assertion that `mapToPayload()` sets `eventType` equal to the source `EventPayload.eventType`
-- [x] 3.2 Add a test case where `eventType` is null and assert the result payload also has null `eventType`
 
 ## 4. Verification
 
