@@ -47,20 +47,20 @@ class NotificationMapperTest {
     @Test
     void mapper_should_return_populated_payload() {
         EventPayload eventPayload = EventPayload.builder()
+                .eventType("PRISON_COURT_REGISTER_GENERATED")
                 .defendant(defendant)
                 .timestamp(now)
-                .eventType("PRISON_COURT_REGISTER_GENERATED")
                 .build();
 
         EventNotificationPayload response = notificationMapper.mapToPayload(documentId, eventPayload);
 
+        assertThat(response.getEventType()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
         assertThat(response.getCases()).hasSize(1);
         assertThat(response.getCases().get(0).getUrn()).isEqualTo("http://localhost");
         assertThat(response.getMasterDefendantId()).isEqualTo(defendentId);
         assertThat(response.getDocumentId()).isEqualTo(documentId);
         assertThat(response.getDocumentGeneratedTimestamp()).isEqualTo(now);
         assertThat(response.getPrisonEmailAddress()).isEqualTo("prison@example.com");
-        assertThat(response.getEventType()).isEqualTo("PRISON_COURT_REGISTER_GENERATED");
     }
 
     @Test
