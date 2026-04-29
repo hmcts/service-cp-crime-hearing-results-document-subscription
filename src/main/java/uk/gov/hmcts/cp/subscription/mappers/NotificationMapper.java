@@ -26,10 +26,10 @@ public class NotificationMapper {
         return EventNotificationPayload.builder()
                 .eventType(eventPayload.getEventType())
                 .hearingId(eventPayload.getHearingId())
-                .cases(cases)
                 .masterDefendantId(defendant.getMasterDefendantId())
                 .documentId(documentId)
                 .documentGeneratedTimestamp(eventPayload.getTimestamp())
+                .cases(cases)
                 .prisonEmailAddress(prisonEmailAddress)
                 .build();
     }

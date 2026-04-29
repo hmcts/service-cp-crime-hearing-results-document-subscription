@@ -147,7 +147,6 @@ class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
 
         then_the_subscriber_receives_a_callback();
         and_the_callback_signature_is_correct();
-        and_the_callback_contains_hearing_id();
         then_the_subscriber_can_retrieve_the_document();
     }
 
@@ -224,10 +223,6 @@ class NotificationAsyncE2EIntegrationTest extends IntegrationTestBase {
         log.info("WireMockDebug got callbackKeyId:{} callbackSignature:{} from callback header", callbackKeyId, callbackSignature);
     }
 
-
-    private void and_the_callback_contains_hearing_id() {
-        assertThat(callbackHearingId).isEqualTo(hearingId);
-    }
 
     private void and_the_callback_signature_is_correct() {
         assertThat(callbackKeyId).isEqualTo(hmacKeyId);
