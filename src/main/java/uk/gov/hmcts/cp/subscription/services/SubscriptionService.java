@@ -148,7 +148,7 @@ public class SubscriptionService {
                         new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
     }
 
-    private void saveClientWithUpdatedTimestamp(ClientEntity client) {
+    private void saveClientWithUpdatedTimestamp(final ClientEntity client) {
         clientRepository.save(client.toBuilder()
                 .updatedAt(clockService.nowOffsetUTC())
                 .build());
