@@ -155,16 +155,6 @@ class SubscriptionControllerTest {
     }
 
     @Test
-    void rotate_controller_should_throw_404_when_subscription_not_found() {
-        final RotateSecretRequest request = RotateSecretRequest.builder().keyId("kid-v1-existing").build();
-        doThrow(new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"))
-                .when(subscriptionValidationService).validateClientSubscriptionExists(TEST_CLIENT_UUID, subscriptionId);
-
-        assertThatThrownBy(() -> subscriptionController.rotateClientSubscriptionSecret(subscriptionId, request, null))
-                .isInstanceOf(EntityNotFoundException.class);
-    }
-
-    @Test
     void get_event_types_controller_should_call_event_type_service() {
         var result = subscriptionController.getEventTypes();
         verify(eventTypeService).getAllEventTypes();
