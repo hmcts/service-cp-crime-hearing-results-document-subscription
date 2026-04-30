@@ -5,19 +5,11 @@
 
 ## 2. Service Implementation
 
-<<<<<<< HEAD
-- [x] 2.1 Add `rotateSecret(String keyId): String` to `HmacManager` — generates new secret bytes via `hmacKeyService.generateKey()`, stores under the existing `keyId` via `secretStoreService.setSecret`, returns the base64-encoded new secret
-- [x] 2.2 In `SubscriptionService`, add `rotateSubscriptionSecret(UUID clientId, UUID subscriptionId, RotateSecretRequest request)` annotated `@Transactional`:
-  - fetch `ClientEntity` via `fetchClient`
-  - fetch `ClientHmacEntity` via `clientHmacRepository.findBySubscriptionId`
-  - validate `request.getKeyId()` matches `clientHmacEntity.getKeyId()`, throw `ResponseStatusException(FORBIDDEN)` if not
-=======
 - [x] 2.1 Add `rotateSecret(String keyId): String` to `HmacManager` — generates new secret bytes via `hmacKeyService.generateSecretBytes()`, stores under the existing `keyId` via `secretStoreService.setSecret`, returns the base64-encoded new secret
 - [x] 2.2 In `SubscriptionService`, add `rotateSubscriptionSecret(UUID clientId, UUID subscriptionId, RotateSecretRequest request)` annotated `@Transactional`:
   - fetch `ClientEntity` via `fetchClient`
   - fetch `ClientHmacEntity` via `clientHmacRepository.findBySubscriptionId`
   - validate `request.getKeyId()` matches `clientHmacEntity.getKeyId()`, throw `EntityNotFoundException` (→ 404) if not
->>>>>>> 4592d69 (AMP-370 Add endpoint to rotate secret)
   - call `hmacManager.rotateSecret(request.getKeyId())` to get new encoded secret (keyId unchanged)
   - return `HmacCredentials.builder().keyId(request.getKeyId()).secret(newEncodedSecret).build()`
 
