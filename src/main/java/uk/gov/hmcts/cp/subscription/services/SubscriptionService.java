@@ -9,6 +9,8 @@ import uk.gov.hmcts.cp.hmac.managers.HmacManager;
 import uk.gov.hmcts.cp.hmac.model.KeyPair;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscription;
 import uk.gov.hmcts.cp.openapi.model.ClientSubscriptionRequest;
+import uk.gov.hmcts.cp.openapi.model.HmacCredentials;
+import uk.gov.hmcts.cp.openapi.model.RotateSecretRequest;
 import uk.gov.hmcts.cp.subscription.entities.ClientEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientEventEntity;
 import uk.gov.hmcts.cp.subscription.entities.ClientHmacEntity;
@@ -89,6 +91,26 @@ public class SubscriptionService {
     public boolean hasAccess(final UUID subscriptionId,
                              final String eventType) {
         return clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, eventType) > 0;
+    }
+
+    public HmacCredentials rotateSubscriptionSecret(final UUID clientId, final UUID subscriptionId,
+                                                    final RotateSecretRequest request) {
+        log.info("rotateSubscriptionSecret clientId:{} subscriptionId:{}", clientId, subscriptionId);
+        final ClientEntity client = fetchClient(clientId, subscriptionId);
+        final ClientHmacEntity existing = clientHmacRepository.findBySubscriptionId(client.getSubscriptionId())
+                .orElseThrow(() -> new EntityNotFoundException("Client not found for the provided subscriptionId" + subscriptionId));
+
+        if (!existing.getKeyId().equals(request.getKeyId())) {
+            throw new EntityNotFoundException("Provided keyId does not match the current key for this subscription");
+        }
+
+        final String newEncodedSecret = hmacManager.rotateSecret(request.getKeyId());
+
+        log.info("rotateSubscriptionSecret complete subscriptionId:{} keyId:{}", subscriptionId, request.getKeyId());
+        return HmacCredentials.builder()
+                .keyId(request.getKeyId())
+                .secret(newEncodedSecret)
+                .build();
     }
 
     private void saveClientEvents(final UUID subscriptionId, final List<Long> eventIds) {
