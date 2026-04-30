@@ -93,18 +93,20 @@ public class SubscriptionService {
         return clientEventRepository.countByClientSubscriptionAndEventName(subscriptionId, eventType) > 0;
     }
 
+    @Transactional
     public HmacCredentials rotateSubscriptionSecret(final UUID clientId, final UUID subscriptionId,
                                                     final RotateSecretRequest request) {
         log.info("rotateSubscriptionSecret clientId:{} subscriptionId:{}", clientId, subscriptionId);
         final ClientEntity client = fetchClient(clientId, subscriptionId);
         final ClientHmacEntity existing = clientHmacRepository.findBySubscriptionId(client.getSubscriptionId())
-                .orElseThrow(() -> new EntityNotFoundException("Client not found for the provided subscriptionId" + subscriptionId));
+                .orElseThrow(() -> new EntityNotFoundException("ClientHmac not found for the provided subscriptionId" + subscriptionId));
 
         if (!existing.getKeyId().equals(request.getKeyId())) {
             throw new EntityNotFoundException("Provided keyId does not match the current key for this subscription");
         }
 
         final String newEncodedSecret = hmacManager.rotateSecret(request.getKeyId());
+        saveClientWithUpdatedTimestamp(client);
 
         log.info("rotateSubscriptionSecret complete subscriptionId:{} keyId:{}", subscriptionId, request.getKeyId());
         return HmacCredentials.builder()
@@ -144,5 +146,11 @@ public class SubscriptionService {
         return clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Client not found for the provided clientId and subscriptionId"));
+    }
+
+    private void saveClientWithUpdatedTimestamp(ClientEntity client) {
+        clientRepository.save(client.toBuilder()
+                .updatedAt(clockService.nowOffsetUTC())
+                .build());
     }
 }

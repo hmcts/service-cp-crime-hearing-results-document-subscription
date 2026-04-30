@@ -28,6 +28,7 @@ import uk.gov.hmcts.cp.subscription.services.ClockService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionService;
 import uk.gov.hmcts.cp.subscription.services.SubscriptionValidationService;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -178,16 +179,20 @@ class SubscriptionServiceTest {
         final String newEncodedSecret = "bmV3U2VjcmV0";
         final ClientHmacEntity hmacEntity = ClientHmacEntity.builder().keyId(existingKeyId).build();
         final RotateSecretRequest request = RotateSecretRequest.builder().keyId(existingKeyId).build();
+        final OffsetDateTime now = OffsetDateTime.now();
+        final ClientEntity clientWithUpdatedAt = clientEntity.toBuilder().updatedAt(now).build();
 
         when(clientRepository.findByClientIdAndSubscriptionId(clientId, subscriptionId)).thenReturn(Optional.of(clientEntity));
         when(clientHmacRepository.findBySubscriptionId(subscriptionId)).thenReturn(Optional.of(hmacEntity));
         when(hmacManager.rotateSecret(existingKeyId)).thenReturn(newEncodedSecret);
+        when(clockService.nowOffsetUTC()).thenReturn(now);
 
         HmacCredentials result = subscriptionService.rotateSubscriptionSecret(clientId, subscriptionId, request);
 
         assertThat(result.getKeyId()).isEqualTo(existingKeyId);
         assertThat(result.getSecret()).isEqualTo(newEncodedSecret);
         verify(hmacManager).rotateSecret(existingKeyId);
+        verify(clientRepository).save(clientWithUpdatedAt);
     }
 
     @Test
