@@ -128,8 +128,12 @@ public abstract class IntegrationTestBase {
     }
 
     protected UUID insertSubscription(UUID clientId, List<String> entityEventTypes, String notificationUri, String keyId) {
+        return insertSubscription(UUID.randomUUID(), clientId, entityEventTypes, notificationUri, keyId);
+    }
+
+    protected UUID insertSubscription(UUID subscriptionId, UUID clientId, List<String> entityEventTypes,
+                                      String notificationUri, String keyId) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
-        UUID subscriptionId = UUID.randomUUID();
 
         clientRepository.save(ClientEntity.builder()
                 .clientId(clientId)
@@ -172,10 +176,14 @@ public abstract class IntegrationTestBase {
     }
 
     protected DocumentMappingEntity insertDocument(UUID materialId, String eventType) {
+        return insertDocument(UUID.randomUUID(), materialId, eventType);
+    }
+
+    protected DocumentMappingEntity insertDocument(UUID documentId, UUID materialId, String eventType) {
         OffsetDateTime now = clockService.now().atOffset(ZoneOffset.UTC);
         EventTypeEntity eventTypeEntity = eventTypeRepository.findByEventName(eventType).get();
         DocumentMappingEntity document = DocumentMappingEntity.builder()
-                .documentId(UUID.randomUUID())
+                .documentId(documentId)
                 .materialId(materialId)
                 .eventTypeId(eventTypeEntity)
                 .createdAt(now)

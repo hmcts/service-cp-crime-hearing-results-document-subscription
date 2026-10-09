@@ -1,6 +1,5 @@
 package uk.gov.hmcts.cp.audit.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -9,12 +8,17 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.wiremock.spring.ConfigureWireMock;
+import org.wiremock.spring.EnableWireMock;
 import uk.gov.hmcts.cp.audit.config.ArtemisAuditAutoConfiguration;
 import uk.gov.hmcts.cp.audit.model.AuditMessage;
 import uk.gov.hmcts.cp.audit.service.AuditClockService;
 import uk.gov.hmcts.cp.audit.service.AuditSenderService;
+import uk.gov.hmcts.cp.audit.service.AuditUuidService;
 import uk.gov.hmcts.cp.subscription.integration.IntegrationTestBase;
+import uk.gov.hmcts.cp.subscription.integration.stubs.MaterialStub;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -27,22 +31,25 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@EnableWireMock({@ConfigureWireMock(name = "material-client", baseUrlProperties = "material-client.url", port = 0, filesUnderClasspath = "wiremock/material-client")})
 @TestPropertySource(properties = "cp.audit.enabled=true")
 class AuditFilterIntegrationTest extends IntegrationTestBase {
 
-    private static final Instant FIXED_TIME = Instant.parse("2026-01-01T10:00:00Z");
-    /** Sent as the CJSCPPUID request header — the source the audit library reads the user from. */
-    private static final String CJSCPPUID_HEADER = "CJSCPPUID";
-    private static final String TEST_USER_ID = "99999999-8888-7777-6666-555555555555";
-    /**
-     * The production mapper, not a locally-configured one — a local mapper with
-     * WRITE_DATES_AS_TIMESTAMPS disabled is what previously hid the numeric-timestamp bug that
-     * audit2dls rejected.
-     */
+    private static final Instant FIXED_TIME          = Instant.parse("2026-01-01T10:00:00Z");
+    private static final String  CJSCPPUID_HEADER     = "CJSCPPUID";
+    private static final String  TEST_USER_ID         = "99999999-8888-7777-6666-555555555555";
+    private static final UUID    FIXED_METADATA_ID    = UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
+    private static final UUID    FIXED_CORRELATION_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
+    private static final UUID    FIXED_SUBSCRIPTION_ID = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
+    private static final UUID    FIXED_DOCUMENT_ID    = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+    private static final UUID    FIXED_MATERIAL_ID    = UUID.fromString("04325082-5203-4eaa-9f62-e153d6308631");
+
     private static final ObjectMapper MAPPER = new ArtemisAuditAutoConfiguration().auditObjectMapper();
 
     @MockitoBean
@@ -51,19 +58,21 @@ class AuditFilterIntegrationTest extends IntegrationTestBase {
     @MockitoBean(name = "auditClockService")
     AuditClockService auditClockService;
 
+    @MockitoBean
+    AuditUuidService auditUuidService;
+
     ArgumentCaptor<AuditMessage> payloadCaptor;
 
     @BeforeEach
     void setUp() {
         clearAllTables();
         when(auditClockService.now()).thenReturn(FIXED_TIME);
+        when(auditUuidService.randomUUID()).thenReturn(FIXED_METADATA_ID);
         payloadCaptor = ArgumentCaptor.forClass(AuditMessage.class);
     }
 
     @Test
-    void calling_audit_excluded_endpoint_should_not_send_audit_event() throws Exception {
-        // /notifications is an internal call from Progression / Hearing NOWs and is exempt from
-        // token validation, so no Authorization header is needed here.
+    void creating_notification_should_not_send_audit_event_because_endpoint_is_excluded() throws Exception {
         mockMvc.perform(post("/notifications")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"eventType\":\"UNKNOWN_EVENT_TYPE\",\"eventId\":\"a4554152-10fb-44fe-a015-226f8d547c91\","
@@ -78,125 +87,102 @@ class AuditFilterIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    void calling_audit_included_endpoint_should_send_request_and_response_audit_events() throws Exception {
-        final UUID subscriptionId = insertSubscription("https://callback", List.of("PRISON_COURT_REGISTER_GENERATED"));
+    void getting_client_subscription_should_send_request_and_response_audit_events() throws Exception {
+        insertSubscription(FIXED_SUBSCRIPTION_ID, TEST_CLIENT_ID, List.of("PRISON_COURT_REGISTER_GENERATED"),
+                "https://callback", "kid-v1-keyid");
 
-        mockMvc.perform(get("/client-subscriptions/{subscriptionId}", subscriptionId)
+        mockMvc.perform(get("/client-subscriptions/{subscriptionId}", FIXED_SUBSCRIPTION_ID)
                         .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
-                        .header(CJSCPPUID_HEADER, TEST_USER_ID))
+                        .header(CJSCPPUID_HEADER, TEST_USER_ID)
+                        .header("X-Correlation-Id", FIXED_CORRELATION_ID))
                 .andExpect(status().isOk());
 
-        verify(auditSenderService, times(2)).send(payloadCaptor.capture());
-        final List<AuditMessage> payloads = payloadCaptor.getAllValues();
-        final UUID correlationId = payloads.get(0).getContent().getCorrelationId();
-        final UUID metadataId = payloads.get(0).getMetadata().getId();
-
-        JSONAssert.assertEquals(
-                expectedRequest(correlationId, subscriptionId, metadataId),
-                MAPPER.writeValueAsString(payloads.get(0)),
-                JSONCompareMode.STRICT);
-
-        JSONAssert.assertEquals(
-                expectedResponse(correlationId, subscriptionId, metadataId),
-                MAPPER.writeValueAsString(payloads.get(1)),
-                JSONCompareMode.STRICT);
+        assertAuditPayloads("get-client-subscription");
     }
 
     @Test
-    void audit_event_should_carry_no_user_when_the_cjscppuid_header_is_absent() throws Exception {
-        final UUID subscriptionId = insertSubscription("https://callback", List.of("PRISON_COURT_REGISTER_GENERATED"));
+    void getting_document_should_send_request_and_response_audit_events_with_material_id() throws Exception {
+        insertSubscription(FIXED_SUBSCRIPTION_ID, TEST_CLIENT_ID, List.of("PRISON_COURT_REGISTER_GENERATED"),
+                "https://callback", "kid-v1-keyid");
+        insertDocument(FIXED_DOCUMENT_ID, FIXED_MATERIAL_ID, "PRISON_COURT_REGISTER_GENERATED");
+        MaterialStub.stubMaterialMetadata(FIXED_MATERIAL_ID);
+        MaterialStub.stubMaterialContent(FIXED_MATERIAL_ID);
+        MaterialStub.stubMaterialBinary(FIXED_MATERIAL_ID);
 
-        mockMvc.perform(get("/client-subscriptions/{subscriptionId}", subscriptionId)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE))
+        mockMvc.perform(get("/client-subscriptions/{clientSubscriptionId}/documents/{documentId}",
+                        FIXED_SUBSCRIPTION_ID, FIXED_DOCUMENT_ID)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
+                        .header("X-Correlation-Id", FIXED_CORRELATION_ID))
                 .andExpect(status().isOk());
 
-        verify(auditSenderService, times(2)).send(payloadCaptor.capture());
-        assertThat(payloadCaptor.getAllValues())
-                .allSatisfy(message -> assertThat(message.getMetadata().getContext().user()).isNull());
+        assertAuditPayloads("get-document");
     }
 
     @Test
-    void getting_subscription_should_log_audit_payload_json() throws Exception {
-        final UUID subscriptionId = insertSubscription("https://callback", List.of("PRISON_COURT_REGISTER_GENERATED"));
+    void creating_client_subscription_should_send_request_and_response_audit_events() throws Exception {
+        mockMvc.perform(post("/client-subscriptions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loadPayload("stubs/requests/subscription/subscription-request-valid.json"))
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
+                        .header(CJSCPPUID_HEADER, TEST_USER_ID)
+                        .header("X-Correlation-Id", FIXED_CORRELATION_ID))
+                .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/client-subscriptions/{subscriptionId}", subscriptionId)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE))
-                .andExpect(status().isOk());
-
-        verify(auditSenderService, times(2)).send(payloadCaptor.capture());
-        final List<AuditMessage> payloads = payloadCaptor.getAllValues();
-
-        System.out.println("=== REQUEST audit payload ===");
-        System.out.println(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(payloads.get(0)));
-        System.out.println("=== RESPONSE audit payload ===");
-        System.out.println(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(payloads.get(1)));
+        assertAuditPayloads("create-client-subscription");
     }
 
     @Test
-    void calling_audit_included_endpoint_when_audit_fails_should_still_return_ok() throws Exception {
-        final UUID subscriptionId = insertSubscription("https://callback", List.of("PRISON_COURT_REGISTER_GENERATED"));
+    void updating_client_subscription_should_send_request_and_response_audit_events() throws Exception {
+        insertSubscription(FIXED_SUBSCRIPTION_ID, TEST_CLIENT_ID, List.of("PRISON_COURT_REGISTER_GENERATED"),
+                "https://callback", "kid-v1-keyid");
+
+        mockMvc.perform(put("/client-subscriptions/{id}", FIXED_SUBSCRIPTION_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loadPayload("stubs/requests/subscription/subscription-request-valid.json"))
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
+                        .header(CJSCPPUID_HEADER, TEST_USER_ID)
+                        .header("X-Correlation-Id", FIXED_CORRELATION_ID))
+                .andExpect(status().isOk());
+
+        assertAuditPayloads("update-client-subscription");
+    }
+
+    @Test
+    void deleting_client_subscription_should_send_request_and_response_audit_events() throws Exception {
+        insertSubscription(FIXED_SUBSCRIPTION_ID, TEST_CLIENT_ID, List.of("PRISON_COURT_REGISTER_GENERATED"),
+                "https://callback", "kid-v1-keyid");
+
+        mockMvc.perform(delete("/client-subscriptions/{id}", FIXED_SUBSCRIPTION_ID)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
+                        .header(CJSCPPUID_HEADER, TEST_USER_ID)
+                        .header("X-Correlation-Id", FIXED_CORRELATION_ID))
+                .andExpect(status().isNoContent());
+
+        assertAuditPayloads("delete-client-subscription");
+    }
+
+    @Test
+    void getting_client_subscription_when_audit_sender_fails_should_still_return_200() throws Exception {
+        insertSubscription(FIXED_SUBSCRIPTION_ID, TEST_CLIENT_ID, List.of("PRISON_COURT_REGISTER_GENERATED"),
+                "https://callback", "kid-v1-keyid");
         doThrow(new RuntimeException("audit broker down")).when(auditSenderService).send(any());
 
-        mockMvc.perform(get("/client-subscriptions/{subscriptionId}", subscriptionId)
-                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE))
+        mockMvc.perform(get("/client-subscriptions/{subscriptionId}", FIXED_SUBSCRIPTION_ID)
+                        .header(AUTHORIZATION, AUTHORIZATION_HEADER_VALUE)
+                        .header("X-Correlation-Id", FIXED_CORRELATION_ID))
                 .andExpect(status().isOk());
     }
 
-    private String expectedRequest(final UUID correlationId, final UUID subscriptionId, final UUID metadataId) {
-        return """
-                {
-                  "_metadata": {
-                    "id":        "%s",
-                    "name":      "audit.events.audit-recorded",
-                    "createdAt": "2026-01-01T10:00:00Z",
-                    "context":   { "user": "%s" }
-                  },
-                  "origin":    "hearing-results-document",
-                  "component": "QUERY_API",
-                  "timestamp": "2026-01-01T10:00:00Z",
-                  "content": {
-                    "eventName":       "hrds.get-client-subscription",
-                    "eventType":       "REQUEST",
-                    "action":          "View",
-                    "clientId":        "11111111-2222-3333-4444-555555555555",
-                    "correlationId":   "%s",
-                    "responseStatus":  null,
-                    "materialId":      null,
-                    "caseId":          null,
-                    "hearingId":       null,
-                    "courtDocumentId": null,
-                    "pathParams": { "clientSubscriptionId": "%s" }
-                  }
-                }
-                """.formatted(metadataId, TEST_USER_ID, correlationId, subscriptionId);
-    }
-
-    private String expectedResponse(final UUID correlationId, final UUID subscriptionId, final UUID metadataId) {
-        return """
-                {
-                  "_metadata": {
-                    "id":        "%s",
-                    "name":      "audit.events.audit-recorded",
-                    "createdAt": "2026-01-01T10:00:00Z",
-                    "context":   { "user": "%s" }
-                  },
-                  "origin":    "hearing-results-document",
-                  "component": "QUERY_API",
-                  "timestamp": "2026-01-01T10:00:00Z",
-                  "content": {
-                    "eventName":       "hrds.get-client-subscription",
-                    "eventType":       "RESPONSE",
-                    "action":          "View",
-                    "clientId":        "11111111-2222-3333-4444-555555555555",
-                    "correlationId":   "%s",
-                    "responseStatus":  200,
-                    "materialId":      null,
-                    "caseId":          null,
-                    "hearingId":       null,
-                    "courtDocumentId": null,
-                    "pathParams": { "clientSubscriptionId": "%s" }
-                  }
-                }
-                """.formatted(metadataId, TEST_USER_ID, correlationId, subscriptionId);
+    private void assertAuditPayloads(final String endpoint) throws Exception {
+        verify(auditSenderService, times(2)).send(payloadCaptor.capture());
+        final List<AuditMessage> payloads = payloadCaptor.getAllValues();
+        JSONAssert.assertEquals(
+                loadPayload("audit/" + endpoint + "-request.json"),
+                MAPPER.writeValueAsString(payloads.get(0)),
+                JSONCompareMode.STRICT);
+        JSONAssert.assertEquals(
+                loadPayload("audit/" + endpoint + "-response.json"),
+                MAPPER.writeValueAsString(payloads.get(1)),
+                JSONCompareMode.STRICT);
     }
 }

@@ -19,6 +19,9 @@ import uk.gov.hmcts.cp.subscription.model.MaterialMetadata;
 import uk.gov.hmcts.cp.subscription.repositories.DocumentMappingRepository;
 import uk.gov.hmcts.cp.subscription.repositories.EventTypeRepository;
 
+import org.slf4j.MDC;
+import uk.gov.hmcts.cp.audit.model.AuditMdcKeys;
+
 import java.net.URI;
 import java.util.UUID;
 
@@ -57,6 +60,7 @@ public class DocumentService {
         final DocumentMappingEntity documentMapping = documentMappingRepository.findByDocumentId(documentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found: " + documentId));
         final UUID materialId = documentMapping.getMaterialId();
+        MDC.put(AuditMdcKeys.MATERIAL_ID, materialId.toString());
         log.info("getDocumentContent documentId:{} resolved to materialId:{}", documentId, materialId);
         final MaterialMetadata metadata = materialClient.getMetadata(materialId);
         final String contentUrl = materialClient.getContentUrl(materialId);
