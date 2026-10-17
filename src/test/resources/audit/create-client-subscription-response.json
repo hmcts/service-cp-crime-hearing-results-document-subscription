@@ -1,0 +1,24 @@
+{
+  "_metadata": {
+    "id":        "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "name":      "audit.events.audit-recorded",
+    "createdAt": "2026-01-01T10:00:00Z",
+    "context":   { "user": "99999999-8888-7777-6666-555555555555" }
+  },
+  "origin":    "hearing-results-document",
+  "component": "QUERY_API",
+  "timestamp": "2026-01-01T10:00:00Z",
+  "content": {
+    "eventName":       "hrds.create-client-subscription",
+    "eventType":       "RESPONSE",
+    "action":          "Create",
+    "clientId":        "11111111-2222-3333-4444-555555555555",
+    "correlationId":   "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "responseStatus":  201,
+    "materialId":      null,
+    "caseId":          null,
+    "hearingId":       null,
+    "courtDocumentId": null,
+    "pathParams":      {}
+  }
+}
