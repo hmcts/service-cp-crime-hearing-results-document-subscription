@@ -87,7 +87,7 @@ auth:
   jwks-cache-ttl-seconds: ${AUTH_JWKS_CACHE_TTL_SECONDS:600}
 
 hearing-event:
-  disabled-in-dev: ${HEARING_EVENT_DISABLED_IN_DEV:false}
+  disabled-in-dev: ${HEARING_EVENT_DISABLED_IN_DEV:true}
 
 vault:
   enabled: ${AZURE_VAULT_ENABLED:false}
