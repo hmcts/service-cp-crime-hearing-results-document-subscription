@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.NativeWebRequest;
+import uk.gov.hmcts.cp.audit.annotation.AuditDetail;
 import uk.gov.hmcts.cp.audit.annotation.AuditExclude;
 import uk.gov.hmcts.cp.filters.ClientIdResolutionFilter;
 import uk.gov.hmcts.cp.openapi.api.InternalApi;
@@ -93,7 +94,7 @@ public class NotificationController implements InternalApi, NotificationApi {
     }
 
     @Override
-    @AuditExclude
+    @AuditDetail(eventName = "hrds.get-document", action = "View", pathParams = {"clientSubscriptionId", "documentId"})
     public ResponseEntity<Resource> getDocument(
             @NotNull @PathVariable("clientSubscriptionId") final UUID clientSubscriptionId,
             @NotNull @PathVariable("documentId") final UUID documentId,
