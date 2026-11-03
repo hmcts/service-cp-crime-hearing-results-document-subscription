@@ -33,7 +33,7 @@ apply {
 dependencies {
   // Api spec
   implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-results-document-subscription:2.0.14')
-  implementation('io.swagger.core.v3:swagger-annotations:2.2.55')
+  implementation('io.swagger.core.v3:swagger-annotations:3.0.0')
 
   // Audit
   implementation('uk.gov.hmcts.cp:cp-audit-springboot-annotations:2.0.0')
@@ -95,6 +95,6 @@ dependencies {
   testImplementation 'org.wiremock.integrations:wiremock-spring-boot:4.4.3'
   testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
 
-  implementation 'com.azure:azure-identity:1.18.7'
-  implementation 'com.azure:azure-security-keyvault-secrets:4.11.3'
+  implementation 'com.azure:azure-identity:1.19.0'
+  implementation 'com.azure:azure-security-keyvault-secrets:4.12.0'
 }
