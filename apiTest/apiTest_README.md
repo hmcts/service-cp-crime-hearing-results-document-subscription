@@ -109,3 +109,40 @@ Tests use the following default configuration:
 - WireMock: Port 9999
 
 
+
+## Entra token validation against a local emulator
+
+`EntraLocalTokenValidationApiTest` proves the whole authentication chain without a real tenant: the
+`entra-local` container registers a subscriber application, issues it a client credentials token, and
+`app-entra` verifies that token by fetching the emulator's JWKS over TLS.
+
+`app1` is unchanged — it still runs with validation off and the locally minted tokens the rest of the
+suite presents, so it proves nothing about verification. `app-entra` is the same image on port 8083
+with `AUTH_MODE=ENFORCE`.
+
+The emulator is [Entra Local](https://github.com/cmaneu/entra-local), patched in
+`entra-local/Dockerfile` for two reasons:
+
+- **`oid`.** Upstream deliberately omits it from app-only tokens. Real Entra sets it to the service
+  principal object id, which for an app-only token equals `sub` — and `EntraTokenValidator`
+  rejects a token without it as `DELEGATED_TOKEN`.
+- **TLS.** Upstream generates a certificate for `localhost` only. The patched image generates one
+  naming `entra-local` as well, plus a truststore, because the Nimbus JWKS fetch uses the JVM
+  truststore and would otherwise reject the certificate and the hostname.
+
+Where it still differs from a real tenant:
+
+- **Role assignment.** The emulator grants a requesting application every app role defined on the
+  resource. Real Entra needs an admin-consented app role assignment per client and issues a token
+  carrying no `roles` without one.
+- **`azpacr`** is not issued. Nothing validates it today.
+- **One tenant**, fixed by `TENANT_ID`. `AUTH_AUDIENCE` uses the emulator's seeded `local-api`
+  application (`cccccccc-0000-0000-0000-000000000007`) in place of this API's own registration.
+
+```bash
+# Roles and claims the emulator issued, decoded
+docker compose logs entra-local | tail
+
+# The emulator's portal, for inspecting registered applications and users
+open https://localhost:9443
+```
