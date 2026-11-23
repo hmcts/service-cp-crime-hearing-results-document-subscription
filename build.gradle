@@ -1,13 +1,13 @@
 plugins {
   id 'application'
   id 'java'
-  id 'org.springframework.boot' version '4.1.1'
+  id 'org.springframework.boot' version '4.1.2'
   id 'io.spring.dependency-management' version '1.1.7'
-  id 'org.openapi.generator' version '7.25.0'
+  id 'org.openapi.generator' version '7.26.0'
   id 'jacoco'
   id 'maven-publish'
-  id 'com.github.ben-manes.versions' version '0.61.0'
-  id 'org.cyclonedx.bom' version '3.4.1'
+  id 'com.github.ben-manes.versions' version '0.66.0'
+  id 'org.cyclonedx.bom' version '3.5.1'
   id 'com.gorylenko.gradle-git-properties' version '4.0.1'
   id 'com.avast.gradle.docker-compose' version '0.17.21'
 }
@@ -33,7 +33,7 @@ apply {
 dependencies {
   // Api spec
   implementation('uk.gov.hmcts.cp:api-cp-crime-hearing-results-document-subscription:2.0.14')
-  implementation('io.swagger.core.v3:swagger-annotations:2.2.54')
+  implementation('io.swagger.core.v3:swagger-annotations:2.2.55')
 
   // Audit
   implementation('uk.gov.hmcts.cp:cp-audit-springboot-annotations:2.0.0')
@@ -44,12 +44,12 @@ dependencies {
   implementation 'org.apache.logging.log4j:log4j-to-slf4j'
   implementation 'ch.qos.logback:logback-classic'
   implementation 'ch.qos.logback:logback-core'
-  implementation 'org.owasp.encoder:encoder:1.4.0'
+  implementation 'org.owasp.encoder:encoder:1.6.0'
 
-  compileOnly 'org.projectlombok:lombok:1.18.46'
-  annotationProcessor 'org.projectlombok:lombok:1.18.46'
-  testCompileOnly 'org.projectlombok:lombok:1.18.46'
-  testAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
+  compileOnly 'org.projectlombok:lombok:1.18.48'
+  annotationProcessor 'org.projectlombok:lombok:1.18.48'
+  testCompileOnly 'org.projectlombok:lombok:1.18.48'
+  testAnnotationProcessor 'org.projectlombok:lombok:1.18.48'
 
   implementation 'org.mapstruct:mapstruct:1.6.3'
   annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
@@ -76,13 +76,14 @@ dependencies {
 
   // --- Observability / Actuator / OTEL / Prometheus ---
   implementation 'org.springframework.boot:spring-boot-starter-actuator'
+  implementation 'io.micrometer:micrometer-registry-prometheus'
   implementation 'org.hibernate.validator:hibernate-validator'
   // Skip this till we get connection sorted and have some ideas about what we want from it
   // implementation 'org.springframework.boot:spring-boot-starter-opentelemetry'
 
 
   // Jwt token validation — Entra access token validation (signature, JWKS, claims).
-  implementation 'com.nimbusds:nimbus-jose-jwt:10.0.2'
+  implementation 'com.nimbusds:nimbus-jose-jwt:10.10'
 
 
   // Artemis connectivity checker
@@ -90,10 +91,10 @@ dependencies {
 
   // Project specific
   implementation 'org.awaitility:awaitility:4.3.0'
-  implementation('com.azure:azure-messaging-servicebus:7.17.20')
-  testImplementation 'org.wiremock.integrations:wiremock-spring-boot:4.2.2'
+  implementation('com.azure:azure-messaging-servicebus:7.18.1')
+  testImplementation 'org.wiremock.integrations:wiremock-spring-boot:4.4.3'
   testImplementation 'org.wiremock:wiremock-standalone:3.13.2'
 
-  implementation 'com.azure:azure-identity:1.18.5'
-  implementation 'com.azure:azure-security-keyvault-secrets:4.11.2'
+  implementation 'com.azure:azure-identity:1.18.7'
+  implementation 'com.azure:azure-security-keyvault-secrets:4.11.3'
 }
